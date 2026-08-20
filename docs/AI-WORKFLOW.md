@@ -37,7 +37,7 @@ mengedit berkas yang sama.
 | Integrasi HTTP ke mock SLIK + jalur error | Yulio Zaki | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
 | Menulis test dari AC | Soleh | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
 | Review kode / cari bug sebelum PR | Soleh (gerbang) + Luthfi (merge) | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| docker-compose & CI | Soleh | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
+| docker-compose & CI | Irgiyansyah (DevOps) | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
 | Seed & data uji | Irgiyansyah (parameter) + Yulio (SLIK) | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
 | Dokumentasi (SRS Yulio · SDD Irgi · ADR Luthfi) | Yulio Zaki / Irgiyansyah / Luthfi | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
 | Debugging galat runtime | pemilik lapisan yang bersangkutan | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |

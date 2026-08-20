@@ -30,6 +30,8 @@
 
 # Pemilik path mengikuti tabel peran di README.md bagian 1.
 # Approver PR: Tech Lead (@<!-- ISI: username Luthfi -->) dan @irgiys.
+# @irgiys juga DevOps / Release: pemilik ci.yml, docker-compose.yml, .env.example,
+# dan backend/migrations/ (satu pemilik migrasi, supaya tidak ada dua migrasi bertabrakan).
 # Tidak ada yang menyetujui PR-nya sendiri — GitHub tidak meminta review dari
 # penulis PR walaupun ia code owner path itu, jadi selalu ada mata kedua.
 
@@ -53,7 +55,7 @@
 
 # Migrasi: satu pemilik, supaya tidak ada dua migrasi bertabrakan.
 # Migrasi yang sudah di-merge tidak boleh diubah (AGENTS.md bagian 6 butir 2).
-/backend/migrations/            @<!-- ISI: username Rayvaldo -->
+/backend/migrations/            @irgiys
 
 # ---------------------------------------------------------------------------
 # Test dan verifikasi
@@ -65,9 +67,9 @@
 # ---------------------------------------------------------------------------
 # Infrastruktur & rilis
 # ---------------------------------------------------------------------------
-/docker-compose.yml             @<!-- ISI: username Soleh (DevOps) -->
-/.github/                       @<!-- ISI: username Soleh (DevOps) -->
-/.env.example                   @<!-- ISI: username Soleh (DevOps) -->
+/docker-compose.yml             @irgiys
+/.github/                       @irgiys
+/.env.example                   @irgiys
 
 # ---------------------------------------------------------------------------
 # Dokumentasi & artefak AI
