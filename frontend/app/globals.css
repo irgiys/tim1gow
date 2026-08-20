@@ -1,0 +1,229 @@
+:root {
+  --fg: #16202a;
+  --fg-lemah: #5b6b7a;
+  --bg: #f6f8fa;
+  --kartu: #ffffff;
+  --garis: #d7dee5;
+  --utama: #0f6b4f;
+  --utama-teks: #ffffff;
+  --baik: #1a7f4b;
+  --buruk: #b3261e;
+  --proses: #8a5a00;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+  font-size: 15px;
+}
+
+a {
+  color: var(--utama);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--kartu);
+  border-bottom: 1px solid var(--garis);
+}
+
+.topbar .merek {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.topbar .peran {
+  color: var(--fg-lemah);
+  font-size: 0.85rem;
+}
+
+main {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+}
+
+h1 {
+  font-size: 1.4rem;
+  margin: 0 0 0.25rem;
+}
+
+.sub {
+  color: var(--fg-lemah);
+  margin: 0 0 1.5rem;
+}
+
+.kartu {
+  background: var(--kartu);
+  border: 1px solid var(--garis);
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.kartu-sempit {
+  max-width: 380px;
+  margin: 3rem auto;
+}
+
+/* --- form --- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 1rem;
+}
+
+.field label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.wajib {
+  color: var(--buruk);
+}
+
+.field input,
+.field select,
+.field textarea {
+  font: inherit;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--garis);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.petunjuk {
+  color: var(--fg-lemah);
+}
+
+.galat-field {
+  color: var(--buruk);
+}
+
+button {
+  font: inherit;
+  font-weight: 600;
+  padding: 0.55rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: var(--utama);
+  color: var(--utama-teks);
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+button.sekunder {
+  background: transparent;
+  color: var(--fg);
+  border-color: var(--garis);
+}
+
+/* --- alert --- */
+.alert {
+  padding: 0.65rem 0.8rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.alert-galat {
+  background: #fdecea;
+  color: var(--buruk);
+  border: 1px solid #f3c2be;
+}
+
+/* --- tabel --- */
+.tabel {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--kartu);
+  border: 1px solid var(--garis);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tabel th,
+.tabel td {
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+  border-bottom: 1px solid var(--garis);
+  font-size: 0.9rem;
+}
+
+.tabel th {
+  background: #eef2f5;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--fg-lemah);
+}
+
+.tabel tr:last-child td {
+  border-bottom: none;
+}
+
+.tabel .angka {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.kosong {
+  color: var(--fg-lemah);
+  padding: 1.25rem;
+  background: var(--kartu);
+  border: 1px dashed var(--garis);
+  border-radius: 8px;
+}
+
+/* --- badge status --- */
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid;
+}
+
+.badge-netral {
+  color: var(--fg-lemah);
+  border-color: var(--garis);
+  background: #eef2f5;
+}
+
+.badge-proses {
+  color: var(--proses);
+  border-color: #e6cf9a;
+  background: #fdf6e3;
+}
+
+.badge-baik {
+  color: var(--baik);
+  border-color: #a8d5ba;
+  background: #eaf7ef;
+}
+
+.badge-buruk {
+  color: var(--buruk);
+  border-color: #f3c2be;
+  background: #fdecea;
+}
