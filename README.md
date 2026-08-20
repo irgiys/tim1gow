@@ -24,11 +24,11 @@
 | Nama | Peran | Fokus FR | Akun GitHub |
 |---|---|---|---|
 | Luthfi | Tech Lead / Integrator | FR-08, FR-09 | `<!-- ISI: URL akun -->` |
-| Irgiyansyah | Backend Engineer — domain & skoring | FR-06, FR-07, FR-13 | https://github.com/irgiys/ |
+| Irgiyansyah | Backend Engineer — domain & skoring + DevOps / Release | FR-06, FR-07, FR-13, CI & compose | https://github.com/irgiys/ |
 | Yulio Zaki | Backend Engineer — auth & integrasi SLIK | FR-01, FR-05, mock SLIK | https://github.com/yuliozakik |
 | Rayvaldo | Backend Engineer — pengajuan & dokumen | FR-02, FR-03, FR-04 | `<!-- ISI: URL akun -->` |
 | Aldi | AI Workflow Officer + Frontend Engineer | FR-03/FR-04/FR-08 (UI), FR-11 | `<!-- ISI: URL akun -->` |
-| Soleh | QA / Verification + DevOps / Release | FR-12, test AC-01…AC-15, CI & compose | `<!-- ISI: URL akun -->` |
+| Soleh | QA / Verification | FR-12, test AC-01…AC-15, DEMO-SCRIPT | `<!-- ISI: URL akun -->` |
 
 **Pembagian tanggung jawab non-koding** (satu berkas = satu pemilik tunggal; orang lain
 mengusulkan lewat PR, supaya tidak ada konflik merge pada tabel markdown):
@@ -36,15 +36,19 @@ mengusulkan lewat PR, supaya tidak ada konflik merge pada tabel markdown):
 | Pemilik | Berkas yang dimiliki | Lapisan kode yang dimiliki |
 |---|---|---|
 | Luthfi (Tech Lead) | `AGENTS.md`, `docs/adr/`, memutus saat tim berdebat > 5 menit, merge PR | `internal/service/approval_service.go`, `audit_service.go` |
-| Irgiyansyah | `docs/SDD-iMitra.md` (BAB 4 model data, BAB 5 endpoint) | `internal/service/skoring_service.go`, `margin_service.go`, tabel parameter |
+| Irgiyansyah | `docs/SDD-iMitra.md` (BAB 4 model data, BAB 5 endpoint), `docker-compose.yml`, `.github/workflows/ci.yml`, `.env.example` | `internal/service/skoring_service.go`, `margin_service.go`, tabel parameter, `backend/migrations/` |
 | Yulio Zaki | `docs/SRS-iMitra.md` | `internal/httpapi/` middleware auth+peran, `internal/slik/`, `mock-slik/` |
 | Rayvaldo | Kontrak API di SDD BAB 5 bersama Irgiyansyah | `internal/service/pengajuan_service.go`, `internal/repository/` |
 | Aldi | `docs/AI-WORKFLOW.md`, `docs/AI-DEVLOG.md` (kontributor: semua anggota) | `frontend/app/`, `frontend/components/`, `frontend/lib/` |
-| Soleh | `README.md`, `docs/DEMO-SCRIPT.md`, `docs/TRACEABILITY.md` | `*_test.go`, `.github/workflows/ci.yml`, `docker-compose.yml` |
+| Soleh | `README.md`, `docs/DEMO-SCRIPT.md`, `docs/TRACEABILITY.md` | `*_test.go`, `backend/test/` |
 
-Tim berisi 6 orang, jadi mengikuti bentuk **Tim 2** pada brief §10: QA / Verification
-dirangkap dengan DevOps / Release pada satu orang. Semua peran, termasuk Tech Lead dan
-AI Workflow Officer, tetap ikut menulis kode.
+Tim berisi 6 orang, jadi mengikuti bentuk **Tim 2** pada brief §10: peran DevOps / Release
+dirangkap oleh salah satu Backend Engineer (Irgiyansyah), bukan oleh QA. Alasannya: DevOps
+memiliki `docker-compose.yml`, `ci.yml`, dan migrasi — ketiganya paling sering rusak justru
+karena perubahan di backend, jadi lebih murah dipegang orang yang menulis backend. QA
+(Soleh) dibiarkan **murni sebagai penjaga gerbang**: kalau QA juga yang menulis CI, ia
+menjadi pemeriksa atas pekerjaannya sendiri — pola yang persis kita larang di BR-09.
+Semua peran, termasuk Tech Lead dan AI Workflow Officer, tetap ikut menulis kode.
 
 **Pembagian frontend (`frontend/app/`, Next.js 14 App Router)**
 
@@ -78,11 +82,11 @@ lain supaya gaya dan pemakaian komponen tetap konsisten.
 | Nama | Akses repo | Peran di alur PR |
 |---|---|---|
 | Luthfi | Write | Tech Lead — approver & **satu-satunya yang me-merge** ke `main` |
-| Irgiyansyah | Write | **Approver** (review + approve PR anggota lain), pemilik `docs/SDD-iMitra.md` + skoring/margin |
+| Irgiyansyah | Write | **Approver** (review + approve PR anggota lain), DevOps / Release — pemilik CI, compose, migrasi, dan yang men-tag `v1.0.0` |
 | Yulio Zaki | Write | Reviewer bidang auth/SLIK, pemilik `docs/SRS-iMitra.md` |
 | Rayvaldo | Write | Reviewer bidang pengajuan/dokumen |
 | Aldi | Write | Reviewer seluruh PR `frontend/` |
-| Soleh | Write | QA — **gerbang terakhir sebelum merge** (test & lint benar-benar lolos) |
+| Soleh | Write | QA — **gerbang terakhir sebelum merge** (test & lint benar-benar lolos), tidak memiliki CI supaya tidak memeriksa pekerjaannya sendiri |
 | Muhammad Harum Alrasyid (instruktur) | Write | Penilai; membuka issue saat cross-review Jumat 16.05 |
 
 Batas yang berlaku untuk approver, mengikuti brief §8.2 dan `AGENTS.md` bagian 4.2:

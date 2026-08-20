@@ -233,31 +233,74 @@ sequenceDiagram
 |  |  |  |  |
 | `<!-- ISI: audit_trail -->` |  |  |  |
 |  |  |  |  |
-| `<!-- ISI: parameter_skoring -->` |  |  |  |
-|  |  |  |  |
-| `<!-- ISI: ambang_approval -->` |  |  |  |
-|  |  |  |  |
-| `<!-- ISI: rentang_margin -->` |  |  |  |
-|  |  |  |  |
+| `parameter_skoring` | `kode` | `VARCHAR(32)` PK | Kode komponen: `KAPASITAS_BAYAR`, `RIWAYAT_SLIK`, `LAMA_USAHA`, `SURVEI_LAPANGAN` |
+|  | `nama` | `VARCHAR(100)` | Nama yang ditampilkan ke ANL pada rincian skor (BR-08) |
+|  | `bobot` | `NUMERIC(6,2)` | Bobot komponen. Dapat diubah ADM tanpa deploy ulang (AC-15) |
+|  | `batas_1`, `batas_2` | `NUMERIC(12,4)` | Ambang skor penuh / skor nol. Satuan bergantung komponen: rasio untuk `KAPASITAS_BAYAR`, bulan untuk `LAMA_USAHA` |
+|  | `aktif` | `BOOLEAN` | Komponen tidak aktif diabaikan saat menghitung |
+| `parameter_riwayat_slik` | `kolektibilitas` | `SMALLINT` PK | 1–5. Kol 3–5 **sengaja tidak di-seed**: pengajuannya sudah `REJECTED_SLIK` sebelum skoring, dan tidak adanya baris membuat skoring berhenti alih-alih memakai nilai default |
+|  | `skor` | `NUMERIC(6,2)` | Skor komponen SLIK: Kol-1 → 100, Kol-2 → 40 (Tabel 4.2) |
+| `parameter_umum` | `kunci` | `VARCHAR(64)` PK | `hari_kerja_per_bulan`, `margin_usaha` — pengali rumus kapasitas bayar (§4.4), disimpan sebagai data supaya angka 25 dan 0,30 tidak ada di dalam kode |
+|  | `nilai` | `NUMERIC(14,4)` | Nilai parameter |
+| `ambang_approval` | `id` | `BIGSERIAL` PK |  |
+|  | `plafon_min`, `plafon_maks` | `BIGINT` | Rentang **tertutup** total plafon. Constraint `EXCLUDE USING gist` mencegah rentang tumpang tindih — kalau tumpang tindih, level approval jadi ambigu |
+|  | `level` | `VARCHAR(8)[]` | Urutan array = urutan approval (BR-02), mis. `{KCP,KC}` |
+| `rentang_margin` | `grade` | `SMALLINT` PK | 1–5 |
+|  | `skor_min`, `skor_maks` | `SMALLINT` | Rentang skor → grade (Tabel 4.3). Dibaca service untuk menurunkan grade; tidak ada rentang yang ditulis di kode |
+|  | `margin_min`, `margin_maks` | `NUMERIC(6,2)` | Rentang margin murabahah. `NULL` untuk grade 5 |
+|  | `nisbah_min`, `nisbah_maks` | `NUMERIC(6,2)` | Rentang nisbah bank musyarakah. `NULL` untuk grade 5 |
+|  | `dapat_dibiayai` | `BOOLEAN` | `FALSE` untuk grade 5 → memicu BR-05, bukan dibandingkan dengan angka 5 di kode |
 | `<!-- ISI: notifikasi -->` |  |  |  |
 |  |  |  |  |
 
 ### 4.2 Strategi Migrasi
 
-<!-- ISI: brief §7.2 butir 4 mewajibkan skema dibangun dari migrasi, bukan dari db.sql yang
-     di-restore manual. Tulis: tool migrasi, konvensi nama berkas migrasi, siapa yang boleh
-     membuat migrasi baru, dan aturan bahwa migrasi yang sudah di-merge tidak boleh diubah
-     (juga tercantum di AGENTS.md bagian 6 butir 2). -->
+**Tool**: golang-migrate 4.17.x. Skema **hanya** berasal dari berkas migrasi SQL —
+`gorm.AutoMigrate` dilarang (`AGENTS.md` Larangan 16), karena skema yang dibangun dari kode
+Go tidak reproducible di mesin penilai.
 
-`<!-- ISI -->`
+**Konvensi nama**: `NNNNNN_nama_singkat.up.sql` dan `.down.sql`, nomor urut 6 digit, di
+`backend/migrations/`. Setiap `up` wajib punya `down` yang benar-benar diuji, bukan berkas
+kosong.
+
+**Siapa yang boleh membuat migrasi baru**: DevOps / Release (Irgiyansyah) sebagai pemilik
+`backend/migrations/` di `.github/CODEOWNERS`. Satu pemilik supaya dua migrasi tidak
+bertabrakan pada nomor urut yang sama.
+
+**Migrasi yang sudah di-merge ke `main` tidak boleh diubah atau dihapus** (`AGENTS.md`
+Larangan 2). Perubahan skema selalu berupa migrasi baru dengan nomor berikutnya.
+
+Migrasi yang sudah ada:
+
+| Berkas | Isi |
+|---|---|
+| `000001_parameter.up.sql` | Tabel `parameter_skoring`, `parameter_riwayat_slik`, `parameter_umum`, `rentang_margin`, `ambang_approval` beserta constraint-nya |
+| `000002_seed_parameter.up.sql` | Nilai awal kelima tabel di atas, dari brief §4.1/4.2/4.3/4.4 |
+
+**Diverifikasi**: kedua migrasi dijalankan pada `postgres:16-alpine`, `down` diuji
+mengembalikan database ke keadaan tanpa tabel, dan constraint `EXCLUDE USING gist` terbukti
+menolak rentang plafon yang tumpang tindih.
 
 ### 4.3 Seed Data
 
-<!-- ISI: apa yang di-seed (pengguna per peran, parameter awal dari brief §4, data SLIK dari
-     fixtures/nasabah-uji.csv, data untuk AC-12 dan AC-14), dan bagaimana seed dibuat
-     idempoten sehingga bisa dijalankan berulang tanpa error (§7.2 butir 5). -->
+**Parameter awal** (sudah ada, `000002_seed_parameter.up.sql`): bobot & ambang keempat
+komponen skor, pemetaan kolektibilitas → skor, pengali rumus kapasitas bayar, rentang
+margin/nisbah per grade, dan ambang approval per total plafon.
 
-`<!-- ISI -->`
+**Cara idempotensinya dijamin**: setiap `INSERT` memakai `ON CONFLICT ... DO NOTHING`,
+**bukan** `DO UPDATE`. Ini keputusan sadar: kalau seed menimpa nilai yang ada, perubahan
+bobot yang dibuat ADM saat demo AC-15 akan ter-reset diam-diam pada restart berikutnya,
+dan AC-15 justru jadi tidak bisa dibuktikan. Diverifikasi dengan menjalankan seed dua kali
+pada database yang sama — tanpa error, jumlah baris tetap.
+
+Yang **belum** di-seed dan siapa pemiliknya (lihat `README.md` bagian 1):
+
+| Yang di-seed | Pemilik | Untuk AC |
+|---|---|---|
+| Pengguna per peran (AO, ANL, KCP, KC, KOM, ADM) | Yulio Zaki (FR-01) | AC-01, AC-02 |
+| Data SLIK dari `fixtures/nasabah-uji.csv` | Yulio Zaki (mock SLIK) | AC-05, AC-06 |
+| Pengajuan contoh untuk riwayat lengkap | Rayvaldo (FR-02) | AC-12 |
+| Pengajuan kelompok 4 anggota | Rayvaldo (FR-10) | AC-14 |
 
 ### 4.4 Bagaimana Audit Trail Dijaga Append-Only
 
