@@ -73,6 +73,32 @@ lain supaya gaya dan pemakaian komponen tetap konsisten.
 | `app/(adm)/parameter` — CRUD bobot skor, ambang approval, rentang margin | ADM | **Irgiyansyah** | FR-13 | Jumat, setelah P0 |
 | Notifikasi in-app | semua | **Aldi** | FR-11 | Jumat, setelah P0 |
 
+**Hak akses & review di GitHub**
+
+| Nama | Akses repo | Peran di alur PR |
+|---|---|---|
+| Luthfi | Write | Tech Lead — approver & **satu-satunya yang me-merge** ke `main` |
+| Irgiyansyah | Write | **Approver** (review + approve PR anggota lain), pemilik `docs/SDD-iMitra.md` + skoring/margin |
+| Yulio Zaki | Write | Reviewer bidang auth/SLIK, pemilik `docs/SRS-iMitra.md` |
+| Rayvaldo | Write | Reviewer bidang pengajuan/dokumen |
+| Aldi | Write | Reviewer seluruh PR `frontend/` |
+| Soleh | Write | QA — **gerbang terakhir sebelum merge** (test & lint benar-benar lolos) |
+| Muhammad Harum Alrasyid (instruktur) | Write | Penilai; membuka issue saat cross-review Jumat 16.05 |
+
+Batas yang berlaku untuk approver, mengikuti brief §8.2 dan `AGENTS.md` bagian 4.2:
+
+- **Tidak ada yang menyetujui PR-nya sendiri**, termasuk Tech Lead dan approver. Ini cermin
+  git dari BR-09 (maker ≠ checker) — kalau kontrol itu kita tegakkan di aplikasi, kita juga
+  menegakkannya pada diri sendiri.
+- Setiap PR butuh **minimal 1 approval dari anggota lain**, dan approval hangus kalau ada
+  commit baru (`Dismiss stale approvals` aktif di branch protection).
+- Approver **tidak boleh** meloloskan PR dengan CI merah atau test yang dilemahkan
+  (`AGENTS.md` Larangan 7). Kalau test gagal, yang salah kode atau requirement-nya.
+- Dua approver (Luthfi & Irgiyansyah) supaya PR tidak menganggur saat satu orang sedang
+  fokus koding — bukan supaya review bisa dilewati.
+- Kepemilikan per path didaftarkan di [`.github/CODEOWNERS`](.github/CODEOWNERS) sehingga
+  GitHub otomatis meminta review dari orang yang paham konsekuensinya.
+
 Aturan yang berlaku untuk seluruh frontend:
 
 - **Tidak ada aturan bisnis di frontend.** Skoring, margin, routing approval, dan seluruh

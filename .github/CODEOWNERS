@@ -28,51 +28,62 @@
 #  Format: <pola path>  <pemilik>  [pemilik lain]
 # =============================================================================
 
+# Pemilik path mengikuti tabel peran di README.md bagian 1.
+# Approver PR: Tech Lead (@<!-- ISI: username Luthfi -->) dan @irgiys.
+# Tidak ada yang menyetujui PR-nya sendiri — GitHub tidak meminta review dari
+# penulis PR walaupun ia code owner path itu, jadi selalu ada mata kedua.
+
 # Default untuk seluruh repo — Tech Lead sebagai jaring terakhir.
-*                               @<!-- ISI: username Tech Lead -->
+*                               @<!-- ISI: username Luthfi (Tech Lead) -->
 
 # ---------------------------------------------------------------------------
 # Kode aplikasi
 # ---------------------------------------------------------------------------
-/backend/                       @<!-- ISI: username Backend Engineer 1 --> @<!-- ISI: username Backend Engineer 2 -->
-/frontend/                      @<!-- ISI: username Frontend Engineer -->
-/mock-slik/                     @<!-- ISI: username pemilik mock SLIK -->
+/backend/                       @irgiys @yuliozakik
+/frontend/                      @<!-- ISI: username Aldi -->
+/mock-slik/                     @yuliozakik
 
 # Aturan bisnis dan perhitungan. Bagian paling mahal kalau salah:
 # skoring (BR-07, BR-08), margin (BR-06), routing approval (BR-01, BR-02).
-# SESUAIKAN pola path ini dengan struktur nyata Anda.
-# /backend/src/domain/           @<!-- ISI: Tech Lead --> @<!-- ISI: Backend Engineer -->
+/backend/internal/domain/       @<!-- ISI: username Luthfi (Tech Lead) --> @irgiys
+/backend/internal/service/      @<!-- ISI: username Luthfi (Tech Lead) --> @irgiys
+/backend/internal/slik/         @yuliozakik
+/backend/internal/httpapi/      @yuliozakik @<!-- ISI: username Rayvaldo -->
+/backend/internal/repository/   @<!-- ISI: username Rayvaldo -->
 
 # Migrasi: satu pemilik, supaya tidak ada dua migrasi bertabrakan.
 # Migrasi yang sudah di-merge tidak boleh diubah (AGENTS.md bagian 6 butir 2).
-# /backend/migrations/           @<!-- ISI: username DevOps / Release -->
+/backend/migrations/            @<!-- ISI: username Rayvaldo -->
 
 # ---------------------------------------------------------------------------
 # Test dan verifikasi
 # ---------------------------------------------------------------------------
-# SESUAIKAN pola path dengan lokasi test Anda.
-# /backend/tests/                @<!-- ISI: username QA / Verification -->
-# /frontend/tests/               @<!-- ISI: username QA / Verification -->
+# Test hidup berdampingan dengan kode (*_test.go), jadi QA didaftarkan pada
+# direktori test integrasi; test unit ikut pemilik paketnya.
+/backend/test/                  @<!-- ISI: username Soleh (QA) -->
 
 # ---------------------------------------------------------------------------
 # Infrastruktur & rilis
 # ---------------------------------------------------------------------------
-/docker-compose.yml             @<!-- ISI: username DevOps / Release -->
-/.github/                       @<!-- ISI: username DevOps / Release -->
-/.env.example                   @<!-- ISI: username DevOps / Release -->
+/docker-compose.yml             @<!-- ISI: username Soleh (DevOps) -->
+/.github/                       @<!-- ISI: username Soleh (DevOps) -->
+/.env.example                   @<!-- ISI: username Soleh (DevOps) -->
 
 # ---------------------------------------------------------------------------
 # Dokumentasi & artefak AI
 # ---------------------------------------------------------------------------
 # AGENTS.md dimiliki Tech Lead (brief §10). Perubahan tetap lewat PR.
-/AGENTS.md                      @<!-- ISI: username Tech Lead -->
-/CLAUDE.md                      @<!-- ISI: username Tech Lead -->
+/AGENTS.md                      @<!-- ISI: username Luthfi (Tech Lead) -->
+/CLAUDE.md                      @<!-- ISI: username Luthfi (Tech Lead) -->
 
 # Artefak AI dimiliki AI Workflow Officer, tetapi diisi seluruh tim.
-/docs/AI-DEVLOG.md              @<!-- ISI: username AI Workflow Officer -->
-/docs/AI-WORKFLOW.md            @<!-- ISI: username AI Workflow Officer -->
+/docs/AI-DEVLOG.md              @<!-- ISI: username Aldi -->
+/docs/AI-WORKFLOW.md            @<!-- ISI: username Aldi -->
 
-/docs/adr/                      @<!-- ISI: username Tech Lead -->
-/docs/TRACEABILITY.md           @<!-- ISI: username QA / Verification -->
-/docs/DEMO-SCRIPT.md            @<!-- ISI: username QA / Verification -->
-/fixtures/                      @<!-- ISI: username QA / Verification -->
+/docs/adr/                      @<!-- ISI: username Luthfi (Tech Lead) -->
+/docs/SRS-iMitra.md             @yuliozakik
+/docs/SDD-iMitra.md             @irgiys
+/docs/TRACEABILITY.md           @<!-- ISI: username Soleh (QA) -->
+/docs/DEMO-SCRIPT.md            @<!-- ISI: username Soleh (QA) -->
+/README.md                      @<!-- ISI: username Soleh (QA) -->
+/fixtures/                      @<!-- ISI: username Soleh (QA) -->
