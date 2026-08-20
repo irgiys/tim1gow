@@ -1,8 +1,8 @@
 # AI-WORKFLOW — Cara Tim Ini Bekerja dengan AI
 
-**Tim**: `<!-- ISI: nama tim -->`
-**Pemilik berkas**: AI Workflow Officer — `<!-- ISI: nama -->`
-**Terakhir diperbarui**: `<!-- ISI: tanggal & jam -->`
+**Tim**: iMitra Tim 1
+**Pemilik berkas**: AI Workflow Officer — Aldi
+**Terakhir diperbarui**: 2026-08-20 10:30
 
 > Target panjang: satu sampai dua halaman. Ini dokumen **keputusan**, bukan laporan.
 > Bedanya dengan `AI-DEVLOG.md`: devlog mencatat kejadian satu per satu, berkas ini mencatat
@@ -22,20 +22,25 @@
      lebih cepat daripada bolak-balik ke chat untuk pekerjaan mekanis".
      Kolom "Terbukti?" diisi pada Jumat: Ya / Tidak / Diganti ke X. -->
 
-| Tugas | Tool | Model | Alasan pemilihan | Terbukti? |
-|---|---|---|---|---|
-| Perancangan & kritik model data | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Menulis migrasi skema | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Aturan bisnis (skoring, margin, routing approval) | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| CRUD & endpoint rutin | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Komponen UI per peran | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Integrasi HTTP ke mock SLIK + jalur error | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Menulis test dari AC | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Review kode / cari bug sebelum PR | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| docker-compose & CI | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Seed & data uji | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Dokumentasi (SRS, SDD, ADR) | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Debugging galat runtime | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
+Kolom **Penanggung jawab** mengikuti pembagian peran di `README.md` bagian 1 dan pemilik
+lapisan kode di `AGENTS.md` bagian 3 — satu tugas satu orang, supaya tidak ada dua orang
+mengedit berkas yang sama.
+
+| Tugas | Penanggung jawab | Tool | Model | Alasan pemilihan | Terbukti? |
+|---|---|---|---|---|---|
+| Perancangan & kritik model data | Irgiyansyah (SDD BAB 4) | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
+| Menulis migrasi skema | Rayvaldo | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
+| Aturan bisnis (skoring, margin) | Irgiyansyah | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
+| Aturan bisnis (routing approval, audit) | Luthfi | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
+| CRUD & endpoint rutin | Rayvaldo | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
+| Komponen UI per peran (shell, auth, AO) | Aldi | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
+| Integrasi HTTP ke mock SLIK + jalur error | Yulio Zaki | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
+| Menulis test dari AC | Soleh | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
+| Review kode / cari bug sebelum PR | Soleh (gerbang) + Luthfi (merge) | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
+| docker-compose & CI | Soleh | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
+| Seed & data uji | Irgiyansyah (parameter) + Yulio (SLIK) | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
+| Dokumentasi (SRS Yulio · SDD Irgi · ADR Luthfi) | Yulio Zaki / Irgiyansyah / Luthfi | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
+| Debugging galat runtime | pemilik lapisan yang bersangkutan | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
 
 ---
 

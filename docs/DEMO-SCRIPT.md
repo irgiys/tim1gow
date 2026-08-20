@@ -1,7 +1,7 @@
 # DEMO-SCRIPT — Skrip Demo iMitra
 
-**Tim**: `<!-- ISI: nama tim -->`
-**Pemilik berkas**: QA / Verification — `<!-- ISI: nama -->`
+**Tim**: iMitra Tim 1
+**Pemilik berkas**: QA / Verification — Soleh
 **Jadwal demo**: Jumat 21 Agustus, 15 menit demo + 10 menit tanya jawab
 
 ---
