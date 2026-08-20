@@ -1,7 +1,7 @@
 # TRACEABILITY — FR → AC → Endpoint → Test → PR
 
 **Tim**: iMitra Tim 1
-**Terakhir diperbarui**: 2026-08-20 10:30
+**Terakhir diperbarui**: 2026-08-20 13:20
 
 ---
 
@@ -48,14 +48,14 @@ atau `Done (tanpa test)` dan jelaskan di `README.md` bagian 5.
 | FR-03 | Upload & Verifikasi Dokumen | P0 | AC-03 |  |  |  |  |
 | FR-04 | Survei Lapangan (OTS) | P0 | AC-04 |  |  |  |  |
 | FR-05 | SLIK Check | P0 | AC-05, AC-06 |  |  |  |  |
-| FR-06 | Skoring Kelayakan Mikro | P0 | AC-06, AC-07, AC-08 |  |  |  |  |
-| FR-07 | Perhitungan Margin / Nisbah | P0 | AC-09 |  |  |  |  |
+| FR-06 | Skoring Kelayakan Mikro | P0 | AC-06, AC-07, AC-08 | *(belum; service siap, handler milik FR-06 UI)* | `backend/internal/service/skoring_service_test.go` | #5 | In Progress |
+| FR-07 | Perhitungan Margin / Nisbah | P0 | AC-09 | *(belum; service siap)* | `backend/internal/service/margin_service_test.go` | #5 | In Progress |
 | FR-08 | Approval Berjenjang | P0 | AC-10, AC-11 |  |  |  |  |
 | FR-09 | Audit Trail | P0 | AC-08, AC-12, AC-13 |  |  |  |  |
 | FR-10 | Pembiayaan Kelompok (Majelis) | P1 | AC-14 |  |  |  |  |
 | FR-11 | Notifikasi Perubahan Status | P1 | — |  |  |  |  |
 | FR-12 | Dashboard Pipeline | P1 | — |  |  |  |  |
-| FR-13 | Parameter Terkonfigurasi | P1 | AC-15 |  |  |  |  |
+| FR-13 | Parameter Terkonfigurasi | P1 | AC-15 | *(CRUD ADM belum; tabel & migrasi siap)* | `skoring_service_test.go` (`TestHitung_AC15_UbahBobotLangsungBerlaku`), `margin_service_test.go` (`TestValidasi_AC15_UbahRentangLangsungBerlaku`) | #5 | In Progress |
 | FR-14 | Simulasi angsuran murabahah & proyeksi bagi hasil musyarakah | P2 | — |  |  |  |  |
 | FR-15 | Ekspor daftar pengajuan ke CSV | P2 | — |  |  |  |  |
 | FR-16 | Mode draft offline untuk AO di lapangan | P2 | — |  |  |  |  |
