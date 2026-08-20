@@ -1,7 +1,7 @@
 # TRACEABILITY — FR → AC → Endpoint → Test → PR
 
 **Tim**: iMitra Tim 1
-**Terakhir diperbarui**: 2026-08-20 15.30 (Gate 2) — kolom BR & Ringkasan Risiko diverifikasi QA terhadap kode nyata
+**Terakhir diperbarui**: 2026-08-20 16.55 (Gate 2) — kolom BR & Ringkasan Risiko diverifikasi QA terhadap kode nyata; seluruh suite backend (`go test ./... -count=1`) dijalankan hijau, termasuk `internal/httpapi`
 
 ---
 

@@ -305,7 +305,11 @@ yang bisa diulang orang lain.
   benar-benar menguji sesuatu. Verifikasi akhir dijalankan nyata, bukan diasumsikan:
   `go test ./internal/service/... -count=1` hijau (47 subtest), `go vet` bersih, `gofmt` bersih.
   Go tidak tersedia di mesin QA, jadi Go 1.22.12 portable dipasang ke direktori temp — versinya
-  disamakan dengan `go 1.22` di `go.mod`, bukan versi terbaru.
+  disamakan dengan `go 1.22` di `go.mod`, bukan versi terbaru. Percobaan pertama menjalankan
+  seluruh suite gagal karena `proxy.golang.org` diputus jaringan kantor; setelah dialihkan ke
+  mirror (`GOPROXY=https://goproxy.io`), **seluruh** suite backend dijalankan dan hijau —
+  `internal/service` **dan** `internal/httpapi` (yang sebelumnya tidak bisa diuji lokal),
+  plus `go build ./...` dan `go vet ./...` bersih.
 - **Tindakan**: keempat baris diturunkan statusnya beserta alasannya (`b9adbe8`). BR-01 dan
   BR-12 lalu benar-benar ditutup (`ef8f775`): 8 test, masing-masing dua arah sesuai Larangan 18
   (4jt/4.999.999 **ditolak** dan 5jt/500jt **diterima**; batas diuji tepat di tepinya). Batas
@@ -313,6 +317,13 @@ yang bisa diulang orang lain.
   di-seed lewat migrasi **baru** `000004` — bukan mengubah `000002` yang sudah di-merge
   (Larangan 2) — dengan `ON CONFLICT DO NOTHING` (Larangan 19). Aturan pengisian tabel BR
   ditulis eksplisit di komentar berkas supaya tidak terulang.
+- **Temuan sampingan (belum ditindak, sengaja di luar lingkup PR ini)**: setelah seluruh suite
+  bisa dijalankan, `go build ./...` memperbaiki `backend/go.mod` sendiri — `github.com/lib/pq`
+  tercatat sebagai `// indirect` padahal diimpor langsung oleh
+  `internal/repository/parameter_repository_db.go`. CI tidak menjalankan `go mod tidy`, jadi ini
+  tidak membuat CI merah dan tidak terlihat oleh siapa pun. Perubahan `go.mod` dikembalikan
+  supaya diff PR QA tetap bersih (satu PR satu tujuan); dilaporkan ke pemilik `go.mod` untuk
+  PR terpisah.
 - **Pelajaran**: **kolom "Test" pada tabel traceability adalah klaim, bukan bukti.** Menunjuk
   nama berkas test tidak membuktikan apa pun — yang membuktikan adalah nama fungsi test dan
   isi assertion-nya. Tiga dari empat kesalahan di atas berbentuk sama: kolom test diisi berkas
