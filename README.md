@@ -233,49 +233,78 @@ Alasan pemilihan ada di [`docs/adr/0001-pilihan-stack.md`](docs/adr/0001-pilihan
 
 ## 4. Status Functional Requirements
 
-<!-- ISI: kolom Status dan PR. Kolom FR / Requirement / Prioritas sudah benar sesuai brief §3
-     — jangan diubah, penilai mencocokkannya.
-     Nilai Status yang diizinkan, pilih satu:
+<!-- Kolom FR / Requirement / Prioritas pre-isi dari brief §3 — jangan diubah, penilai
+     mencocokkannya.
+
+     Nilai Status yang diizinkan pada tag v1.0.0, pilih satu:
        - Selesai & teruji  : lolos AC terkait, ada test otomatis, sudah di-merge ke main
        - Selesai           : jalan dan di-merge, tetapi belum ada test otomatis
        - Sebagian          : hanya sebagian AC terpenuhi. WAJIB dijelaskan di bagian 5
        - Tidak dikerjakan  : sengaja dibuang. WAJIB dijelaskan di bagian 5
-     Jangan pakai "In progress" di tag v1.0.0 — pada saat itu tidak ada lagi yang sedang jalan.
-     Kolom PR: nomor PR yang menyelesaikannya, mis. #14, #21.
-     Perbarui tabel ini setiap kali PR di-merge, bukan sekali di akhir. -->
+
+     "Belum mulai" di bawah adalah status SEMENTARA selama pengerjaan, bukan nilai yang
+     boleh bertahan sampai tag v1.0.0 — pada saat itu tidak ada lagi yang sedang jalan.
+
+     Aturan pengisian yang kami sepakati (QA): sebuah baris hanya boleh "Selesai & teruji"
+     kalau endpoint/layarnya benar-benar terdaftar DAN ada test yang menguji AC-nya. Kalau
+     hanya service-nya siap tetapi endpoint belum ada, itu "Sebagian" — bukan "Selesai".
+
+     Siapa yang mengisi: setiap orang memperbarui baris FR-nya saat PR-nya di-merge
+     (AGENTS.md bagian 7, checklist sebelum membuka PR), bukan QA di akhir. Kolom PR diisi
+     nomor PR yang benar-benar me-merge commit-nya ke main — periksa dengan
+     `git log --merges --ancestry-path <commit>..origin/main`, jangan menebak. -->
 
 ### P0 — WAJIB (batas lulus fungsional)
 
 | FR | Requirement | Prioritas | Status | PR |
 |---|---|---|---|---|
-| FR-01 | Autentikasi & Otorisasi Berbasis Peran | P0 |  |  |
-| FR-02 | Pengajuan Pembiayaan Mikro | P0 |  |  |
-| FR-03 | Upload & Verifikasi Dokumen | P0 |  |  |
-| FR-04 | Survei Lapangan (OTS) | P0 |  |  |
-| FR-05 | SLIK Check | P0 |  |  |
-| FR-06 | Skoring Kelayakan Mikro | P0 |  |  |
-| FR-07 | Perhitungan Margin / Nisbah | P0 |  |  |
-| FR-08 | Approval Berjenjang | P0 | Selesai & teruji | #6 |
-| FR-09 | Audit Trail | P0 | Selesai & teruji | #6 |
+| FR-01 | Autentikasi & Otorisasi Berbasis Peran | P0 | Sebagian | #6 |
+| FR-02 | Pengajuan Pembiayaan Mikro | P0 | Sebagian | (branch `Rayvaldo`) |
+| FR-03 | Upload & Verifikasi Dokumen | P0 | Belum mulai | — |
+| FR-04 | Survei Lapangan (OTS) | P0 | Belum mulai | — |
+| FR-05 | SLIK Check | P0 | Belum mulai | (branch `branch-yulio`) |
+| FR-06 | Skoring Kelayakan Mikro | P0 | Sebagian | #4 |
+| FR-07 | Perhitungan Margin / Nisbah | P0 | Sebagian | #4 |
+| FR-08 | Approval Berjenjang | P0 | Selesai & teruji | #8 |
+| FR-09 | Audit Trail | P0 | Selesai & teruji | #8 |
 
 ### P1 — SEHARUSNYA (nilai penuh butuh ini)
 
 | FR | Requirement | Prioritas | Status | PR |
 |---|---|---|---|---|
-| FR-10 | Pembiayaan Kelompok (Majelis) | P1 |  |  |
-| FR-11 | Notifikasi Perubahan Status | P1 |  |  |
-| FR-12 | Dashboard Pipeline | P1 |  |  |
-| FR-13 | Parameter Terkonfigurasi | P1 |  |  |
+| FR-10 | Pembiayaan Kelompok (Majelis) | P1 | Belum mulai | — |
+| FR-11 | Notifikasi Perubahan Status | P1 | Belum mulai | — |
+| FR-12 | Dashboard Pipeline | P1 | Belum mulai | — |
+| FR-13 | Parameter Terkonfigurasi | P1 | Sebagian | #4 |
 
 ### P2 — BOLEH (hanya kalau P0 dan P1 tuntas dan teruji)
 
 | FR | Requirement | Prioritas | Status | PR |
 |---|---|---|---|---|
-| FR-14 | Simulasi angsuran murabahah & proyeksi bagi hasil musyarakah | P2 |  |  |
-| FR-15 | Ekspor daftar pengajuan ke CSV | P2 |  |  |
-| FR-16 | Mode draft offline untuk AO di lapangan | P2 |  |  |
-| FR-17 | Deteksi lokasi palsu (mock location) pada survei lapangan | P2 |  |  |
-| FR-18 | Laporan Turn-Around Time per tahap dan per petugas | P2 |  |  |
+| FR-14 | Simulasi angsuran murabahah & proyeksi bagi hasil musyarakah | P2 | Belum mulai | — |
+| FR-15 | Ekspor daftar pengajuan ke CSV | P2 | Belum mulai | — |
+| FR-16 | Mode draft offline untuk AO di lapangan | P2 | Belum mulai | — |
+| FR-17 | Deteksi lokasi palsu (mock location) pada survei lapangan | P2 | Belum mulai | — |
+| FR-18 | Laporan Turn-Around Time per tahap dan per petugas | P2 | Belum mulai | — |
+
+**Dasar penilaian status di atas** (diverifikasi QA terhadap kode di `main`, bukan dari rencana —
+lihat `docs/TRACEABILITY.md` untuk penelusuran per AC dan per BR):
+
+| FR | Yang sudah ada | Yang belum |
+|---|---|---|
+| FR-01 | Fondasi frontend: `app/login`, `lib/auth.ts`, `lib/apiClient.ts`, `components/GuardPeran.tsx` | **Endpoint login & middleware peran di server belum ada.** Guard di UI bukan otorisasi (`AGENTS.md` Larangan 6), jadi AC-02 (403 dari API) belum bisa dibuktikan |
+| FR-02 | `service/pengajuan_service.go`: nomor referensi `IMT-YYYYMMDD-NNNN` (BR-12) + batas plafon (BR-01), 8 test | Endpoint `POST /api/pengajuan` belum ada; repository nomor referensi masih fake |
+| FR-05 | — | `internal/slik/` dan `mock-slik/` belum ada, sehingga jalur error E-1 (503) dan E-2 (404) belum bisa didemokan |
+| FR-06 | `skoring_service.go` + `skoring_komponen.go`, rincian 4 komponen (BR-08), 8 test termasuk AC-06/AC-07 | Endpoint skoring & layar ANL belum ada. Rincian komponen **belum tersimpan** — tabel `komponen_skor` belum ada di migrasi |
+| FR-07 | `margin_service.go`, blokir margin di luar rentang (BR-06), 6 test termasuk AC-09 | Endpoint perhitungan margin belum ada |
+| FR-08 | 3 endpoint approval, routing berjenjang (BR-02), maker≠approver (BR-09), 6 test | Layar approval di frontend belum ada |
+| FR-09 | 2 endpoint audit (append-only, tanpa PUT/PATCH/DELETE), 4 test termasuk AC-13 | Layar audit trail di frontend belum ada |
+| FR-13 | Tabel `parameter_skoring`, `ambang_approval`, `rentang_margin`, `parameter_umum` + seed idempoten; nilai dibaca dari data setiap kali hitung (AC-15 terbukti lewat test) | Endpoint CRUD ADM dan layar `app/(adm)/parameter` belum ada |
+
+Nilai `Belum mulai` tidak ada dalam daftar status yang diizinkan untuk tag `v1.0.0`. Sebelum
+code freeze, setiap baris `Belum mulai` **wajib** berubah menjadi `Sebagian`, `Selesai`, atau
+`Tidak dikerjakan` dengan penjelasan di bagian 5 — meninggalkannya apa adanya bernilai negatif
+(brief §11 Gate 3 dan §12).
 
 Penelusuran rinci FR → endpoint → test → PR ada di [`docs/TRACEABILITY.md`](docs/TRACEABILITY.md).
 
