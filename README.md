@@ -28,7 +28,7 @@
 | Yulio Zaki | Backend Engineer — auth & integrasi SLIK | FR-01, FR-05, mock SLIK | https://github.com/yuliozakik |
 | Rayvaldo | Backend Engineer — pengajuan & dokumen | FR-02, FR-03, FR-04 | `<!-- ISI: URL akun -->` |
 | Aldi | AI Workflow Officer + Frontend Engineer | FR-03/FR-04/FR-08 (UI), FR-11 | https://github.com/aldiariq/ |
-| Soleh | QA / Verification | FR-12, test AC-01…AC-15 | `<!-- ISI: URL akun -->` |
+| Soleh | QA / Verification | FR-12, test AC-01…AC-15 | https://github.com/mshcode89 |
 
 **Pembagian tanggung jawab non-koding** (satu berkas = satu pemilik tunggal; orang lain
 mengusulkan lewat PR, supaya tidak ada konflik merge pada tabel markdown):

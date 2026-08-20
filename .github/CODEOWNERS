@@ -62,7 +62,7 @@
 # ---------------------------------------------------------------------------
 # Test hidup berdampingan dengan kode (*_test.go), jadi QA didaftarkan pada
 # direktori test integrasi; test unit ikut pemilik paketnya.
-/backend/test/                  @<!-- ISI: username Soleh (QA) -->
+/backend/test/                  @mshcode89
 
 # ---------------------------------------------------------------------------
 # Infrastruktur & rilis
@@ -85,7 +85,7 @@
 /docs/adr/                      @<!-- ISI: username Luthfi (Tech Lead) -->
 /docs/SRS-iMitra.md             @yuliozakik
 /docs/SDD-iMitra.md             @irgiys
-/docs/TRACEABILITY.md           @<!-- ISI: username Soleh (QA) -->
-/docs/DEMO-SCRIPT.md            @<!-- ISI: username Soleh (QA) -->
-/README.md                      @<!-- ISI: username Soleh (QA) -->
-/fixtures/                      @<!-- ISI: username Soleh (QA) -->
+/docs/TRACEABILITY.md           @mshcode89
+/docs/DEMO-SCRIPT.md            @mshcode89
+/README.md                      @mshcode89
+/fixtures/                      @mshcode89
