@@ -2,7 +2,7 @@
 
 **Tim**: iMitra Tim 1
 **Pemilik berkas**: AI Workflow Officer — Aldi
-**Terakhir diperbarui**: 2026-08-20 10:30
+**Terakhir diperbarui**: 2026-08-20 11:45
 
 > Target panjang: satu sampai dua halaman. Ini dokumen **keputusan**, bukan laporan.
 > Bedanya dengan `AI-DEVLOG.md`: devlog mencatat kejadian satu per satu, berkas ini mencatat
@@ -11,16 +11,17 @@
 > dengan apa yang **ternyata** terjadi. Perbedaan antara dugaan awal dan kenyataan justru
 > bagian yang paling menarik untuk penilai — jangan dihapus, catat sebagai revisi.
 
+**Cara membaca penanda di berkas ini**
+
+| Penanda | Arti |
+|---|---|
+| *(belum disetor)* | Anggota yang bersangkutan belum menyetor 3 barisnya. Bukan berarti tidak dipakai — berarti kami belum punya datanya, dan kami tidak mengarang. |
+| *(belum diamati)* | Tool dipakai, tetapi kami belum punya pengamatan yang cukup spesifik untuk dituliskan. Diisi saat istirahat makan. |
+| Kolom "Terbukti?" | Sengaja kosong sampai Jumat. Mengisinya sekarang berarti mengarang. |
+
 ---
 
 ## 1. Tugas → Tool/Model → Alasan
-
-<!-- ISI: satu baris per jenis tugas. Hapus baris yang tidak Anda kerjakan, tambahkan yang
-     kurang. Kolom "Alasan" harus berisi alasan teknis yang spesifik, bukan "lebih bagus".
-     Contoh alasan yang bernilai: "patuh pada format tabel yang kami minta", "konteks
-     panjang cukup untuk melampirkan SRS + skema sekaligus", "autocomplete di dalam berkas
-     lebih cepat daripada bolak-balik ke chat untuk pekerjaan mekanis".
-     Kolom "Terbukti?" diisi pada Jumat: Ya / Tidak / Diganti ke X. -->
 
 Kolom **Penanggung jawab** mengikuti pembagian peran di `README.md` bagian 1 dan pemilik
 lapisan kode di `AGENTS.md` bagian 3 — satu tugas satu orang, supaya tidak ada dua orang
@@ -28,115 +29,122 @@ mengedit berkas yang sama.
 
 | Tugas | Penanggung jawab | Tool | Model | Alasan pemilihan | Terbukti? |
 |---|---|---|---|---|---|
-| Perancangan & kritik model data | Irgiyansyah (SDD BAB 4) | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Menulis migrasi skema | Rayvaldo | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Aturan bisnis (skoring, margin) | Irgiyansyah | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Aturan bisnis (routing approval, audit) | Luthfi | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| CRUD & endpoint rutin | Rayvaldo | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Komponen UI per peran (shell, auth, AO) | Aldi | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Integrasi HTTP ke mock SLIK + jalur error | Yulio Zaki | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Menulis test dari AC | Soleh | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Review kode / cari bug sebelum PR | Soleh (gerbang) + Luthfi (merge) | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| docker-compose & CI | Soleh | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Seed & data uji | Irgiyansyah (parameter) + Yulio (SLIK) | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Dokumentasi (SRS Yulio · SDD Irgi · ADR Luthfi) | Yulio Zaki / Irgiyansyah / Luthfi | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Debugging galat runtime | pemilik lapisan yang bersangkutan | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
+| Perancangan & kritik model data | Irgiyansyah (SDD BAB 4) | Hermes IDE | Claude Opus | Konteks cukup panjang untuk melampirkan `AGENTS.md` utuh + brief §10 + `SETUP-SPRINT-0.md` sekaligus, sehingga kritik model diuji terhadap AC-14 dengan angka, bukan terhadap prosa saja (lihat DEVLOG-01) |  |
+| Menulis migrasi skema | Rayvaldo | *(belum disetor)* | *(belum disetor)* | *(belum disetor)* |  |
+| Aturan bisnis (skoring, margin) | Irgiyansyah | *(belum disetor)* | *(belum disetor)* | *(belum disetor)* |  |
+| Aturan bisnis (routing approval, audit) | Luthfi | *(belum disetor)* | *(belum disetor)* | *(belum disetor)* |  |
+| CRUD & endpoint rutin | Rayvaldo | *(belum disetor)* | *(belum disetor)* | *(belum disetor)* |  |
+| Komponen UI per peran (shell, auth, AO) | Aldi | Hermes IDE | Claude Opus | Agen bisa menjalankan `tsc`, `next build`, `eslint`, dan `curl` sendiri lalu membaca keluarannya, sehingga fondasi frontend diverifikasi hijau **sebelum** commit, bukan diserahkan ke CI |  |
+| Integrasi HTTP ke mock SLIK + jalur error | Yulio Zaki | *(belum disetor)* | *(belum disetor)* | *(belum disetor)* |  |
+| Menulis test dari AC | Soleh | *(belum disetor)* | *(belum disetor)* | *(belum disetor)* |  |
+| Review kode / cari bug sebelum PR | Soleh (gerbang) + Luthfi (merge) | *(belum disetor)* | *(belum disetor)* | *(belum disetor)* |  |
+| docker-compose & CI | Soleh | *(belum disetor)* | *(belum disetor)* | *(belum disetor)* |  |
+| Seed & data uji | Irgiyansyah (parameter) + Yulio (SLIK) | *(belum disetor)* | *(belum disetor)* | *(belum disetor)* |  |
+| Dokumentasi (SRS Yulio · SDD Irgi · ADR Luthfi) | Yulio Zaki / Irgiyansyah / Luthfi | Hermes IDE | Claude Opus | Patuh pada format tabel yang diminta dan bisa menghitung sendiri placeholder `<!-- ISI -->` per berkas, jadi tidak ada bagian yang terlewat karena lupa |  |
+| Debugging galat runtime | pemilik lapisan yang bersangkutan | *(belum disetor)* | *(belum disetor)* | *(belum disetor)* |  |
 
 ---
 
 ## 2. Cara Kami Memberi Konteks ke AI
 
-<!-- ISI: bagian ini yang membedakan tim yang memakai AI sebagai alat rekayasa dari tim yang
-     memakainya sebagai mesin tebak. Jawab konkret, bukan prinsip umum. -->
-
 **Yang selalu dilampirkan** (dan mengapa):
 
 | Yang dilampirkan | Untuk tugas apa | Kenapa |
 |---|---|---|
-| `AGENTS.md` | `<!-- ISI -->` | `<!-- ISI -->` |
-| Bagian brief yang relevan (mis. Tabel 4.3) | `<!-- ISI -->` | `<!-- ISI -->` |
-| AC terkait, apa adanya | `<!-- ISI -->` | `<!-- ISI -->` |
-| Skema / berkas migrasi | `<!-- ISI -->` | `<!-- ISI -->` |
-| Berkas yang akan diubah, utuh | `<!-- ISI -->` | `<!-- ISI -->` |
-| ADR yang sudah diputuskan | `<!-- ISI -->` | `<!-- ISI -->` |
+| `AGENTS.md` | Semua tugas yang menghasilkan kode atau menyentuh struktur repo | Memuat stack + versi terkunci (bagian 2), tabel penempatan kode (bagian 3), dan 17 larangan. Tanpa ini agen menaruh aturan bisnis di handler dan menaikkan versi dependensi |
+| Bagian brief yang relevan (mis. Tabel 4.3) | Skoring (FR-06), margin/nisbah (FR-07), routing approval (FR-08) | Angka ambang harus berasal dari brief lalu **disimpan sebagai data**. Melampirkan tabelnya membuat agen tahu nilainya tanpa punya alasan menuliskannya sebagai konstanta |
+| AC terkait, apa adanya | Penulisan test, dan setiap FR sebelum kodenya ditulis | Test wajib diturunkan dari AC, bukan dari kode yang baru ditulis (`AGENTS.md` bagian 7 Definition of Done). Menempel AC apa adanya mencegah agen menulis test yang hanya mencerminkan implementasinya sendiri |
+| Skema / berkas migrasi | Repository, query, seed | Agen tidak boleh menebak nama tabel/kolom. Salah nama kolom baru terlihat saat runtime, jauh setelah review |
+| Berkas yang akan diubah, utuh | Semua perubahan pada berkas yang sudah ada | Potongan sebagian membuat agen menulis ulang bagian yang tidak diminta dan menghapus komentar aturan yang sudah ada |
+| ADR yang sudah diputuskan | Usulan arsitektur apa pun | Agen tidak boleh mengusulkan hal yang bertentangan dengan ADR `Accepted` tanpa ADR baru (`AGENTS.md` bagian 1) |
+| `README.md` bagian 1 (pembagian peran & pemilik berkas) | Semua tugas dokumentasi | Supaya agen tidak menyunting berkas milik orang lain dan memicu konflik merge pada tabel markdown |
 
-**Yang sengaja TIDAK dilampirkan**: `<!-- ISI: mis. seluruh repo sekaligus — karena konteks
-yang terlalu luas membuat keluaran menyentuh berkas yang tidak diminta. Atau: data nasabah,
-walaupun fiktif, di luar fixtures resmi. -->`
+**Yang sengaja TIDAK dilampirkan**:
+
+- **Seluruh repo sekaligus.** Konteks terlalu luas membuat keluaran menyentuh berkas yang
+  tidak diminta — termasuk `docker-compose.yml`, `ci.yml`, dan `AGENTS.md` yang menurut
+  Larangan 14 hanya boleh diubah lewat PR terpisah.
+- **Data nasabah di luar `fixtures/nasabah-uji.csv`.** Tidak ada NIK karangan di prompt,
+  supaya tidak ada NIK karangan yang lolos ke seed, test, atau contoh di dokumen (BR-11).
+- **Isi `.env` siapa pun.** Hanya `.env.example` dengan placeholder (Larangan 10).
 
 **Batasan yang selalu kami sebut eksplisit di prompt**:
 
-<!-- ISI: daftar kalimat batasan yang tim pakai berulang. Ini "pustaka prompt" tim, dan
-     AI Workflow Officer yang menjaganya. Contoh bentuk yang berguna:
-     - "parameter dibaca dari tabel X, jangan hardcode"
-     - "jangan tambah dependensi; pakai yang sudah ada di manifest"
-     - "jelaskan rencana dulu dalam maksimal 10 baris, jangan tulis kode sebelum saya setuju"
-     - "maksimal 150 baris; kalau lebih, pecah jadi langkah" -->
+- "Parameter dibaca dari tabel `parameter_skoring` / `ambang_approval` / `rentang_margin`.
+  Jangan hardcode, termasuk sebagai nilai default dan termasuk di dalam test."
+- "Jangan tambah dependensi. Pakai yang sudah ada di `go.mod` / `package.json`; kalau memang
+  perlu, usulkan dulu beserta alternatifnya dan tunggu persetujuan Tech Lead."
+- "Jelaskan rencana dulu maksimal 10 baris. Jangan tulis kode sebelum saya setuju."
+- "Maksimal ~200 baris per keluaran. Kalau lebih, pecah jadi tahap bernomor."
+- "Kegagalan tidak boleh dianggap sukses: jangan `catch` kosong, jangan isi nilai default
+  saat panggilan gagal, khususnya di jalur SLIK."
+- "Jangan tulis NIK, nomor dokumen, atau path foto ke log, pesan error, atau URL. Pakai id
+  internal pengajuan untuk korelasi."
+- "Setelah selesai, jalankan lint + test + build dan tunjukkan keluaran aslinya. Jangan
+  laporkan 'seharusnya lolos'."
 
-- `<!-- ISI -->`
-- `<!-- ISI -->`
-- `<!-- ISI -->`
+**Pola prompt yang paling sering berhasil** — dua pola, keduanya sudah dipakai hari ini:
 
-**Pola prompt yang paling sering berhasil**: `<!-- ISI: satu atau dua pola, tulis bentuknya
-supaya anggota lain bisa memakainya. -->`
+1. **"Turunkan dari berkas, jangan simpulkan dari prosa."** Bentuknya: *"Baca `X` dan `Y`
+   lebih dulu, lalu jawab hanya dari apa yang tertulis di sana. Kalau sebuah fakta tidak ada
+   di kedua berkas itu, katakan tidak ada — jangan menyimpulkan dari brief."* Pola ini lahir
+   dari DEVLOG-01, di mana inferensi agen atas prosa brief terdengar kuat tetapi salah.
+2. **"Bertahap dengan gerbang verifikasi."** Bentuknya: *"Kerjakan tahap 1 saja, jalankan
+   lint + build, tunjukkan keluarannya, baru lanjut tahap 2."* Dipakai saat membangun fondasi
+   frontend: scaffold → `lib/` → `components/` → route, dengan `tsc`/`eslint`/`next build`
+   dijalankan di antaranya. Keluaran besar sekali jalan tidak bisa direview baris per baris
+   dalam tekanan waktu.
 
-**Pola prompt yang kami hentikan**: `<!-- ISI: dan apa yang salah dengannya. Rujuk nomor
-DEVLOG kalau ada. -->`
+**Pola prompt yang kami hentikan**: meminta agen "lengkapi semua placeholder di berkas ini"
+tanpa menyebut bagian mana yang **belum punya datanya**. Hasilnya, agen mengisi seluruh tabel
+termasuk kolom yang seharusnya menunggu pengalaman nyata (kolom "Terbukti?", pengamatan per
+tool), dan isian itu terlihat rapi sehingga sulit dibedakan dari fakta. Penggantinya: sebutkan
+eksplisit *"bagian yang belum ada datanya tandai `(belum disetor)`, jangan diisi"*.
 
 ---
 
 ## 3. Pembagian AI vs Manual
 
-<!-- ISI: isi ketiga kolom. Ini bukan pengakuan; ini keputusan rekayasa yang harus punya
-     dasar. Kolom "Dasar keputusan" tidak boleh diisi "lebih cepat" saja — lebih cepat untuk
-     apa, dan dengan risiko apa. -->
-
 | Pekerjaan | AI / Manual / Campuran | Dasar keputusan |
 |---|---|---|
-| Model data & relasi | `<!-- ISI -->` | `<!-- ISI -->` |
-| Migrasi | `<!-- ISI -->` | `<!-- ISI -->` |
-| Perhitungan skor (BR-07, BR-08) | `<!-- ISI -->` | `<!-- ISI -->` |
-| Validasi rentang margin (BR-06) | `<!-- ISI -->` | `<!-- ISI -->` |
-| Routing approval berjenjang (BR-01, BR-02) | `<!-- ISI -->` | `<!-- ISI -->` |
-| Pemisahan maker/checker (BR-09) | `<!-- ISI -->` | `<!-- ISI -->` |
-| Middleware otorisasi | `<!-- ISI -->` | `<!-- ISI -->` |
-| Audit trail append-only | `<!-- ISI -->` | `<!-- ISI -->` |
-| Boilerplate CRUD | `<!-- ISI -->` | `<!-- ISI -->` |
-| Form & tampilan | `<!-- ISI -->` | `<!-- ISI -->` |
-| Test dari AC | `<!-- ISI -->` | `<!-- ISI -->` |
-| Review PR | `<!-- ISI -->` | `<!-- ISI -->` |
+| Model data & relasi | Campuran — manusia merancang, AI **mengkritik** | Kesalahan model data mahal dibatalkan: skema salah pada FR-02 merembet ke FR-10, skoring, dan routing approval. AI dipakai sebagai penantang ("apakah skema ini bisa menghasilkan Rp 240jt → 3 level dan Rp 180jt → 2 level hanya dari data tersimpan?"), bukan sebagai perancang |
+| Migrasi | Campuran — AI menulis SQL, manusia membaca sebelum commit | Migrasi yang sudah masuk `main` tidak boleh diubah (Larangan 2), jadi biaya kesalahan tinggi dan permanen. AI mempercepat penulisan boilerplate `up`/`down`; manusia memverifikasi tipe kolom, constraint, dan indeks |
+| Perhitungan skor (BR-07, BR-08) | Campuran — AI menulis struktur, **angka harapan test dari manusia** | Rumus Σ(skor×bobot)÷Σbobot mudah ditulis, tetapi titik pembulatannya menentukan grade — dan grade menentukan margin. Kalau angka harapan test juga dari AI, test hanya membuktikan AI konsisten dengan dirinya sendiri (brief §13 butir 7) |
+| Validasi rentang margin (BR-06) | Campuran — AI menulis, manusia wajib memeriksa sumber angkanya | Kegagalan khas AI di sini sudah terdokumentasi di brief §14: menuliskan rentang sebagai object literal di dalam service, lengkap dengan test yang lolos. Hijaunya menipu karena test ikut menguji konstanta yang salah |
+| Routing approval berjenjang (BR-01, BR-02) | Campuran — AI menulis, manusia memverifikasi urutan | AC-10 menuntut KC tidak bisa memutuskan sebelum KCP. Ini kondisi urutan yang mudah "hampir benar": kode yang memeriksa keberadaan approval L1 tanpa memeriksa **hasilnya** `APPROVE` akan lolos test yang dangkal |
+| Pemisahan maker/checker (BR-09) | **Manual** | Kontrol perbankan inti. Ditegakkan di server, dan kegagalannya tidak selalu terlihat di UI. Ditulis dan direview manusia, lalu diuji oleh QA dari AC-11 |
+| Middleware otorisasi | **Manual** | AC-02 menguji 403 secara langsung. AI cenderung menghasilkan guard yang benar di jalur bahagia tetapi longgar di kasus tepi (token kedaluwarsa, peran tidak dikenal, endpoint baru yang lupa didaftarkan). Konsekuensi kebocoran di sini paling mahal |
+| Audit trail append-only | Campuran — AI menulis penulisan baris, manusia memastikan **tidak ada** jalur ubah/hapus | Sifat append-only dibuktikan dari **daftar route** (AC-13), bukan dari niat. AI bisa menambahkan endpoint "perbaiki catatan" karena terlihat berguna; itu justru pelanggaran Larangan 8 |
+| Boilerplate CRUD | **AI** | Berulang, punya pola jelas, dan salahnya langsung terlihat di test integrasi. Di sinilah AI memberi penghematan waktu terbesar dengan risiko terendah |
+| Form & tampilan | **AI** | Tidak memuat aturan bisnis (Larangan 17) — UI hanya menampilkan hasil dan pesan dari API. Kesalahan tampilan terlihat langsung di layar dan murah diperbaiki |
+| Test dari AC | Campuran — AI menulis kerangka, **manusia menentukan nilai harapan** | Test wajib diturunkan dari AC, bukan dari kode. Kalau AI membaca implementasi lalu menulis test, test itu hanya mengunci perilaku yang ada, termasuk bug-nya |
+| Review PR | Campuran — AI sebagai pembaca pertama, manusia yang memutuskan | AI berguna untuk menemukan pola terlarang secara mekanis (angka hardcode, `catch` kosong, NIK di log). Keputusan approve tetap manusia, dan approver tidak boleh yang meminta keluaran AI itu |
 
-**Aturan tim tentang ukuran keluaran AI**: `<!-- ISI: mis. "keluaran > 200 baris tidak
-di-merge sebelum dibaca baris per baris oleh orang selain yang meminta". Brief §13 butir 6
-menyarankan mencurigai keluaran besar; tuliskan aturan Anda sendiri. -->`
+**Aturan tim tentang ukuran keluaran AI**: keluaran > 200 baris **tidak** di-merge sebelum
+dibaca baris per baris oleh orang selain yang memintanya (`AGENTS.md` Larangan 13). Kalau
+tugasnya memang besar, agen wajib mengajukan rencana bertahap lebih dulu dan menunggu
+persetujuan — dan setiap tahap diverifikasi (lint/test/build) sebelum tahap berikutnya. Kami
+memilih ini karena keluaran besar yang rapi adalah kombinasi paling berbahaya: terlihat
+selesai, terlalu panjang untuk direview jujur dalam tekanan waktu.
 
-**Aturan tim tentang siapa yang bertanggung jawab atas kode hasil AI**: `<!-- ISI. Ingat
-brief §12: penilai akan menunjuk satu baris acak dan meminta orang yang commit menjelaskan
-apa yang dilakukannya, mengapa, dan apa yang terjadi kalau dihapus. Jawaban "itu dari AI"
-menurunkan nilai. -->`
+**Aturan tim tentang siapa yang bertanggung jawab atas kode hasil AI**: **yang commit yang
+bertanggung jawab, tanpa pengecualian.** Kalau Anda tidak bisa menjelaskan satu baris —
+apa yang dilakukannya, mengapa ada, dan apa yang rusak kalau dihapus — baris itu tidak boleh
+Anda commit. Hapus, atau pahami dulu. Jawaban "itu dari AI" tidak berlaku di review internal
+kami, sama seperti tidak berlaku di penilaian (brief §12). Konsekuensi praktisnya: reviewer
+berhak menunjuk baris acak di PR dan meminta penjelasan sebelum approve.
 
 ---
 
 ## 4. Yang Tidak Kami Percayakan ke AI
 
-<!-- ISI: minimal 3 hal, dengan alasan teknis. Bagian ini dibaca penilai sebagai indikator
-     kedewasaan tim. Jawaban yang lemah: "hal-hal penting". Jawaban yang kuat menyebut
-     mekanisme kegagalannya — mengapa AI cenderung gagal di situ, dan apa akibatnya kalau
-     kegagalan itu lolos ke main. -->
-
 | Yang tidak diserahkan ke AI | Alasan | Bagaimana kami mengerjakannya |
 |---|---|---|
-| `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |
-| `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |
-| `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |
-
-Kandidat yang layak dipertimbangkan — putuskan sendiri, jangan salin mentah:
-
-- Nilai harapan (expected value) di dalam test aturan bisnis. Kalau angka harapan berasal
-  dari AI, test hanya membuktikan AI konsisten dengan dirinya sendiri (brief §13 butir 7).
-- Keputusan arsitektur yang mahal dibatalkan — dicatat di ADR oleh manusia.
-- Penentuan prioritas FR mana yang dibuang di Gate 3.
-- Apa pun yang menyentuh data pribadi (BR-11) dan penegakan otorisasi di server (AC-02).
+| **Nilai harapan (expected value) di dalam test aturan bisnis** | Kalau angka harapan berasal dari AI, test hanya membuktikan AI konsisten dengan dirinya sendiri — bukan konsisten dengan brief. Mekanisme kegagalannya: AI menghitung skor dengan pembulatan di langkah tengah, menulis test dengan hasil hitungannya sendiri, dan test lolos. Grade bergeser satu tingkat, margin ikut bergeser, dan CI tetap hijau (persis kasus di brief §14) | QA menurunkan angka harapan langsung dari AC dan Tabel 4.3 brief, dihitung manual di kertas lebih dulu. Angka itu ditulis ke test sebelum implementasinya ada |
+| **Penegakan otorisasi di server & pemisahan maker/checker (AC-02, BR-09)** | AI menghasilkan guard yang benar di jalur yang diminta, tetapi tidak punya gambaran menyeluruh tentang endpoint mana saja yang ada. Endpoint baru yang lupa didaftarkan tidak menghasilkan galat apa pun — ia hanya terbuka. Kalau ini lolos ke `main`, kebocoran otorisasi tidak terlihat di UI dan baru ketahuan saat penilai mencobanya | Middleware ditulis manusia. Setiap endpoint baru wajib menyertakan test 403 dari peran yang tidak berwenang, dan QA memeriksa daftar route utuh sebagai gerbang sebelum merge |
+| **Apa pun yang menyentuh data pribadi (BR-11)** | AI menambahkan konteks ke pesan galat dan log karena itu praktik baik pada umumnya — dan konteks paling "berguna" yang tersedia justru NIK dan nama nasabah. Kegagalannya sunyi: tidak ada test yang gagal karena log terlalu informatif, dan kebocorannya permanen begitu masuk riwayat log | Log dan pesan error hanya memakai id internal pengajuan. Reviewer khusus mencari NIK/nomor dokumen/path foto pada setiap PR yang menyentuh logging, error handling, atau URL |
+| **Keputusan arsitektur yang mahal dibatalkan** | Agen tidak menanggung biaya migrasi keputusan yang salah, jadi usulannya cenderung optimistis terhadap perubahan besar. Membatalkan pilihan ORM atau bentuk skema di jam ke-7 berarti kehilangan seluruh sisa waktu | Ditulis manusia sebagai ADR di `docs/adr/`, dengan minimal dua alternatif yang ditolak beserta alasannya. AI boleh mengkritik draf ADR, tidak boleh memutuskan |
+| **Penentuan prioritas FR yang dibuang di Gate 3** | Ini keputusan tentang risiko dan sisa waktu tim — informasi yang tidak dimiliki agen. AI cenderung menyarankan menyelesaikan semuanya, yang justru menghasilkan banyak fitur setengah jadi (penalti −5 per fitur) | Diputuskan tim bersama pada Gate 3, ditulis di `README.md` bagian 5 dengan alasan rekayasa |
 
 ---
 
@@ -158,71 +166,70 @@ Kandidat yang layak dipertimbangkan — putuskan sendiri, jangan salin mentah:
 
 ### 5.1 Siapa memakai apa
 
-<!-- ISI: satu baris per anggota. -->
-
 | Anggota | Tool utama | Model yang dipakai | Untuk bagian apa |
 |---|---|---|---|
-|  |  |  |  |
-|  |  |  |  |
-|  |  |  |  |
-|  |  |  |  |
-|  |  |  |  |
-|  |  |  |  |
-|  |  |  |  |
+| Luthfi | *(belum disetor)* | *(belum disetor)* | `AGENTS.md`, ADR, `approval_service.go`, `audit_service.go`, merge PR |
+| Irgiyansyah | Hermes IDE | Claude Opus | Pembagian peran & pemilik berkas (DEVLOG-01), SDD BAB 4–5, skoring & margin, tabel parameter |
+| Yulio Zaki | *(belum disetor)* | *(belum disetor)* | SRS, middleware auth+peran, `internal/slik/`, `mock-slik/` |
+| Rayvaldo | *(belum disetor)* | *(belum disetor)* | Pengajuan, dokumen, survei, `internal/repository/`, migrasi |
+| Aldi | Hermes IDE | Claude Opus | Fondasi `frontend/` (`lib/apiClient.ts`, `lib/auth.ts`, komponen bersama, `app/login`), `AI-WORKFLOW.md`, `AI-DEVLOG.md` |
+| Soleh | *(belum disetor)* | *(belum disetor)* | Test dari AC, `ci.yml`, `docker-compose.yml`, `README.md`, DEMO-SCRIPT |
 
 ### 5.2 Pengamatan per tool
 
-<!-- ISI: isi hanya tool yang benar-benar dipakai. Kolom "Kegagalan khas" adalah yang paling
-     berguna bagi tim Anda sendiri di pekerjaan sehari-hari — dan yang paling meyakinkan
-     bagi penilai bahwa Anda benar-benar mengamati, bukan menyalin kesan umum. -->
-
 | Tool | Paling kuat untuk | Paling lemah untuk | Kegagalan khas yang kami amati | Cara kami menyiasatinya |
 |---|---|---|---|---|
-| 9Router / OmniRouter | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |
-| VSCode + Copilot | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |
-| Hermes IDE | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |
-| Antigravity IDE | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |
-| `<!-- ISI: tool lain -->` | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |
+| Hermes IDE | Pekerjaan yang perlu **membaca keadaan repo lalu memverifikasi dirinya sendiri**: bisa menjalankan `git log`, `tsc`, `eslint`, `next build`, dan `curl` lalu membaca keluaran aslinya. Fondasi frontend (13 berkas) selesai dengan lint/build/type-check hijau sebelum commit, bukan diserahkan ke CI | Fakta tentang **orang** dan kepemilikan berkas. Konteksnya luas, jadi ia menyimpulkan dari prosa brief padahal jawabannya ada di `git log` | (1) DEVLOG-01: menetapkan Tech Lead yang salah dari inferensi brief §1.1 yang terdengar kuat, dan menukar pemilik SRS/SDD — keduanya tidak terdeteksi pemeriksaan otomatis karena tabelnya rapi dan konsisten secara internal. (2) Satu koreksi nama hanya diperbaiki di berkas yang sedang dibuka, bukan di semua berkas yang menyebutnya | Setiap keluaran yang menyebut nama orang atau kepemilikan berkas dicek ke `git log` + tabel riwayat `AGENTS.md` lebih dulu. Untuk koreksi nama, dilacak dengan `grep` ke seluruh repo, bukan per berkas |
+| 9Router / OmniRouter | *(belum diamati)* | *(belum diamati)* | *(belum diamati)* | *(belum diamati)* |
+| VSCode + Copilot | *(belum diamati)* | *(belum diamati)* | *(belum diamati)* | *(belum diamati)* |
+| Antigravity IDE | *(belum diamati)* | *(belum diamati)* | *(belum diamati)* | *(belum diamati)* |
 
 ### 5.3 Uji banding kecil (opsional, tetapi bernilai)
 
-<!-- ISI: kalau memungkinkan, ambil SATU tugas identik dan berikan ke dua tool berbeda,
-     lalu bandingkan. Tugas yang cocok karena punya jawaban benar yang jelas:
-     - implementasi BR-07 (pembulatan hanya di akhir), atau
-     - penanganan SLIK 503 + timeout (harus berhenti, tidak boleh menganggap SLIK bersih)
-     Batasi 15 menit. Kalau tidak sempat, tulis "tidak dilakukan" — jangan mengarang. -->
+**Status**: **belum dilakukan.** Direncanakan pada istirahat makan Jumat, dibatasi 15 menit.
 
-**Tugas yang dibandingkan**: `<!-- ISI -->`
-**Konteks yang diberikan (identik ke keduanya)**: `<!-- ISI -->`
+**Tugas yang akan dibandingkan**: penanganan SLIK 503 + timeout (FR-05). Dipilih karena
+punya jawaban benar yang tegas dan tidak bergantung selera: panggilan yang gagal **harus**
+menghentikan pengajuan, dan **tidak boleh** mengisi kolektibilitas dengan nilai default atau
+menganggap SLIK bersih (`AGENTS.md` Larangan 15). Jawaban salah mudah dikenali, jadi uji ini
+tidak berujung pada debat rasa.
+
+**Konteks yang akan diberikan (identik ke keduanya)**: kontrak mock SLIK `AGENTS.md`
+bagian 5.2, Tabel 4.2 keluaran kolektibilitas, dan AC-05. Tanpa melampirkan kode `internal/slik/`
+yang sudah ada, supaya keduanya menjawab dari requirement, bukan dari implementasi.
 
 | Tool | Keluaran | Benar / salah | Catatan |
 |---|---|---|---|
-| `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |
-| `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |
+| *(belum dilakukan)* |  |  |  |
+| *(belum dilakukan)* |  |  |  |
 
-**Kesimpulan yang kami pakai untuk sisa hackathon**: `<!-- ISI -->`
+**Kesimpulan yang kami pakai untuk sisa hackathon**: *(diisi setelah uji dilakukan; kalau
+sampai code freeze tidak sempat, baris ini tetap ditulis "tidak dilakukan" — tidak dikarang)*
 
 ### 5.4 Apakah `AGENTS.md` terbaca oleh semua tool?
 
-<!-- ISI: ini pertanyaan praktis yang jawabannya sering mengejutkan. Uji dengan cara sederhana:
-     minta agent menyebutkan satu larangan spesifik dari AGENTS.md tanpa Anda melampirkannya.
-     Kalau tidak terbaca otomatis, catat bagaimana Anda menyiasatinya (lampirkan manual,
-     buat berkas penunjuk, atau tempel bagian yang relevan ke awal prompt). -->
+Diuji dengan cara yang disarankan: meminta agen menyebutkan satu larangan spesifik dari
+`AGENTS.md` **tanpa** melampirkan berkasnya.
 
 | Tool | Membaca otomatis? | Nama berkas yang dibacanya | Siasat kalau tidak terbaca |
 |---|---|---|---|
-| `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |
-| `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |
+| Hermes IDE | **Ya** | `AGENTS.md` dan `CLAUDE.md` — keduanya dimuat sebagai konteks proyek di awal sesi, terverifikasi karena agen menyebut Larangan 13 (batas ~200 baris), Larangan 14 (`docker-compose.yml`/`ci.yml`/`AGENTS.md` lewat PR terpisah), dan Larangan 17 (aturan bisnis tidak di `httpapi`) tanpa dilampirkan | Tidak perlu siasat |
+| 9Router / OmniRouter | *(belum diuji)* | — | Kalau tidak terbaca: tempel bagian 2, 3, dan 6 `AGENTS.md` ke awal prompt — ketiganya yang paling sering dilanggar |
+| VSCode + Copilot | *(belum diuji)* | Kandidat: `.github/copilot-instructions.md` — **berkas ini belum ada di repo** | Buat penunjuk satu baris `.github/copilot-instructions.md` berisi "Lihat AGENTS.md". Perlu PR terpisah karena `.github/` bukan efek samping tugas fitur |
+| Antigravity IDE | *(belum diuji)* | Kandidat: `AGENTS.md` (konvensi bersama, lihat `CLAUDE.md`) | Lampirkan manual kalau ternyata tidak terbaca |
+
+**Temuan yang perlu ditindaklanjuti**: `CLAUDE.md` sudah ada sebagai penunjuk ke `AGENTS.md`,
+tetapi **`.github/copilot-instructions.md` belum ada**. Anggota yang memakai Copilot berarti
+bekerja tanpa aturan repo sama sekali. Ini bukan masalah teori: 17 larangan di `AGENTS.md`
+bagian 6 tidak akan terlihat oleh tool itu. Perlu satu PR kecil membuat penunjuk tersebut.
 
 ---
 
 ## 6. Revisi Cara Kerja Selama Hackathon
 
-<!-- ISI: catat setiap kali tim mengubah cara kerjanya dengan AI. Ini bukti pembelajaran
-     — hal yang sama yang dinilai pada evolusi AGENTS.md. -->
-
 | Kapan | Yang diubah | Pemicu (DEVLOG-xx) |
 |---|---|---|
-|  |  |  |
-|  |  |  |
-|  |  |  |
+| 2026-08-20 11.00 | Setiap keluaran agen yang menyebut **nama orang atau kepemilikan berkas** wajib dicek ke `git log` dan tabel riwayat `AGENTS.md` lebih dulu — tidak boleh disimpulkan dari prosa brief | DEVLOG-01 |
+| 2026-08-20 11.00 | Satu koreksi nama/kepemilikan wajib dilacak dengan `grep` ke seluruh repo, bukan hanya diperbaiki di berkas yang sedang dibuka | DEVLOG-01 |
+| 2026-08-20 11.45 | Prompt "lengkapi semua placeholder" dihentikan. Diganti dengan menyebut eksplisit bagian mana yang belum punya data dan wajib ditandai `(belum disetor)` | (dicatat di berkas ini, bagian 2) |
+| 2026-08-20 11.45 | Tugas besar wajib dipecah bertahap dengan gerbang verifikasi (lint/build/test) di antara tahap, bukan satu keluaran besar sekali jalan | (pola dari pembangunan fondasi frontend) |
