@@ -219,17 +219,46 @@ yang bisa diulang orang lain.
   `git log` lebih dulu. Konsekuensi kedua: satu koreksi nama harus dilacak ke semua berkas
   yang menyebutnya, karena agen cenderung memperbaiki hanya berkas yang sedang dibuka.
 
-### [DEVLOG-02] `<!-- ISI: judul -->` (FR-`<!-- ISI -->`)
-- **Waktu**:
-- **Oleh**:
-- **Tool/Model**:
-- **Tugas**:
-- **Cara memberi konteks**:
-- **Keluaran AI**:
-- **Yang salah**:
-- **Cara verifikasi**:
-- **Tindakan**:
-- **Pelajaran**:
+### [DEVLOG-02] Argumen ambang kapasitas bayar tertukar (FR-06, BR-07) — kasus AI salah, halus
+- **Waktu**: 2026-08-20 12:40 – 13:15
+- **Oleh**: Irgiyansyah
+- **Tool/Model**: Hermes IDE (agen dengan akses baca/tulis repo)
+- **Tugas**: Implementasi `skoring_service` (FR-06) dan `margin_service` (FR-07) beserta
+  test dari AC-06, AC-07, AC-09, AC-15. Syarat yang disebut eksplisit: seluruh bobot, ambang,
+  dan rentang **dibaca dari tabel parameter**, tidak boleh muncul sebagai konstanta di kode
+  maupun di dalam test (`AGENTS.md` Larangan 3).
+- **Cara memberi konteks**: melampirkan `AGENTS.md` bagian 3, 4.1, 4.3, dan 5 (termasuk tabel
+  komponen skor brief §4.4), ditambah AC-06/07/09/15 apa adanya. Batasan tambahan: fungsi
+  perhitungan tidak boleh tahu tentang HTTP, dan test AC-15 wajib **mengubah baris parameter
+  di tengah test** lalu memastikan hasilnya berubah.
+- **Keluaran AI**: `skoring_service.go`, `skoring_komponen.go`, `margin_service.go`, plus 13
+  test. Struktur lapisannya benar dan seluruh angka memang dibaca dari repository parameter.
+- **Yang salah**: pada `skorKapasitasBayar`, argumen ambang dibalik —
+  `skorLinearTurun(rasio, k.Batas2, k.Batas1)` alih-alih `(rasio, k.Batas1, k.Batas2)`.
+  Akibatnya rasio angsuran yang **bagus** (0,267 — jauh di bawah batas 0,30) justru diberi
+  skor 0, dan rasio buruk diberi skor penuh. Ini halus karena: fungsi `skorLinearTurun`
+  sendiri benar, tidak ada error, kompilasi lolos, `go vet` lolos, dan skor akhir tetap
+  keluar sebagai angka 0–100 yang tampak masuk akal. Kalau hanya diperiksa "apakah skornya
+  wajar", ini lolos.
+- **Cara verifikasi**: yang menangkapnya adalah test AC-06 — bukan pembacaan kode. Test itu
+  sengaja memuat **kasus pembanding**: data yang sama dijalankan dengan kolektibilitas 1,
+  lalu dipastikan grade-nya lebih baik dari 3. Ketika pembanding ikut menghasilkan grade 3,
+  test gagal dengan pesan *"data pembanding menghasilkan grade 3; kasus uji tidak membuktikan
+  apa pun"* — menandakan bukan aturan kolektibilitasnya yang salah, melainkan skor dasarnya
+  terlalu rendah. Dari situ komponen dilacak satu per satu. Test yang hanya memeriksa
+  `grade >= 3` untuk kolektibilitas 2 akan **lolos** dan bug ini masuk ke `main`.
+- **Tindakan**: urutan argumen diperbaiki dan diberi komentar yang menjelaskan arah
+  perbandingannya ("untuk rasio angsuran, makin kecil makin baik, jadi batas skor penuh
+  adalah nilai yang lebih kecil"), karena inilah tepat sumber kebingungannya. Seluruh 13 test
+  dijalankan ulang di container `golang:1.22-alpine` — lolos, `gofmt` bersih, `go vet` bersih.
+  Sebelum itu `go vet` juga menangkap empat pesan test yang memuat `%` mentah sehingga dibaca
+  sebagai verb format; diperbaiki di commit yang sama.
+- **Pelajaran**: untuk fungsi berambang, **satu test per kasus tidak cukup** — wajib ada
+  kasus pembanding yang membuktikan test itu bisa gagal. Aturan yang kami ambil: setiap test
+  aturan bisnis yang memeriksa "nilai X ditolak" harus disertai kasus "nilai Y diterima",
+  dan sebaliknya. Tanpa itu, fungsi yang selalu menolak akan meloloskan seluruh test
+  penolakan. Pelajaran kedua: `go vet` dijalankan sebelum `go test`, bukan sesudah —
+  ia menangkap kesalahan format yang membuat pesan kegagalan test menyesatkan.
 
 ### [DEVLOG-03] `<!-- ISI: judul -->` (FR-`<!-- ISI -->`)
 - **Waktu**:

@@ -38,6 +38,7 @@
 | 2026-08-20 10:45 | Irgiyansyah | Koreksi pemilik SRS (Yulio Zaki) dan SDD (Irgiyansyah); tambah pembagian `frontend/app/` per route — UI sebuah FR ditulis oleh pemilik aturan bisnis FR itu, Aldi menyiapkan fondasi & me-review, supaya satu Frontend Engineer tidak menjadi penghambat 6 peran | Sprint 0 · brief §10 |
 | 2026-08-20 10:55 | Irgiyansyah | Tetapkan dua approver PR (Luthfi & Irgiyansyah) + isi `.github/CODEOWNERS` per path. Tegaskan larangan menyetujui PR sendiri sebagai cermin git dari BR-09 (maker ≠ checker) | Sprint 0 · brief §8.2 |
 | 2026-08-20 11:10 | Irgiyansyah | Pindahkan peran DevOps / Release dari Soleh (QA) ke Irgiyansyah, beserta kepemilikan `ci.yml`, `docker-compose.yml`, `.env.example`, dan `backend/migrations/`. QA dibiarkan murni sebagai penjaga gerbang supaya tidak memeriksa pekerjaannya sendiri | Sprint 0 · brief §10 · PR #2 di-merge tanpa review |
+| 2026-08-20 13:20 | Irgiyansyah | Tambah Larangan 18 (test aturan bisnis wajib punya kasus pembanding) dan Larangan 19 (seed parameter wajib `ON CONFLICT DO NOTHING`) | DEVLOG-02 |
 |  |  |  |  |
 
 ---
@@ -459,6 +460,13 @@ Agent **tidak boleh**:
     berkas migrasi SQL di `backend/migrations/` (golang-migrate). GORM hanya untuk query.
 17. Menaruh aturan bisnis (skoring, margin, routing approval, guard BR) di `httpapi` (handler),
     middleware, `repository`, atau komponen frontend. Semuanya di `backend/internal/service/`.
+18. Menulis test aturan bisnis yang hanya memeriksa satu arah. Setiap test "nilai X ditolak"
+    wajib disertai kasus pembanding "nilai Y diterima" (dan sebaliknya) — ditambahkan setelah
+    DEVLOG-02, karena fungsi yang argumen ambangnya tertukar meloloskan seluruh test penolakan
+    dan baru tertangkap oleh kasus pembanding.
+19. Menyusun seed dengan `ON CONFLICT DO UPDATE` untuk tabel parameter. Wajib `DO NOTHING`,
+    supaya perubahan bobot yang dibuat ADM saat demo tidak ter-reset diam-diam pada restart —
+    kalau ter-reset, AC-15 justru tidak bisa dibuktikan.
 
 ---
 
