@@ -24,7 +24,7 @@
 | Nama | Peran | Fokus FR | Akun GitHub |
 |---|---|---|---|
 | Irgiyansyah  |  |  | https://github.com/irgiys/  |
-|  |  |  |  |
+| Aldi |  |  | https://github.com/aldiariq/ |
 |  |  |  |  |
 |  |  |  |  |
 |  |  |  |  |
