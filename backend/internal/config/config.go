@@ -25,6 +25,12 @@ type Config struct {
 	// PasswordHashCost adalah cost bcrypt. Nilai kecil mempercepat seed dan
 	// test; produksi memakai nilai lebih tinggi lewat environment.
 	PasswordHashCost int
+	// JWTSecret menandatangani token HS256. Wajib diisi lewat environment;
+	// tidak ada nilai default supaya token tidak pernah ditandatangani dengan
+	// secret yang bisa ditebak (AGENTS.md Larangan 10).
+	JWTSecret string
+	// JWTExpiresIn adalah masa berlaku access token.
+	JWTExpiresIn time.Duration
 }
 
 // Load membaca konfigurasi dari environment. Tidak ada nilai secret yang
@@ -47,6 +53,8 @@ func Load() Config {
 		// variabelnya belum diset, bukan memakai password yang bisa ditebak.
 		SeedDefaultPassword: getEnv("SEED_DEFAULT_PASSWORD", ""),
 		PasswordHashCost:    getInt("PASSWORD_HASH_COST", 10),
+		JWTSecret:           getEnv("JWT_SECRET", ""),
+		JWTExpiresIn:        getDurasi("JWT_EXPIRES_IN", 8*time.Hour),
 	}
 }
 
@@ -108,4 +116,16 @@ func splitCSV(s string) []string {
 		}
 	}
 	return out
+}
+
+// getDurasi membaca durasi bergaya Go ("8h", "30m"). Nilai yang tidak dapat
+// diurai memakai default, bukan 0 — masa berlaku token 0 detik akan membuat
+// setiap login langsung kedaluwarsa dan sangat membingungkan saat demo.
+func getDurasi(key string, def time.Duration) time.Duration {
+	if v, ok := os.LookupEnv(key); ok {
+		if d, err := time.ParseDuration(strings.TrimSpace(v)); err == nil && d > 0 {
+			return d
+		}
+	}
+	return def
 }
