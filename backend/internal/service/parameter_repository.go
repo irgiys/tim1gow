@@ -24,6 +24,12 @@ type ParameterRepository interface {
 
 	// RentangMargin mengembalikan baris rentang_margin untuk satu grade.
 	RentangMargin(grade int) (r domain.RentangMargin, ditemukan bool, err error)
+
+	// AmbangApproval mengembalikan aturan ambang approval untuk nominal total plafon tertentu (Tabel 4.1).
+	AmbangApproval(totalPlafon int64) (ambang domain.AmbangApproval, ditemukan bool, err error)
+
+	// SemuaAmbangApproval mengembalikan seluruh baris ambang_approval.
+	SemuaAmbangApproval() ([]domain.AmbangApproval, error)
 }
 
 // Kunci parameter umum. Ini KUNCI baris, bukan nilainya.

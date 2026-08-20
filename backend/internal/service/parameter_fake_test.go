@@ -15,6 +15,7 @@ type fakeParameterRepo struct {
 	skorSlik map[int]float64
 	umum     map[string]float64
 	rentang  []domain.RentangMargin
+	ambang   []domain.AmbangApproval
 
 	// jumlahBacaKomponen mencatat berapa kali tabel dibaca, dipakai memastikan
 	// service tidak meng-cache parameter antar pemanggilan.
@@ -40,6 +41,11 @@ func newFakeParameterRepo() *fakeParameterRepo {
 			{Grade: 3, SkorMin: 55, SkorMaks: 69, MarginMin: 15.5, MarginMaks: 18.0, NisbahMin: 30, NisbahMaks: 35, DapatDibiayai: true},
 			{Grade: 4, SkorMin: 40, SkorMaks: 54, MarginMin: 18.0, MarginMaks: 21.0, NisbahMin: 35, NisbahMaks: 40, DapatDibiayai: true},
 			{Grade: 5, SkorMin: 0, SkorMaks: 39, DapatDibiayai: false},
+		},
+		ambang: []domain.AmbangApproval{
+			{PlafonMin: 5000000, PlafonMaks: 50000000, Level: []domain.Peran{domain.PeranKCP}},
+			{PlafonMin: 50000001, PlafonMaks: 200000000, Level: []domain.Peran{domain.PeranKCP, domain.PeranKC}},
+			{PlafonMin: 200000001, PlafonMaks: 500000000, Level: []domain.Peran{domain.PeranKCP, domain.PeranKC, domain.PeranKOM}},
 		},
 	}
 }
@@ -74,6 +80,21 @@ func (f *fakeParameterRepo) RentangMargin(grade int) (domain.RentangMargin, bool
 		}
 	}
 	return domain.RentangMargin{}, false, nil
+}
+
+func (f *fakeParameterRepo) AmbangApproval(totalPlafon int64) (domain.AmbangApproval, bool, error) {
+	for _, a := range f.ambang {
+		if totalPlafon >= a.PlafonMin && totalPlafon <= a.PlafonMaks {
+			return a, true, nil
+		}
+	}
+	return domain.AmbangApproval{}, false, nil
+}
+
+func (f *fakeParameterRepo) SemuaAmbangApproval() ([]domain.AmbangApproval, error) {
+	out := make([]domain.AmbangApproval, len(f.ambang))
+	copy(out, f.ambang)
+	return out, nil
 }
 
 // ubahBobot meniru ADM mengubah bobot satu komponen lewat FR-13.
