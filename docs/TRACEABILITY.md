@@ -80,7 +80,7 @@ diverifikasi — **tetapkan kriteria verifikasi Anda sendiri** untuk keduanya da
 
 | BR | Ringkasan | Ditegakkan di | Test | Status |
 |---|---|---|---|---|
-| BR-01 | Plafon di luar Rp 5 juta – Rp 500 juta ditolak saat submit | *(belum)* — `pengajuan_service.go` **belum ada**; `approval_service.go` hanya mencocokkan plafon ke `ambang_approval`, bukan menegakkan batas BR-01 | *(belum)* — `approval_service_test.go` hanya memakai plafon 30jt/120jt/300jt (semua di dalam batas), tidak ada kasus 4jt / 600jt | **Belum** |
+| BR-01 | Plafon di luar Rp 5 juta – Rp 500 juta ditolak saat submit | `backend/internal/service/pengajuan_service.go` (`PastikanPlafonValid`); batas dibaca dari `parameter_umum` (`plafon_minimum`/`plafon_maksimum`), di-seed `migrations/000004` | `internal/service/pengajuan_service_test.go` (`TestPastikanPlafonValid_BR01_BatasBawahDanAtas` — 4jt/4.999.999 ditolak & 5jt/500jt diterima, `..._PesanMenyebutBatas`, `..._BatasDibacaDariParameter`, `..._ParameterKosongTidakMemakaiDefault`) | **Done** |
 | BR-02 | Approval berurutan; level 2 menunggu `APPROVE` level 1 | `backend/internal/service/approval_service.go` | `internal/service/approval_service_test.go` (`TestApproval_AC10_RoutingBerjenjangDanUrutan`), `internal/httpapi/approval_http_test.go` | Done |
 | BR-03 | Skoring butuh dokumen `VERIFIED` + survei `VALID` + SLIK sudah dijalankan | `backend/internal/service/skoring_service.go` | `internal/service/skoring_service_test.go` (`TestPastikanBolehSkoring_BR03`) | Done |
 | BR-04 | Hasil SLIK berlaku 30 hari | *(belum)* — rencana `service/slik_service.go`, berkasnya belum ada |  | Belum |
@@ -91,7 +91,7 @@ diverifikasi — **tetapkan kriteria verifikasi Anda sendiri** untuk keduanya da
 | BR-09 | Maker tidak boleh menjadi approver; ditegakkan di server | `backend/internal/service/approval_service.go` | `internal/service/approval_service_test.go` (`TestApproval_AC11_MakerChecker_BR09`), `internal/httpapi/approval_http_test.go` | Done |
 | BR-10 | Setiap perubahan status punya aktor + timestamp | `backend/internal/service/audit_service.go`, `approval_service.go` | `internal/service/audit_service_test.go` (`TestAudit_AC12_RiwayatLengkapUrutWaktu`) | Done (jalur approval) — transisi FR-02…FR-05 belum ada, jadi belum semua transisi tercakup |
 | BR-11 | NIK & foto dokumen tidak muncul di log, pesan error, atau URL | *(belum)* — helper log terpusat belum ada; saat ini hanya bergantung pada review PR | *(belum)* — `audit_service_test.go` tidak memuat satu pun assertion tentang NIK | **Belum** — pelanggarannya tidak terlihat di jalur bahagia |
-| BR-12 | Nomor referensi `IMT-YYYYMMDD-NNNN` unik, tidak dipakai ulang | Constraint `UNIQUE` sudah ada (`migrations/000003…up.sql:6`); **pembangkit nomornya belum ada** (`pengajuan_service.go` belum ada) | *(belum)* — constraint DB bukan test; format & anti-reuse belum diuji | **Sebagian** |
+| BR-12 | Nomor referensi `IMT-YYYYMMDD-NNNN` unik, tidak dipakai ulang | `backend/internal/service/pengajuan_service.go` (`BuatNomorReferensi`, dibangkitkan di server) + constraint `UNIQUE` (`migrations/000003…up.sql:6`) | `internal/service/pengajuan_service_test.go` (`TestBuatNomorReferensi_BR12_Format`, `..._UrutanDalamSatuHari`, `..._ResetPerTanggal`, `..._NomorPengajuanDitolakTidakDipakaiUlang`) | **Done** — repository nyata (sequence per tanggal) belum ada; saat ini kontraknya diuji lewat fake |
 
 ---
 
@@ -104,6 +104,6 @@ diverifikasi — **tetapkan kriteria verifikasi Anda sendiri** untuk keduanya da
 |---|---|---|---|
 | Berapa FR P0 berstatus Done? | **2 dari 9** — FR-08, FR-09. FR-06 & FR-07 `In Progress` (service + test siap, endpoint belum). FR-01…FR-05 belum mulai |  |  |
 | Berapa FR P0 tanpa file test? | **5 dari 9** — FR-01, FR-02, FR-03, FR-04, FR-05. Kelimanya juga belum ada kodenya, jadi ini risiko jadwal, bukan sekadar kekurangan test |  |  |
-| Berapa BR tanpa test? | **4 dari 12** — BR-01, BR-04, BR-11, BR-12. Ditambah 2 `Sebagian`: BR-08 (rincian belum tersimpan), BR-10 (baru jalur approval) |  |  |
+| Berapa BR tanpa test? | **2 dari 12** — BR-04, BR-11. Ditambah 2 `Sebagian`: BR-08 (rincian belum tersimpan), BR-10 (baru jalur approval). BR-01 & BR-12 ditutup pada sesi ini |  |  |
 | Berapa AC yang sudah pernah dilatih di demo? | **0 dari 15** — kolom "Status latihan" di `DEMO-SCRIPT.md` masih kosong seluruhnya; jalur error E-1…E-5 belum satu pun disiapkan |  |  |
 | Risiko terbesar saat ini | **Alur inti pengajuan belum ada.** FR-02 (pengajuan) dan FR-05 (SLIK) belum mulai, padahal FR-06/07/08 di hilirnya sudah selesai — artinya belum ada satu pun pengajuan yang bisa berjalan `DRAFT` → `APPROVED` untuk didemokan (AC-01, AC-12). Risiko kedua: **BR-11 tanpa penegakan otomatis** — NIK bisa lolos ke log tanpa ada yang menangkapnya, dan `mock-slik/` belum ada sehingga E-1/E-2 (yang brief §13 nyatakan pasti diuji penilai) belum bisa dilatih |  |  |
