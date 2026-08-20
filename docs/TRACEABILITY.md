@@ -50,8 +50,8 @@ atau `Done (tanpa test)` dan jelaskan di `README.md` bagian 5.
 | FR-05 | SLIK Check | P0 | AC-05, AC-06 |  |  |  |  |
 | FR-06 | Skoring Kelayakan Mikro | P0 | AC-06, AC-07, AC-08 | *(belum; service siap, handler milik FR-06 UI)* | `backend/internal/service/skoring_service_test.go` | #5 | In Progress |
 | FR-07 | Perhitungan Margin / Nisbah | P0 | AC-09 | *(belum; service siap)* | `backend/internal/service/margin_service_test.go` | #5 | In Progress |
-| FR-08 | Approval Berjenjang | P0 | AC-10, AC-11 |  |  |  |  |
-| FR-09 | Audit Trail | P0 | AC-08, AC-12, AC-13 |  |  |  |  |
+| FR-08 | Approval Berjenjang | P0 | AC-10, AC-11 | `POST /api/pengajuan/{id}/ajukan-approval`, `POST /api/pengajuan/{id}/approval`, `GET /api/pengajuan/{id}/approval` | `internal/service/approval_service_test.go`, `internal/httpapi/approval_http_test.go` | #6 | Done |
+| FR-09 | Audit Trail | P0 | AC-08, AC-12, AC-13 | `GET /api/pengajuan/{id}/audit`, `GET /api/audit` *(append-only, tanpa PUT/PATCH/DELETE)* | `internal/service/audit_service_test.go`, `internal/httpapi/audit_http_test.go` | #6 | Done |
 | FR-10 | Pembiayaan Kelompok (Majelis) | P1 | AC-14 |  |  |  |  |
 | FR-11 | Notifikasi Perubahan Status | P1 | — |  |  |  |  |
 | FR-12 | Dashboard Pipeline | P1 | — |  |  |  |  |
@@ -76,18 +76,18 @@ diverifikasi — **tetapkan kriteria verifikasi Anda sendiri** untuk keduanya da
 
 | BR | Ringkasan | Ditegakkan di | Test | Status |
 |---|---|---|---|---|
-| BR-01 | Plafon di luar Rp 5 juta – Rp 500 juta ditolak saat submit |  |  |  |
-| BR-02 | Approval berurutan; level 2 menunggu `APPROVE` level 1 |  |  |  |
-| BR-03 | Skoring butuh dokumen `VERIFIED` + survei `VALID` + SLIK sudah dijalankan |  |  |  |
-| BR-04 | Hasil SLIK berlaku 30 hari |  |  |  |
-| BR-05 | Grade 5 tidak dapat diajukan; `REJECTED_SCORING` |  |  |  |
-| BR-06 | Margin/nisbah di luar rentang grade diblokir |  |  |  |
-| BR-07 | Skor akhir = Σ(skor × bobot) ÷ Σbobot, dibulatkan sekali di akhir |  |  |  |
-| BR-08 | Rincian komponen ditampilkan dan disimpan |  |  |  |
-| BR-09 | Maker tidak boleh menjadi approver; ditegakkan di server |  |  |  |
-| BR-10 | Setiap perubahan status punya aktor + timestamp |  |  |  |
-| BR-11 | NIK & foto dokumen tidak muncul di log, pesan error, atau URL |  |  |  |
-| BR-12 | Nomor referensi `IMT-YYYYMMDD-NNNN` unik, tidak dipakai ulang |  |  |  |
+| BR-01 | Plafon di luar Rp 5 juta – Rp 500 juta ditolak saat submit | `backend/internal/service/pengajuan_service.go`, `approval_service.go` | `internal/service/approval_service_test.go` | Done |
+| BR-02 | Approval berurutan; level 2 menunggu `APPROVE` level 1 | `backend/internal/service/approval_service.go` | `internal/service/approval_service_test.go` (`TestApproval_AC10_RoutingBerjenjangDanUrutan`), `internal/httpapi/approval_http_test.go` | Done |
+| BR-03 | Skoring butuh dokumen `VERIFIED` + survei `VALID` + SLIK sudah dijalankan | `backend/internal/service/skoring_service.go` | `internal/service/skoring_service_test.go` (`TestPastikanBolehSkoring_BR03`) | Done |
+| BR-04 | Hasil SLIK berlaku 30 hari | `backend/internal/service/slik_service.go` |  | Belum |
+| BR-05 | Grade 5 tidak dapat diajukan; `REJECTED_SCORING` | `backend/internal/service/approval_service.go`, `skoring_service.go` | `internal/service/approval_service_test.go` (`TestApproval_BR05_Grade5Ditolak`) | Done |
+| BR-06 | Margin/nisbah di luar rentang grade diblokir | `backend/internal/service/margin_service.go` | `internal/service/margin_service_test.go` (`TestValidasi_AC09_MarginDiBawahBatasGrade1Diblokir`) | Done |
+| BR-07 | Skor akhir = Σ(skor × bobot) ÷ Σbobot, dibulatkan sekali di akhir | `backend/internal/service/skoring_service.go` | `internal/service/skoring_service_test.go` (`TestHitung_BR07_RumusSkorAkhir`) | Done |
+| BR-08 | Rincian komponen ditampilkan dan disimpan | `backend/internal/service/skoring_service.go` | `internal/service/skoring_service_test.go` (`TestHitung_AC07_RincianKeempatKomponenTersedia`) | Done |
+| BR-09 | Maker tidak boleh menjadi approver; ditegakkan di server | `backend/internal/service/approval_service.go` | `internal/service/approval_service_test.go` (`TestApproval_AC11_MakerChecker_BR09`), `internal/httpapi/approval_http_test.go` | Done |
+| BR-10 | Setiap perubahan status punya aktor + timestamp | `backend/internal/service/audit_service.go`, `approval_service.go` | `internal/service/audit_service_test.go` (`TestAudit_AC12_RiwayatLengkapUrutWaktu`) | Done |
+| BR-11 | NIK & foto dokumen tidak muncul di log, pesan error, atau URL | Lintas lapisan (`httpapi`, `audit_service`) | `internal/service/audit_service_test.go` | Done |
+| BR-12 | Nomor referensi `IMT-YYYYMMDD-NNNN` unik, tidak dipakai ulang | `pengajuan_service.go` + DB constraint | `backend/migrations/000003_pengajuan_approval_audit.up.sql` | Done |
 
 ---
 
