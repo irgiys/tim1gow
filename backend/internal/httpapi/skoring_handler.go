@@ -30,22 +30,20 @@ func NewSkoringHandler(skoring *service.SkoringService, margin *service.MarginSe
 
 // skoringRequest adalah badan POST /api/pengajuan/{id}/skoring.
 //
-// Nilainya berasal dari data pengajuan, survei, dan hasil SLIK yang sudah
-// tersimpan. Tidak ada NIK di sini: data pribadi tidak ikut mengalir ke
-// lapisan perhitungan (BR-11).
+// Tidak ada NIK di sini: data pribadi tidak ikut mengalir ke lapisan
+// perhitungan (BR-11).
+//
+// Yang SENGAJA TIDAK ADA di sini: prasyarat BR-03 (dokumen VERIFIED, survei
+// VALID, SLIK sudah dijalankan) dan kolektibilitas. Keempatnya dulu dikirim
+// klien, sehingga siapa pun yang memegang token ANL dapat mengirim `true` dan
+// melewati guard BR-03, atau mengirim kolektibilitas 1 untuk menaikkan grade
+// sendiri. Sekarang semuanya dibaca dari database lewat
+// PastikanBolehSkoringPengajuan. Jangan kembalikan sebagai field request.
 type skoringRequest struct {
 	AngsuranBulanan float64 `json:"angsuranBulanan"`
 	OmzetHarian     float64 `json:"omzetHarian"`
 	LamaUsahaBulan  int     `json:"lamaUsahaBulan"`
-	Kolektibilitas  int     `json:"kolektibilitas"`
 	NilaiSurvei     int     `json:"nilaiSurvei"`
-
-	// Prasyarat BR-03. Dikirim eksplisit selama FR-03/FR-04/FR-05 belum
-	// menyimpan keadaannya ke DB; begitu tabel dokumen/survei/hasil_slik ada,
-	// nilai ini dibaca dari repository, bukan dari klien.
-	SemuaDokumenVerified bool `json:"semuaDokumenVerified"`
-	AdaSurveiValid       bool `json:"adaSurveiValid"`
-	SlikSudahDijalankan  bool `json:"slikSudahDijalankan"`
 }
 
 // rincianResponse adalah bentuk JSON satu komponen skor. BR-08 mewajibkan
@@ -72,6 +70,9 @@ type skoringResponse struct {
 // Urutannya penting: BR-03 diperiksa SEBELUM menghitung. Skoring yang jalan
 // tanpa dokumen VERIFIED / survei VALID / SLIK check menghasilkan angka yang
 // tidak berdasar, jadi permintaannya ditolak 422 dengan rule BR-03 (AC-04).
+//
+// Keadaan prasyarat dan kolektibilitas dibaca dari database, bukan dari badan
+// request — klien tidak dapat mengklaim BR-03 terpenuhi.
 func (h *SkoringHandler) HitungSkoring(w http.ResponseWriter, r *http.Request) {
 	id, ok := parseIDPengajuan(w, r)
 	if !ok {
@@ -84,11 +85,8 @@ func (h *SkoringHandler) HitungSkoring(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.skoring.PastikanBolehSkoring(service.PrasyaratSkoring{
-		SemuaDokumenVerified: req.SemuaDokumenVerified,
-		AdaSurveiValid:       req.AdaSurveiValid,
-		SlikSudahDijalankan:  req.SlikSudahDijalankan,
-	}); err != nil {
+	keadaan, err := h.skoring.PastikanBolehSkoringPengajuan(r.Context(), id)
+	if err != nil {
 		handleServiceError(w, err)
 		return
 	}
@@ -98,7 +96,7 @@ func (h *SkoringHandler) HitungSkoring(w http.ResponseWriter, r *http.Request) {
 		AngsuranBulanan: req.AngsuranBulanan,
 		OmzetHarian:     req.OmzetHarian,
 		LamaUsahaBulan:  req.LamaUsahaBulan,
-		Kolektibilitas:  req.Kolektibilitas,
+		Kolektibilitas:  keadaan.Kolektibilitas,
 		NilaiSurvei:     req.NilaiSurvei,
 	})
 	if err != nil {

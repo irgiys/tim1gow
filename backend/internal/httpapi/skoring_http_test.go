@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -96,10 +97,47 @@ func (f *fakeParamRepoSkoring) SemuaAmbangApproval() ([]domain.AmbangApproval, e
 	return nil, nil
 }
 
-// routerSkoring membangun router dengan HANYA handler skoring/margin terpasang.
+// fakePrasyaratRepo meniru keadaan nyata pengajuan di database (dokumen,
+// survei, hasil SLIK). Test mengubah keadaan DI SINI, bukan lewat badan
+// request — persis seperti produksi, di mana klien tidak punya suara soal
+// terpenuhi atau tidaknya BR-03.
+type fakePrasyaratRepo struct {
+	keadaan service.KeadaanPrasyarat
+	err     error
+}
+
+func newFakePrasyaratRepo() *fakePrasyaratRepo {
+	return &fakePrasyaratRepo{keadaan: service.KeadaanPrasyarat{
+		SemuaDokumenVerified: true,
+		AdaSurveiValid:       true,
+		SlikSudahDijalankan:  true,
+		Kolektibilitas:       1,
+	}}
+}
+
+func (f *fakePrasyaratRepo) KeadaanPrasyaratSkoring(_ context.Context, _ int64) (service.KeadaanPrasyarat, error) {
+	if f.err != nil {
+		return service.KeadaanPrasyarat{}, f.err
+	}
+	return f.keadaan, nil
+}
+
+// routerSkoring membangun router dengan HANYA handler skoring/margin terpasang,
+// dengan seluruh prasyarat BR-03 terpenuhi.
 func routerSkoring(param service.ParameterRepository) http.Handler {
-	h := NewSkoringHandler(service.NewSkoringService(param), service.NewMarginService(param))
-	return NewRouterWithAllHandlers(config.Config{AppEnv: "test"}, nil, nil, nil, h)
+	h, _ := routerSkoringDenganPrasyarat(param)
+	return h
+}
+
+// routerSkoringDenganPrasyarat mengembalikan router beserta fake keadaannya,
+// supaya test dapat mengubah keadaan pengajuan di tengah jalan.
+func routerSkoringDenganPrasyarat(param service.ParameterRepository) (http.Handler, *fakePrasyaratRepo) {
+	pra := newFakePrasyaratRepo()
+	h := NewSkoringHandler(
+		service.NewSkoringService(param).DenganPrasyarat(pra),
+		service.NewMarginService(param),
+	)
+	return NewRouterWithAllHandlers(config.Config{AppEnv: "test"}, nil, nil, nil, h), pra
 }
 
 func postJSON(t *testing.T, h http.Handler, path string, body any) *httptest.ResponseRecorder {
@@ -125,17 +163,14 @@ func decodeError(t *testing.T, rec *httptest.ResponseRecorder) errorResponse {
 	return out
 }
 
-// prasyaratLengkap adalah badan request dengan BR-03 terpenuhi.
-func prasyaratLengkap() map[string]any {
+// dataSkoring adalah badan request skoring. Prasyarat BR-03 dan
+// kolektibilitas TIDAK ada di sini: keduanya dibaca dari keadaan pengajuan.
+func dataSkoring() map[string]any {
 	return map[string]any{
-		"angsuranBulanan":      1000000.0,
-		"omzetHarian":          500000.0,
-		"lamaUsahaBulan":       36,
-		"kolektibilitas":       1,
-		"nilaiSurvei":          5,
-		"semuaDokumenVerified": true,
-		"adaSurveiValid":       true,
-		"slikSudahDijalankan":  true,
+		"angsuranBulanan": 1000000.0,
+		"omzetHarian":     500000.0,
+		"lamaUsahaBulan":  36,
+		"nilaiSurvei":     5,
 	}
 }
 
@@ -145,7 +180,7 @@ func prasyaratLengkap() map[string]any {
 func TestHTTP_AC07_RincianKeempatKomponenAdaDiRespons(t *testing.T) {
 	h := routerSkoring(newFakeParamRepoSkoring())
 
-	rec := postJSON(t, h, "/api/pengajuan/7/skoring", prasyaratLengkap())
+	rec := postJSON(t, h, "/api/pengajuan/7/skoring", dataSkoring())
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d, mau 200 (body=%s)", rec.Code, rec.Body.String())
 	}
@@ -249,12 +284,12 @@ func TestHTTP_AC09_MarginDiBawahBatasGrade1Diblokir(t *testing.T) {
 // TestHTTP_AC04_SkoringTanpaSurveiValidDitolak memverifikasi AC-04: skoring
 // tanpa survei VALID ditolak 422 dan pesannya menyebut BR-03.
 func TestHTTP_AC04_SkoringTanpaSurveiValidDitolak(t *testing.T) {
-	h := routerSkoring(newFakeParamRepoSkoring())
+	h, pra := routerSkoringDenganPrasyarat(newFakeParamRepoSkoring())
 
-	body := prasyaratLengkap()
-	body["adaSurveiValid"] = false
+	// Keadaan pengajuan yang menentukan, bukan badan request.
+	pra.keadaan.AdaSurveiValid = false
 
-	rec := postJSON(t, h, "/api/pengajuan/7/skoring", body)
+	rec := postJSON(t, h, "/api/pengajuan/7/skoring", dataSkoring())
 	if rec.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("status = %d, mau 422 (body=%s)", rec.Code, rec.Body.String())
 	}
@@ -267,7 +302,8 @@ func TestHTTP_AC04_SkoringTanpaSurveiValidDitolak(t *testing.T) {
 	}
 
 	// Kasus pembanding (Larangan 18): prasyarat lengkap harus DITERIMA.
-	if rec2 := postJSON(t, h, "/api/pengajuan/7/skoring", prasyaratLengkap()); rec2.Code != http.StatusOK {
+	pra.keadaan.AdaSurveiValid = true
+	if rec2 := postJSON(t, h, "/api/pengajuan/7/skoring", dataSkoring()); rec2.Code != http.StatusOK {
 		t.Fatalf("prasyarat lengkap: status = %d, mau 200 (body=%s)", rec2.Code, rec2.Body.String())
 	}
 }
@@ -275,14 +311,14 @@ func TestHTTP_AC04_SkoringTanpaSurveiValidDitolak(t *testing.T) {
 // TestHTTP_AC06_Kolektibilitas2GradeTidakLebihBaikDari3 memverifikasi AC-06 pada
 // lapisan HTTP: pengajuan tetap lanjut (200), tetapi grade minimal 3.
 func TestHTTP_AC06_Kolektibilitas2GradeTidakLebihBaikDari3(t *testing.T) {
-	h := routerSkoring(newFakeParamRepoSkoring())
+	h, pra := routerSkoringDenganPrasyarat(newFakeParamRepoSkoring())
 
 	// Komponen lain sempurna supaya perhitungan mentah menghasilkan grade 1;
-	// pemaksaan grade harus tetap terjadi.
-	body := prasyaratLengkap()
-	body["kolektibilitas"] = 2
+	// pemaksaan grade harus tetap terjadi. Kolektibilitas berasal dari hasil
+	// SLIK tersimpan, bukan dari klien.
+	pra.keadaan.Kolektibilitas = 2
 
-	rec := postJSON(t, h, "/api/pengajuan/7/skoring", body)
+	rec := postJSON(t, h, "/api/pengajuan/7/skoring", dataSkoring())
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d, mau 200 — kol-2 tetap lanjut (body=%s)", rec.Code, rec.Body.String())
 	}
@@ -299,7 +335,8 @@ func TestHTTP_AC06_Kolektibilitas2GradeTidakLebihBaikDari3(t *testing.T) {
 	}
 
 	// Kasus pembanding: kol-1 dengan masukan sama boleh lebih baik dari 3.
-	rec2 := postJSON(t, h, "/api/pengajuan/7/skoring", prasyaratLengkap())
+	pra.keadaan.Kolektibilitas = 1
+	rec2 := postJSON(t, h, "/api/pengajuan/7/skoring", dataSkoring())
 	var resp2 skoringResponse
 	if err := json.Unmarshal(rec2.Body.Bytes(), &resp2); err != nil {
 		t.Fatalf("decode respons kol-1: %v", err)
@@ -321,7 +358,7 @@ func TestHTTP_AC15_UbahBobotLangsungBerlakuTanpaRestart(t *testing.T) {
 	param := newFakeParamRepoSkoring()
 	h := routerSkoring(param) // dibangun SEKALI
 
-	body := prasyaratLengkap()
+	body := dataSkoring()
 	body["lamaUsahaBulan"] = 6 // komponen lama usaha bernilai rendah
 
 	rec1 := postJSON(t, h, "/api/pengajuan/7/skoring", body)
@@ -466,7 +503,7 @@ func TestHTTP_NisbahMusyarakahMemakaiRentangSendiri(t *testing.T) {
 func TestHTTP_SkoringIDPengajuanTidakValid(t *testing.T) {
 	h := routerSkoring(newFakeParamRepoSkoring())
 
-	rec := postJSON(t, h, "/api/pengajuan/abc/skoring", prasyaratLengkap())
+	rec := postJSON(t, h, "/api/pengajuan/abc/skoring", dataSkoring())
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("status = %d, mau 400 (body=%s)", rec.Code, rec.Body.String())
 	}

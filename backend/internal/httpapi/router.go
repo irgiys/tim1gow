@@ -63,7 +63,8 @@ func NewRouter(cfg config.Config, gdb *gorm.DB) http.Handler {
 		// FR-06 & FR-07. Keduanya membaca tabel parameter lewat repository yang
 		// sama, jadi perubahan bobot/rentang oleh ADM langsung berlaku (AC-15).
 		skoH = NewSkoringHandler(
-			service.NewSkoringServiceWithAudit(paramRepo, auditSvc),
+			service.NewSkoringServiceWithAudit(paramRepo, auditSvc).
+				DenganPrasyarat(repository.NewPrasyaratSkoringRepository(gdb)),
 			service.NewMarginService(paramRepo),
 		)
 

@@ -20,6 +20,11 @@ type SkoringService struct {
 	// pada pemakaian yang hanya menghitung skor, supaya perhitungan murni
 	// tetap bisa diuji tanpa dependensi audit.
 	audit AuditService
+
+	// prasyarat membaca keadaan BR-03 (dokumen, survei, SLIK) dari database.
+	// Dipasang lewat DenganPrasyarat; lihat prasyarat_skoring.go. Nil berarti
+	// jalur PastikanBolehSkoringPengajuan MENOLAK, bukan meloloskan.
+	prasyarat PrasyaratSkoringRepository
 }
 
 func NewSkoringService(param ParameterRepository) *SkoringService {
