@@ -32,8 +32,8 @@
 
 | Tanggal & jam | Oleh | Perubahan | Dipicu oleh |
 |---|---|---|---|
-| 2026-08-20 09:50 | Luthfi (Tech Lead) | Versi awal — kerangka dari template brief | Sprint 0 |
-| 2026-08-20 10:20 | Luthfi (Tech Lead) | Isi bagian 2–7: stack (Go + Chi + GORM + golang-migrate, Next.js, Postgres 16), struktur direktori, konvensi, lokasi penegakan BR, perintah test/lint | Sprint 0 · ADR-0001 |
+| 2026-08-20 09:50 | Luthfi | Versi awal — kerangka dari template brief | Sprint 0 |
+| 2026-08-20 10:20 | Luthfi | Isi bagian 2–7: stack (Go + Chi + GORM + golang-migrate, Next.js, Postgres 16), struktur direktori, konvensi, lokasi penegakan BR, perintah test/lint | Sprint 0 · ADR-0001 |
 |  |  |  |  |
 |  |  |  |  |
 
