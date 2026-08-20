@@ -37,6 +37,7 @@
 | 2026-08-20 10:35 | Irgiyansyah | Tetapkan pemilik tunggal per berkas dokumentasi dan per lapisan `internal/service/`, diturunkan dari bagian 3 & 5 berkas ini; dicatat di README bagian 1 dan AI-WORKFLOW bagian 1 | Sprint 0 · brief §10 |
 | 2026-08-20 10:45 | Irgiyansyah | Koreksi pemilik SRS (Yulio Zaki) dan SDD (Irgiyansyah); tambah pembagian `frontend/app/` per route — UI sebuah FR ditulis oleh pemilik aturan bisnis FR itu, Aldi menyiapkan fondasi & me-review, supaya satu Frontend Engineer tidak menjadi penghambat 6 peran | Sprint 0 · brief §10 |
 | 2026-08-20 10:55 | Irgiyansyah | Tetapkan dua approver PR (Luthfi & Irgiyansyah) + isi `.github/CODEOWNERS` per path. Tegaskan larangan menyetujui PR sendiri sebagai cermin git dari BR-09 (maker ≠ checker) | Sprint 0 · brief §8.2 |
+| 2026-08-20 11:10 | Irgiyansyah | Pindahkan peran DevOps / Release dari Soleh (QA) ke Irgiyansyah, beserta kepemilikan `ci.yml`, `docker-compose.yml`, `.env.example`, dan `backend/migrations/`. QA dibiarkan murni sebagai penjaga gerbang supaya tidak memeriksa pekerjaannya sendiri | Sprint 0 · brief §10 · PR #2 di-merge tanpa review |
 |  |  |  |  |
 
 ---
