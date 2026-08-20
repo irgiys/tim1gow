@@ -174,17 +174,50 @@ yang bisa diulang orang lain.
      "### [DEVLOG-04] ... (FR-07) — kasus AI salah".
      Ingat: minimal 3 entri kegagalan, dan minimal 3 entri sudah ada sebelum Gate 2. -->
 
-### [DEVLOG-01] `<!-- ISI: judul -->` (FR-`<!-- ISI -->`)
-- **Waktu**:
-- **Oleh**:
-- **Tool/Model**:
-- **Tugas**:
-- **Cara memberi konteks**:
-- **Keluaran AI**:
-- **Yang salah**:
-- **Cara verifikasi**:
-- **Tindakan**:
-- **Pelajaran**:
+### [DEVLOG-01] Pembagian peran, pemilik berkas, dan pembagian frontend (Sprint 0) — kasus AI salah
+- **Waktu**: 2026-08-20 10:30 – 11:00
+- **Oleh**: Irgiyansyah
+- **Tool/Model**: Hermes IDE (agen dengan akses baca/tulis repo)
+- **Tugas**: Menurunkan pembagian peran 6 anggota dan pemilik tiap berkas dokumentasi dari
+  aturan yang sudah ada di `AGENTS.md` — bukan mengarang struktur tim baru. Sasarannya:
+  setiap berkas markdown punya satu pemilik supaya tidak ada konflik merge pada tabel, dan
+  setiap FR punya satu penanggung jawab (brief §10, syarat Gate 1).
+- **Cara memberi konteks**: melampirkan `AGENTS.md` utuh, ditambah `01-BRIEF-Hackathon-iMitra.md`
+  §10 dan `SETUP-SPRINT-0.md`. Batasan yang disebut eksplisit: pembagian harus **diturunkan
+  dari bagian 3 (struktur `internal/service/`) dan bagian 5 (kolom "Ditegakkan di")** berkas
+  `AGENTS.md`, sehingga satu berkas service hanya punya satu pemilik. Agen juga diminta
+  menghitung placeholder `<!-- ISI -->` per berkas lebih dulu, bukan menebak mana yang kosong.
+- **Keluaran AI**: tabel peran 6 orang + tabel pemilik berkas/lapisan kode di `README.md`
+  bagian 1, kolom penanggung jawab di `docs/AI-WORKFLOW.md` bagian 1, header pemilik di 6
+  berkas `docs/`, tabel pembagian `frontend/app/` per route (14 baris), tabel hak akses &
+  approver, dan pengisian `.github/CODEOWNERS` per path. Tiga commit: `429fe68`, `e5b2f91`,
+  `f9a731b`.
+- **Yang salah**: dua kesalahan, keduanya **halus karena keluarannya terlihat masuk akal**.
+  (1) Pada jawaban pertama agen menetapkan Rayvaldo sebagai Tech Lead dengan alasan yang
+  terdengar kuat — brief §1.1 menyebut dia penyusun SRS/SDD iLoan Commercial. Itu inferensi
+  dari brief, bukan dari keadaan repo: tabel riwayat `AGENTS.md` menunjukkan **Luthfi** yang
+  mengisi bagian 2–7, dan berkas itu menyatakan pemiliknya Tech Lead. (2) Agen menetapkan
+  pemilik `SRS` = Irgiyansyah dan `SDD` = Yulio Zaki, tertukar dari kesepakatan tim
+  (`SRS` = Yulio Zaki, `SDD` = Irgiyansyah). Keduanya tidak terdeteksi oleh pemeriksaan
+  otomatis apa pun — tabelnya rapi dan konsisten secara internal.
+- **Cara verifikasi**: menjalankan `git log --oneline` dan membaca tabel "Riwayat perubahan"
+  di `AGENTS.md` untuk mencari **bukti siapa yang benar-benar menyentuh berkas**, bukan
+  mengandalkan penalaran agen atas brief. Untuk kesalahan kedua, mencocokkan nama pemilik di
+  `README.md` bagian 1 dengan kesepakatan tim, lalu memeriksa bahwa perbaikannya ikut
+  diterapkan di **tiga tempat** — tabel README, header `**Penyusun**` di kedua berkas, dan
+  baris "Perancangan & kritik model data" di `AI-WORKFLOW.md` — karena satu koreksi nama
+  menyentuh lebih dari satu berkas dan agen sempat hanya memperbaiki README.
+- **Tindakan**: Tech Lead dikoreksi menjadi Luthfi; kepemilikan SRS/SDD ditukar di ketiga
+  lokasi (commit `e5b2f91`). Pembagian frontend diubah dari "semua UI ke satu Frontend
+  Engineer" menjadi vertikal — pemilik aturan bisnis sebuah FR juga menulis UI-nya, karena
+  bentuk Tim 2 brief §10 hanya menyediakan satu Frontend Engineer untuk UI 6 peran. Ketiga
+  perubahan dicatat di tabel riwayat `AGENTS.md`.
+- **Pelajaran**: kalau sebuah fakta bisa dibaca dari **keadaan repo** (`git log`, tabel
+  riwayat, isi berkas), jangan biarkan agen menyimpulkannya dari prosa brief — inferensi yang
+  terdengar kuat justru paling sulit dibantah saat dibaca ulang. Sejak entri ini, setiap
+  keluaran agen yang menyebut **nama orang atau kepemilikan berkas** wajib dicek terhadap
+  `git log` lebih dulu. Konsekuensi kedua: satu koreksi nama harus dilacak ke semua berkas
+  yang menyebutnya, karena agen cenderung memperbaiki hanya berkas yang sedang dibuka.
 
 ### [DEVLOG-02] `<!-- ISI: judul -->` (FR-`<!-- ISI -->`)
 - **Waktu**:
