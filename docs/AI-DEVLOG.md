@@ -272,17 +272,47 @@ yang bisa diulang orang lain.
 - **Tindakan**: Menerapkan idiomatic Go *Dependency Inversion Principle* di mana interface repository (`ApprovalRepository`, `AuditRepository`, `ParameterRepository`) didefinisikan di package konsumen (`service`), dan package `repository` yang mengimplementasikannya. Seluruh unit dan integration test (7 test approval, 2 test audit, 2 test HTTP approval, 2 test HTTP audit append-only) dijalankan ulang dan 100% PASS. Migrasi 000003 berhasil diterapkan pada database Aiven PostgreSQL instance.
 - **Pelajaran**: Dalam layout Clean Architecture di Go, service mendefinisikan interface dependensinya sendiri; package luar (repository) yang mengimplementasikannya. Ini mencegah circular dependency dan membuat service mudah diuji dengan mock/fake tanpa ketergantungan DB nyata.
 
-### [DEVLOG-04] `<!-- ISI: judul -->` (FR-`<!-- ISI -->`)
-- **Waktu**:
-- **Oleh**:
-- **Tool/Model**:
-- **Tugas**:
-- **Cara memberi konteks**:
-- **Keluaran AI**:
-- **Yang salah**:
-- **Cara verifikasi**:
-- **Tindakan**:
-- **Pelajaran**:
+### [DEVLOG-04] Import cycle service ↔ repository setelah merge `main` (FR-02, FR-03, FR-04) — kasus AI salah
+- **Waktu**: 2026-08-20 14:20 – 15:40
+- **Oleh**: Rayvaldo
+- **Tool/Model**: Hermes IDE (agen dengan akses baca/tulis repo)
+- **Tugas**: Implementasi service + kontrak repository untuk FR-02 (pengajuan), FR-03 (dokumen),
+  dan FR-04 (survei), beserta unit test dari AC-01, AC-03, dan AC-15. Syarat yang disebut
+  eksplisit: seluruh ambang plafon dibaca dari tabel parameter, bukan konstanta
+  (`AGENTS.md` Larangan 3), dan setiap kasus penolakan wajib berpasangan dengan kasus
+  penerimaan (Larangan 18).
+- **Cara memberi konteks**: melampirkan `AGENTS.md` bagian 3 (aturan lapisan), 4.1, 4.3, dan 5
+  (BR-01, BR-03, BR-12), ditambah `docs/SDD-iMitra.md` BAB 4.1 untuk bentuk kolom. Batasan
+  tambahan: service tidak boleh tahu tentang HTTP, dan test harus jalan tanpa database nyata
+  memakai fake in-memory karena GORM belum masuk `go.mod` saat itu.
+- **Keluaran AI**: `pengajuan_service.go`, `dokumen_service.go`, `survei_service.go`, kontrak
+  repository di `internal/repository/`, plus 59 test. Semua hijau saat itu, dan dua uji mutasi
+  (membalik kondisi BR-01; mematok nomor urut BR-12) keduanya tertangkap test.
+- **Yang salah**: struktur yang dipilih AI mengikuti `AGENTS.md` bagian 3 secara harfiah —
+  interface repository ditaruh di paket `repository`, sehingga `service` meng-import
+  `repository`. Setelah `main` di-merge, ternyata Luthfi sudah memakai pola sebaliknya:
+  interface di `service/parameter_repository.go`, dan `repository/parameter_repository_db.go`
+  meng-import `service`. Dua konvensi itu bertemu menjadi
+  `service → repository → service`: **import cycle**, seluruh backend gagal build. Halusnya:
+  kedua sisi benar bila dilihat sendiri-sendiri, dan cycle tidak muncul di branch mana pun
+  sebelum digabungkan.
+- **Cara verifikasi**: `go build ./...` gagal dengan `import cycle not allowed`. Untuk
+  memastikan penyebabnya bukan kode sendiri, 9 berkas baru di-*stash* sementara lalu build
+  diulang — hasilnya `EXIT=0`, membuktikan cycle hanya terbentuk saat kedua pola bertemu,
+  bukan bawaan salah satu pihak.
+- **Tindakan**: mengalah ke pola yang sudah lebih dulu masuk `main`. Entitas dan kontrak
+  repository dipindahkan ke `internal/service/pengajuan_repository.go` meniru
+  `parameter_repository.go`, dan `internal/repository/{model,repository}.go` dihapus. Build,
+  vet, dan 70 test kembali hijau, termasuk test `httpapi` milik Irgiyansyah. Catatan penting:
+  arah `repository → service` ini **berlawanan dengan `AGENTS.md` bagian 3** yang menetapkan
+  `httpapi → service → repository`; diikuti demi keseragaman, tetapi diangkat ke Tech Lead
+  sebagai keputusan terpisah — salah satu dari dua (kode atau AGENTS.md) harus menyesuaikan.
+- **Pelajaran**: AI hanya melihat berkas yang dilampirkan, jadi ia patuh pada dokumen dan buta
+  terhadap konvensi nyata yang hidup di branch lain. Sebelum menulis lapisan baru di repo tim,
+  `main` harus ditarik lebih dulu dan pola tetangga yang sudah ada dibaca — dokumen arsitektur
+  bukan jaminan bahwa kode mengikutinya. Efek samping kedua: `gofmt -w` dan `sed -i` pada
+  seluruh direktori sempat menyentuh 11 berkas milik anggota lain (murni CRLF, nol perubahan
+  isi) dan harus dikembalikan; perintah massal wajib ditargetkan ke berkas sendiri saja.
 
 ### [DEVLOG-05] `<!-- ISI: judul -->` (FR-`<!-- ISI -->`)
 - **Waktu**:
