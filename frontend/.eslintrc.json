@@ -1,0 +1,18 @@
+{
+  "extends": ["next/core-web-vitals", "eslint-config-prettier"],
+  "rules": {
+    "no-restricted-globals": [
+      "error",
+      {
+        "name": "fetch",
+        "message": "Semua panggilan API lewat lib/apiClient.ts — jangan fetch() telanjang di komponen (README.md bagian 1)."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["lib/apiClient.ts"],
+      "rules": { "no-restricted-globals": "off" }
+    }
+  ]
+}
