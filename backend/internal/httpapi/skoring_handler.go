@@ -193,6 +193,62 @@ func (h *SkoringHandler) RentangMargin(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// overrideRequest adalah badan PATCH /api/pengajuan/{id}/skoring/override.
+type overrideRequest struct {
+	GradeSemula int    `json:"gradeSemula"`
+	GradeBaru   int    `json:"gradeBaru"`
+	Alasan      string `json:"alasan"`
+}
+
+type overrideResponse struct {
+	PengajuanID int64  `json:"pengajuanId"`
+	GradeSemula int    `json:"gradeSemula"`
+	GradeBaru   int    `json:"gradeBaru"`
+	Alasan      string `json:"alasan"`
+	Status      string `json:"status"`
+}
+
+// OverrideGrade menangani PATCH /api/pengajuan/{id}/skoring/override.
+//
+// AC-08: ANL override grade dari 2 ke 3; sistem menolak jika alasan kosong;
+// setelah diisi, override tercatat di audit trail dengan identitas ANL.
+// Aturan "alasan wajib" ditegakkan di service, bukan di sini (Larangan 17);
+// handler hanya menerjemahkan errornya ke HTTP.
+func (h *SkoringHandler) OverrideGrade(w http.ResponseWriter, r *http.Request) {
+	id, ok := parseIDPengajuan(w, r)
+	if !ok {
+		return
+	}
+
+	var req overrideRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "INVALID_JSON", "format JSON tidak valid", "")
+		return
+	}
+
+	actorID, actorRole := getActor(r)
+	hasil, err := h.skoring.OverrideGrade(r.Context(), service.OverrideGrade{
+		PengajuanID: id,
+		GradeSemula: req.GradeSemula,
+		GradeBaru:   req.GradeBaru,
+		Alasan:      req.Alasan,
+		ActorID:     actorID,
+		ActorRole:   actorRole,
+	})
+	if err != nil {
+		handleServiceError(w, err)
+		return
+	}
+
+	respondJSON(w, http.StatusOK, overrideResponse{
+		PengajuanID: hasil.PengajuanID,
+		GradeSemula: hasil.GradeSemula,
+		GradeBaru:   hasil.GradeBaru,
+		Alasan:      hasil.Alasan,
+		Status:      "ok",
+	})
+}
+
 // parseIDPengajuan membaca {id} dari path dan membalas 400 bila tidak valid.
 func parseIDPengajuan(w http.ResponseWriter, r *http.Request) (int64, bool) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)

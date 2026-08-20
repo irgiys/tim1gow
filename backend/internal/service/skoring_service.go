@@ -1,8 +1,11 @@
 package service
 
 import (
+	"context"
+	"fmt"
 	"math"
 	"sort"
+	"strings"
 
 	"github.com/irgiys/tim1gow/backend/internal/domain"
 )
@@ -12,10 +15,21 @@ import (
 // membangun SQL (AGENTS.md bagian 3).
 type SkoringService struct {
 	param ParameterRepository
+
+	// audit dipakai untuk merekam override grade (AC-08 / BR-10). Boleh nil
+	// pada pemakaian yang hanya menghitung skor, supaya perhitungan murni
+	// tetap bisa diuji tanpa dependensi audit.
+	audit AuditService
 }
 
 func NewSkoringService(param ParameterRepository) *SkoringService {
 	return &SkoringService{param: param}
+}
+
+// NewSkoringServiceWithAudit dipakai jalur yang mengubah keadaan (override
+// grade): setiap perubahan wajib punya aktor dan timestamp (BR-10).
+func NewSkoringServiceWithAudit(param ParameterRepository, audit AuditService) *SkoringService {
+	return &SkoringService{param: param, audit: audit}
 }
 
 // PrasyaratSkoring adalah keadaan pengajuan yang menentukan boleh/tidaknya
@@ -159,4 +173,91 @@ func (s *SkoringService) PastikanBolehKeApproval(grade int) error {
 			"grade %d tidak dapat diajukan ke approval", grade)
 	}
 	return nil
+}
+
+// OverrideGrade adalah masukan permintaan override grade oleh ANL (AC-08).
+type OverrideGrade struct {
+	PengajuanID int64
+	GradeSemula int
+	GradeBaru   int
+	Alasan      string
+	ActorID     int64
+	ActorRole   domain.Peran
+}
+
+// HasilOverrideGrade adalah keluaran override yang sudah tercatat.
+type HasilOverrideGrade struct {
+	PengajuanID int64
+	GradeSemula int
+	GradeBaru   int
+	Alasan      string
+}
+
+// OverrideGrade menerapkan override grade oleh ANL dan MENCATATNYA ke audit
+// trail bersama identitas pelakunya (AC-08, BR-10).
+//
+// Aturan yang ditegakkan di sini, bukan di handler (Larangan 17):
+//   - Alasan wajib. Override tanpa alasan ditolak; AC-08 memintanya eksplisit.
+//   - Grade harus ada di tabel rentang_margin, supaya ANL tidak bisa memasukkan
+//     grade yang tidak dikenal sistem.
+//   - Grade yang sama dengan semula bukan override, jadi ditolak.
+//   - Pencatatan audit adalah bagian dari operasi: kalau audit gagal, override
+//     dianggap GAGAL. Tidak ada perubahan tanpa jejak (BR-10) — ini sebabnya
+//     error audit tidak diabaikan di sini.
+func (s *SkoringService) OverrideGrade(ctx context.Context, in OverrideGrade) (HasilOverrideGrade, error) {
+	var hasil HasilOverrideGrade
+
+	if strings.TrimSpace(in.Alasan) == "" {
+		return hasil, domain.NewBusinessRuleError("VALIDATION_ERROR",
+			"alasan override wajib diisi")
+	}
+	if in.ActorID <= 0 || in.ActorRole == "" {
+		return hasil, domain.NewBusinessRuleError("VALIDATION_ERROR",
+			"identitas aktor wajib diketahui untuk override (BR-10)")
+	}
+	// Override adalah kewenangan Analis Mikro (AGENTS.md bagian 1).
+	if in.ActorRole != domain.PeranANL {
+		return hasil, domain.NewBusinessRuleError("FORBIDDEN",
+			"hanya ANL yang dapat melakukan override grade")
+	}
+	if in.GradeBaru == in.GradeSemula {
+		return hasil, domain.NewBusinessRuleError("VALIDATION_ERROR",
+			"grade baru sama dengan grade semula; tidak ada yang di-override")
+	}
+
+	// Grade tujuan wajib dikenal tabel parameter — bukan divalidasi terhadap
+	// rentang yang ditulis di kode.
+	if _, ada, err := s.param.RentangMargin(in.GradeBaru); err != nil {
+		return hasil, err
+	} else if !ada {
+		return hasil, domain.NewBusinessRuleError("VALIDATION_ERROR",
+			"grade %d tidak dikenal pada tabel rentang_margin", in.GradeBaru)
+	}
+
+	if s.audit == nil {
+		return hasil, domain.NewConfigError("audit service belum dipasang; override tidak dapat dicatat")
+	}
+
+	// Catatan sengaja hanya memuat grade dan alasan dari ANL — tanpa NIK,
+	// nomor dokumen, atau path foto (BR-11).
+	catatan := fmt.Sprintf("override grade %d -> %d; alasan: %s",
+		in.GradeSemula, in.GradeBaru, strings.TrimSpace(in.Alasan))
+
+	pengajuanID := in.PengajuanID
+	if err := s.audit.Catat(ctx, domain.CatatAuditInput{
+		PengajuanID: &pengajuanID,
+		Aksi:        domain.AksiOverrideSkor,
+		Catatan:     catatan,
+		ActorID:     in.ActorID,
+		ActorRole:   in.ActorRole,
+	}); err != nil {
+		return hasil, err
+	}
+
+	return HasilOverrideGrade{
+		PengajuanID: in.PengajuanID,
+		GradeSemula: in.GradeSemula,
+		GradeBaru:   in.GradeBaru,
+		Alasan:      strings.TrimSpace(in.Alasan),
+	}, nil
 }

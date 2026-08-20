@@ -60,7 +60,7 @@ func NewRouter(cfg config.Config, gdb *gorm.DB) http.Handler {
 		// FR-06 & FR-07. Keduanya membaca tabel parameter lewat repository yang
 		// sama, jadi perubahan bobot/rentang oleh ADM langsung berlaku (AC-15).
 		skoH = NewSkoringHandler(
-			service.NewSkoringService(paramRepo),
+			service.NewSkoringServiceWithAudit(paramRepo, auditSvc),
 			service.NewMarginService(paramRepo),
 		)
 	}
@@ -125,6 +125,8 @@ func NewRouterWithAllHandlers(cfg config.Config, gdb *gorm.DB, appH *ApprovalHan
 			// FR-06 skoring kelayakan; BR-03 dicek sebelum hitung, rincian
 			// komponen ikut di respons (BR-08 / AC-07).
 			api.Post("/pengajuan/{id}/skoring", skoH.HitungSkoring)
+			// AC-08: override grade oleh ANL, alasan wajib, tercatat di audit.
+			api.Patch("/pengajuan/{id}/skoring/override", skoH.OverrideGrade)
 			// FR-07 margin/nisbah; di luar rentang grade -> 422 BR-06 (AC-09).
 			api.Post("/pengajuan/{id}/margin", skoH.TentukanMargin)
 			api.Get("/pengajuan/{id}/margin", skoH.RentangMargin)
