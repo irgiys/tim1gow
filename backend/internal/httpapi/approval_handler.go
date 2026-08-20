@@ -131,5 +131,21 @@ func handleServiceError(w http.ResponseWriter, err error) {
 		return
 	}
 
+	// Kegagalan validasi masukan -> 400, BUKAN 500 (AGENTS.md bagian 4.3).
+	// Tanpa cabang ini, "nama nasabah wajib diisi" dari PengajuanService
+	// terlihat seperti kerusakan server dan pesannya hilang dari respons.
+	var valErr *service.ValidationError
+	if errors.As(err, &valErr) {
+		respondError(w, http.StatusBadRequest, "VALIDATION_ERROR", valErr.Message, "")
+		return
+	}
+
+	// Baris yang diminta tidak ada -> 404, bukan 500. Tanpa pemetaan ini,
+	// id pengajuan yang salah ketik terlihat seperti kerusakan server.
+	if errors.Is(err, service.ErrTidakDitemukan) {
+		respondError(w, http.StatusNotFound, "NOT_FOUND", "sumber daya tidak ditemukan", "")
+		return
+	}
+
 	respondError(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", "terjadi kesalahan internal", "")
 }
