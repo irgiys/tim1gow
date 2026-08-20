@@ -131,10 +131,11 @@ services:
   #  Uncomment bersamaan dengan backend/Dockerfile, backend/cmd/migrate, dan
   #  backend/cmd/seed. Perintahnya mengikuti AGENTS.md bagian 7.
   # ---------------------------------------------------------------------------
-  #  CATATAN: `/app/seed` belum diaktifkan karena backend/cmd/seed belum ada.
-  #  Untuk sementara seed nilai awal tabel parameter ditangani migrasi
-  #  000002_seed_parameter.up.sql (ON CONFLICT DO NOTHING, jadi idempoten).
-  #  Tambahkan `&& /app/seed` di command begitu cmd/seed dibuat.
+  #  CATATAN: nilai tabel parameter di-seed oleh migrasi 000002 (ON CONFLICT DO
+  #  NOTHING, jadi idempoten). `/app/seed` bertugas MEMVERIFIKASI tabel itu
+  #  benar-benar terisi lalu mengisi data demo non-parameter; ia berhenti dengan
+  #  galat kalau parameter kosong, supaya kegagalan terlihat di sini dan bukan
+  #  saat demo di depan penilai.
   migrate:
     build:
       context: ./backend
@@ -146,7 +147,7 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       SEED_DEFAULT_PASSWORD: ${SEED_DEFAULT_PASSWORD}
       PASSWORD_HASH_COST: ${PASSWORD_HASH_COST}
-    command: ["/app/migrate", "up"]
+    command: ["sh", "-c", "/app/migrate up && /app/seed"]
     depends_on:
       db:
         condition: service_healthy

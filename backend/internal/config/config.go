@@ -19,6 +19,9 @@ type Config struct {
 	SlikInquiryPath    string
 	SlikTimeout        time.Duration
 	CorsAllowedOrigins []string
+	// SeedDefaultPassword dipakai cmd/seed untuk akun demo. Nilainya berasal
+	// dari environment, tidak pernah di-hardcode (AGENTS.md Larangan 10).
+	SeedDefaultPassword string
 }
 
 // Load membaca konfigurasi dari environment. Tidak ada nilai secret yang
@@ -37,6 +40,9 @@ func Load() Config {
 		CorsAllowedOrigins: splitCSV(
 			getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000"),
 		),
+		// Tanpa default: seed akun demo harus gagal terang-terangan kalau
+		// variabelnya belum diset, bukan memakai password yang bisa ditebak.
+		SeedDefaultPassword: getEnv("SEED_DEFAULT_PASSWORD", ""),
 	}
 }
 

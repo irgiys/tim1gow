@@ -1,10 +1,11 @@
 # =============================================================================
 #  backend/Dockerfile — iMitra API (Go 1.22 + Chi)
 # =============================================================================
-#  Multi-stage: build statis di stage `builder`, lalu jalankan di alpine tipis.
-#  Dua binary dibangun sekaligus karena keduanya dipakai container ini:
+# Multi-stage: build statis di stage `builder`, lalu jalankan di alpine tipis.
+#  Tiga binary dibangun sekaligus karena semuanya dipakai container ini:
 #    - api     : server HTTP (cmd/api)
 #    - migrate  : runner golang-migrate (cmd/migrate), dijalankan sebelum api
+#    - seed     : verifikasi parameter + seed data demo (cmd/seed)
 #
 #  wget disertakan di stage runtime karena healthcheck compose memakainya
 #  (penyebab umum container "selalu unhealthy" adalah image tanpa wget/curl).
@@ -23,7 +24,8 @@ COPY . .
 
 # CGO_ENABLED=0 → binary statis, bisa jalan di alpine tanpa glibc.
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/api ./cmd/api && \
-    CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/migrate ./cmd/migrate
+    CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/migrate ./cmd/migrate && \
+    CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/seed ./cmd/seed
 
 # -----------------------------------------------------------------------------
 
@@ -37,6 +39,7 @@ WORKDIR /app
 
 COPY --from=builder /out/api /app/api
 COPY --from=builder /out/migrate /app/migrate
+COPY --from=builder /out/seed /app/seed
 
 # cmd/migrate membuka sumber migrasi dengan path relatif "file://migrations",
 # jadi berkas SQL harus ada relatif terhadap WORKDIR.
