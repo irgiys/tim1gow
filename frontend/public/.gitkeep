@@ -1,0 +1,16 @@
+# Direktori aset statis Next.js (favicon, gambar, robots.txt).
+#
+# Berkas ini ada supaya direktori `public/` ikut ter-commit walaupun masih
+# kosong. Alasannya bukan kerapian: `frontend/Dockerfile` stage `runner`
+# menjalankan
+#
+#     COPY --from=builder /app/public ./public
+#
+# dan Docker menggagalkan seluruh build kalau direktori sumbernya tidak ada:
+#
+#     ERROR: failed to compute cache key: "/app/public": not found
+#
+# `npm run build` sendiri tetap sukses, jadi kegagalan ini hanya muncul saat
+# `docker compose up` — yaitu di mesin penilai, bukan di laptop pengembang.
+#
+# Hapus berkas ini begitu ada aset nyata (mis. favicon.ico) di direktori ini.
