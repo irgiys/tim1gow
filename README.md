@@ -24,7 +24,7 @@
 | Nama | Peran | Fokus FR | Akun GitHub |
 |---|---|---|---|
 | Irgiyansyah  |  |  | https://github.com/irgiys/  |
-|  |  |  |  |
+| Yulio Zaki |  |  | https://github.com/yuliozakik |
 |  |  |  |  |
 |  |  |  |  |
 |  |  |  |  |
