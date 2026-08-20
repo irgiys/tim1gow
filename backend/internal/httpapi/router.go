@@ -44,6 +44,7 @@ func respondError(w http.ResponseWriter, status int, code, message, rule string)
 func NewRouter(cfg config.Config, gdb *gorm.DB) http.Handler {
 	var appH *ApprovalHandler
 	var audH *AuditHandler
+	var skoH *SkoringHandler
 
 	if gdb != nil {
 		paramRepo := repository.NewParameterRepository(gdb)
@@ -55,13 +56,27 @@ func NewRouter(cfg config.Config, gdb *gorm.DB) http.Handler {
 
 		appH = NewApprovalHandler(approvalSvc)
 		audH = NewAuditHandler(auditSvc)
+
+		// FR-06 & FR-07. Keduanya membaca tabel parameter lewat repository yang
+		// sama, jadi perubahan bobot/rentang oleh ADM langsung berlaku (AC-15).
+		skoH = NewSkoringHandler(
+			service.NewSkoringService(paramRepo),
+			service.NewMarginService(paramRepo),
+		)
 	}
 
-	return NewRouterWithHandlers(cfg, gdb, appH, audH)
+	return NewRouterWithAllHandlers(cfg, gdb, appH, audH, skoH)
 }
 
 // NewRouterWithHandlers membangun router Chi dengan handler yang disediakan (mudah di-test/mock).
 func NewRouterWithHandlers(cfg config.Config, gdb *gorm.DB, appH *ApprovalHandler, audH *AuditHandler) http.Handler {
+	return NewRouterWithAllHandlers(cfg, gdb, appH, audH, nil)
+}
+
+// NewRouterWithAllHandlers adalah bentuk lengkap: menerima seluruh handler,
+// termasuk skoring/margin. Handler bernilai nil hanya membuat route-nya tidak
+// terdaftar, sehingga paket test bisa memasang sebagian saja.
+func NewRouterWithAllHandlers(cfg config.Config, gdb *gorm.DB, appH *ApprovalHandler, audH *AuditHandler, skoH *SkoringHandler) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
@@ -104,6 +119,15 @@ func NewRouterWithHandlers(cfg config.Config, gdb *gorm.DB, appH *ApprovalHandle
 			// FR-09 & AC-12 / AC-13: Audit Trail hanya ada method GET (append-only)
 			api.Get("/pengajuan/{id}/audit", audH.RiwayatPengajuan)
 			api.Get("/audit", audH.SemuaAudit)
+		}
+
+		if skoH != nil {
+			// FR-06 skoring kelayakan; BR-03 dicek sebelum hitung, rincian
+			// komponen ikut di respons (BR-08 / AC-07).
+			api.Post("/pengajuan/{id}/skoring", skoH.HitungSkoring)
+			// FR-07 margin/nisbah; di luar rentang grade -> 422 BR-06 (AC-09).
+			api.Post("/pengajuan/{id}/margin", skoH.TentukanMargin)
+			api.Get("/pengajuan/{id}/margin", skoH.RentangMargin)
 		}
 	})
 
