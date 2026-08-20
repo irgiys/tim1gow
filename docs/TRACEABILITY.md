@@ -44,9 +44,9 @@ atau `Done (tanpa test)` dan jelaskan di `README.md` bagian 5.
 | FR | Judul | Prioritas | AC terkait | Endpoint | File test | PR | Status |
 |---|---|---|---|---|---|---|---|
 | FR-01 | Autentikasi & Otorisasi Berbasis Peran | P0 | AC-01, AC-02 |  |  |  |  |
-| FR-02 | Pengajuan Pembiayaan Mikro | P0 | AC-01 |  |  |  |  |
-| FR-03 | Upload & Verifikasi Dokumen | P0 | AC-03 |  |  |  |  |
-| FR-04 | Survei Lapangan (OTS) | P0 | AC-04 |  |  |  |  |
+| FR-02 | Pengajuan Pembiayaan Mikro | P0 | AC-01 | *(belum; service siap, handler menyusul)* | `backend/internal/service/pengajuan_service_test.go` | #11 | In Progress |
+| FR-03 | Upload & Verifikasi Dokumen | P0 | AC-03 | *(belum; service siap, handler menyusul)* | `backend/internal/service/dokumen_service_test.go` | #11 | In Progress |
+| FR-04 | Survei Lapangan (OTS) | P0 | AC-04 | *(belum; service siap, handler menyusul)* | `backend/internal/service/survei_service_test.go` | #11 | In Progress |
 | FR-05 | SLIK Check | P0 | AC-05, AC-06 |  |  |  |  |
 | FR-06 | Skoring Kelayakan Mikro | P0 | AC-06, AC-07, AC-08 | `POST /api/pengajuan/{id}/skoring`, `PATCH /api/pengajuan/{id}/skoring/override` | `internal/service/skoring_service_test.go`, `internal/httpapi/skoring_http_test.go` (`TestHTTP_AC07_...`, `TestHTTP_AC06_...`, `TestHTTP_AC04_...`), `internal/httpapi/skoring_override_http_test.go` (`TestHTTP_AC08_OverrideGrade2Ke3TercatatDiAuditTrail`) | #5 | Done |
 | FR-07 | Perhitungan Margin / Nisbah | P0 | AC-09 | `POST /api/pengajuan/{id}/margin`, `GET /api/pengajuan/{id}/margin` | `internal/service/margin_service_test.go`, `internal/httpapi/skoring_http_test.go` (`TestHTTP_AC09_MarginDiBawahBatasGrade1Diblokir`) | #5 | Done |
