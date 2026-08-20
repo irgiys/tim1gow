@@ -29,7 +29,7 @@
 **Tim**: iMitra Tim 1
 **Versi**: `<!-- ISI: 1.0 -->`
 **Tanggal**: `<!-- ISI -->`
-**Penyusun**: Irgiyansyah (pemilik berkas), dengan masukan Luthfi (Tech Lead) dan Soleh (QA)
+**Penyusun**: Yulio Zaki (pemilik berkas), dengan masukan Luthfi (Tech Lead) dan Soleh (QA)
 
 ---
 

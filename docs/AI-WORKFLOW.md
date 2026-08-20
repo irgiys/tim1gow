@@ -28,18 +28,18 @@ mengedit berkas yang sama.
 
 | Tugas | Penanggung jawab | Tool | Model | Alasan pemilihan | Terbukti? |
 |---|---|---|---|---|---|
-| Perancangan & kritik model data | Yulio Zaki (SDD BAB 4) | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
+| Perancangan & kritik model data | Irgiyansyah (SDD BAB 4) | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
 | Menulis migrasi skema | Rayvaldo | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
 | Aturan bisnis (skoring, margin) | Irgiyansyah | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
 | Aturan bisnis (routing approval, audit) | Luthfi | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
 | CRUD & endpoint rutin | Rayvaldo | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Komponen UI per peran | Aldi | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
+| Komponen UI per peran (shell, auth, AO) | Aldi | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
 | Integrasi HTTP ke mock SLIK + jalur error | Yulio Zaki | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
 | Menulis test dari AC | Soleh | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
 | Review kode / cari bug sebelum PR | Soleh (gerbang) + Luthfi (merge) | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
 | docker-compose & CI | Soleh | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
 | Seed & data uji | Irgiyansyah (parameter) + Yulio (SLIK) | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Dokumentasi (SRS, SDD, ADR) | Irgiyansyah / Yulio Zaki / Luthfi | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
+| Dokumentasi (SRS Yulio · SDD Irgi · ADR Luthfi) | Yulio Zaki / Irgiyansyah / Luthfi | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
 | Debugging galat runtime | pemilik lapisan yang bersangkutan | `<!-- ISI -->` | `<!-- ISI -->` | `<!-- ISI -->` |  |
 
 ---

@@ -30,7 +30,7 @@
 **Tim**: iMitra Tim 1
 **Versi**: `<!-- ISI -->`
 **Tanggal**: `<!-- ISI -->`
-**Penyusun**: Yulio Zaki (pemilik berkas), BAB 5 disusun bersama Rayvaldo; disetujui Luthfi (Tech Lead)
+**Penyusun**: Irgiyansyah (pemilik berkas), BAB 5 disusun bersama Rayvaldo; disetujui Luthfi (Tech Lead)
 
 ---
 
