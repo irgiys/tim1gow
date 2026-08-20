@@ -272,17 +272,55 @@ yang bisa diulang orang lain.
 - **Tindakan**: Menerapkan idiomatic Go *Dependency Inversion Principle* di mana interface repository (`ApprovalRepository`, `AuditRepository`, `ParameterRepository`) didefinisikan di package konsumen (`service`), dan package `repository` yang mengimplementasikannya. Seluruh unit dan integration test (7 test approval, 2 test audit, 2 test HTTP approval, 2 test HTTP audit append-only) dijalankan ulang dan 100% PASS. Migrasi 000003 berhasil diterapkan pada database Aiven PostgreSQL instance.
 - **Pelajaran**: Dalam layout Clean Architecture di Go, service mendefinisikan interface dependensinya sendiri; package luar (repository) yang mengimplementasikannya. Ini mencegah circular dependency dan membuat service mudah diuji dengan mock/fake tanpa ketergantungan DB nyata.
 
-### [DEVLOG-04] `<!-- ISI: judul -->` (FR-`<!-- ISI -->`)
-- **Waktu**:
-- **Oleh**:
-- **Tool/Model**:
-- **Tugas**:
-- **Cara memberi konteks**:
-- **Keluaran AI**:
-- **Yang salah**:
-- **Cara verifikasi**:
-- **Tindakan**:
-- **Pelajaran**:
+### [DEVLOG-04] Empat BR ditandai "Done" tanpa test yang mengujinya (BR-01, BR-08, BR-11, BR-12) — kasus AI salah
+- **Waktu**: 2026-08-20 15:20 – 16:40
+- **Oleh**: Soleh (QA / Verification)
+- **Tool/Model**: Hermes IDE (Claude Opus, agen dengan akses baca/tulis repo)
+- **Tugas**: Dua hal. (1) Mengisi kolom BR pada `docs/TRACEABILITY.md` dan tabel Ringkasan
+  Risiko untuk Gate 2. (2) Menutup BR yang belum punya test, dimulai dari yang bisa diuji
+  murni di `service` tanpa DB maupun HTTP.
+- **Cara memberi konteks**: melampirkan `AGENTS.md` bagian 5 (daftar BR + lokasi penegakan),
+  Larangan 3, 15, 18, 19, dan bagian "Cara memakai tabel ini sebagai alat deteksi risiko"
+  pada `TRACEABILITY.md`. Batasan yang disebut eksplisit: sebuah baris hanya boleh berstatus
+  `Done` kalau berkas penegaknya **benar-benar ada** DAN ada nama fungsi test yang menguji
+  aturan itu.
+- **Keluaran AI**: audit repo, koreksi tabel BR, pengisian Ringkasan Risiko Gate 2, lalu
+  8 fungsi test baru + `pengajuan_service.go` + migrasi `000004`.
+- **Yang salah**: dua hal, dan yang pertama bukan kesalahan sesi ini.
+  1. **Tabel BR yang sudah diisi PR #8 memuat empat klaim `Done` tanpa bukti.** BR-01 menunjuk
+     `pengajuan_service.go` yang **tidak ada satu pun di repo**; kolom test-nya menunjuk
+     `approval_service_test.go`, yang ternyata hanya memakai plafon 30jt/120jt/300jt —
+     semuanya **di dalam** batas, jadi tidak ada satu pun kasus yang menguji BR-01. BR-11
+     ditandai `Done` dengan test `audit_service_test.go` yang tidak memuat satu pun assertion
+     tentang NIK. BR-12 menunjuk berkas migrasi sebagai "test" — constraint DB bukan test.
+     BR-08 ditandai `Done` padahal tabel `komponen_skor` tidak ada di migrasi mana pun,
+     sementara BR-08 mewajibkan rincian **disimpan**, bukan sekadar dikembalikan di memori.
+  2. **Kesalahan agen di sesi ini**: rencana awalnya "mengisi kolom BR yang kosong" disusun
+     dari `main` lokal yang **ketinggalan 2 commit**. Tabel itu sebenarnya sudah terisi. Kalau
+     tidak di-`fetch` lebih dulu, hasil kerjanya akan menimpa pekerjaan orang lain.
+- **Cara verifikasi**: setiap klaim `Done` dicek satu per satu ke kode, bukan dibaca dari
+  tabel — `ls` berkas penegaknya, lalu `grep` nama fungsi test dan isi assertion-nya. Itu yang
+  memunculkan keempatnya. Untuk pekerjaan (2), test ditulis lebih dulu dan **dipastikan GAGAL**
+  (`undefined: NewPengajuanService`) sebelum implementasi ditulis, supaya terbukti test-nya
+  benar-benar menguji sesuatu. Verifikasi akhir dijalankan nyata, bukan diasumsikan:
+  `go test ./internal/service/... -count=1` hijau (47 subtest), `go vet` bersih, `gofmt` bersih.
+  Go tidak tersedia di mesin QA, jadi Go 1.22.12 portable dipasang ke direktori temp — versinya
+  disamakan dengan `go 1.22` di `go.mod`, bukan versi terbaru.
+- **Tindakan**: keempat baris diturunkan statusnya beserta alasannya (`b9adbe8`). BR-01 dan
+  BR-12 lalu benar-benar ditutup (`ef8f775`): 8 test, masing-masing dua arah sesuai Larangan 18
+  (4jt/4.999.999 **ditolak** dan 5jt/500jt **diterima**; batas diuji tepat di tepinya). Batas
+  plafon tidak ditulis sebagai konstanta melainkan dibaca dari `parameter_umum` (Larangan 3),
+  di-seed lewat migrasi **baru** `000004` — bukan mengubah `000002` yang sudah di-merge
+  (Larangan 2) — dengan `ON CONFLICT DO NOTHING` (Larangan 19). Aturan pengisian tabel BR
+  ditulis eksplisit di komentar berkas supaya tidak terulang.
+- **Pelajaran**: **kolom "Test" pada tabel traceability adalah klaim, bukan bukti.** Menunjuk
+  nama berkas test tidak membuktikan apa pun — yang membuktikan adalah nama fungsi test dan
+  isi assertion-nya. Tiga dari empat kesalahan di atas berbentuk sama: kolom test diisi berkas
+  yang *ada* dan *hijau*, tetapi tidak menguji aturan yang diklaim. Ini justru berbahaya karena
+  CI hijau memberi rasa aman: tim masuk Jumat dengan keyakinan 12/12 BR terlindungi, padahal
+  4 di antaranya tidak diuji siapa pun. Pelajaran kedua, untuk agen: **`git fetch` sebelum
+  menyusun rencana kerja pada repo yang dikerjakan 6 orang paralel** — rencana yang disusun
+  dari basis usang menghasilkan pekerjaan yang menimpa milik orang lain.
 
 ### [DEVLOG-05] `<!-- ISI: judul -->` (FR-`<!-- ISI -->`)
 - **Waktu**:
