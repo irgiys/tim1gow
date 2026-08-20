@@ -34,6 +34,7 @@
 |---|---|---|---|
 | 2026-08-20 09:50 | Luthfi | Versi awal — kerangka dari template brief | Sprint 0 |
 | 2026-08-20 10:20 | Luthfi | Isi bagian 2–7: stack (Go + Chi + GORM + golang-migrate, Next.js, Postgres 16), struktur direktori, konvensi, lokasi penegakan BR, perintah test/lint | Sprint 0 · ADR-0001 |
+| 2026-08-20 10:35 | Irgiyansyah | Tetapkan pemilik tunggal per berkas dokumentasi dan per lapisan `internal/service/`, diturunkan dari bagian 3 & 5 berkas ini; dicatat di README bagian 1 dan AI-WORKFLOW bagian 1 | Sprint 0 · brief §10 |
 |  |  |  |  |
 |  |  |  |  |
 

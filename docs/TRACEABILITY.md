@@ -1,7 +1,7 @@
 # TRACEABILITY — FR → AC → Endpoint → Test → PR
 
-**Tim**: `<!-- ISI: nama tim -->`
-**Terakhir diperbarui**: `<!-- ISI: tanggal & jam -->`
+**Tim**: iMitra Tim 1
+**Terakhir diperbarui**: 2026-08-20 10:30
 
 ---
 

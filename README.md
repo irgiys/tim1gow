@@ -13,7 +13,7 @@
 
 <!-- ISI: nama tim. Bebas, tapi dipakai konsisten di semua dokumen dan di nama repo. -->
 
-**Nama tim**: `<!-- ISI: nama tim -->`
+**Nama tim**: iMitra Tim 1
 
 <!-- ISI: tabel di bawah. Satu baris per anggota. Peran diambil dari §10 brief:
      Tech Lead / Integrator, AI Workflow Officer, Backend Engineer, Frontend Engineer,
@@ -23,19 +23,35 @@
 
 | Nama | Peran | Fokus FR | Akun GitHub |
 |---|---|---|---|
-| Irgiyansyah  |  |  | https://github.com/irgiys/  |
-| Yulio Zaki |  |  | https://github.com/yuliozakik |
-|  |  |  |  |
-|  |  |  |  |
-|  |  |  |  |
-|  |  |  |  |
-|  |  |  |  |
+| Luthfi | Tech Lead / Integrator | FR-08, FR-09 | `<!-- ISI: URL akun -->` |
+| Irgiyansyah | Backend Engineer — domain & skoring | FR-06, FR-07, FR-13 | https://github.com/irgiys/ |
+| Yulio Zaki | Backend Engineer — auth & integrasi SLIK | FR-01, FR-05, mock SLIK | https://github.com/yuliozakik |
+| Rayvaldo | Backend Engineer — pengajuan & dokumen | FR-02, FR-03, FR-04 | `<!-- ISI: URL akun -->` |
+| Aldi | AI Workflow Officer + Frontend Engineer | FR-03/FR-04/FR-08 (UI), FR-11 | `<!-- ISI: URL akun -->` |
+| Soleh | QA / Verification + DevOps / Release | FR-12, test AC-01…AC-15, CI & compose | `<!-- ISI: URL akun -->` |
+
+**Pembagian tanggung jawab non-koding** (satu berkas = satu pemilik tunggal; orang lain
+mengusulkan lewat PR, supaya tidak ada konflik merge pada tabel markdown):
+
+| Pemilik | Berkas yang dimiliki | Lapisan kode yang dimiliki |
+|---|---|---|
+| Luthfi (Tech Lead) | `AGENTS.md`, `docs/adr/`, memutus saat tim berdebat > 5 menit, merge PR | `internal/service/approval_service.go`, `audit_service.go` |
+| Irgiyansyah | `docs/SRS-iMitra.md` | `internal/service/skoring_service.go`, `margin_service.go`, tabel parameter |
+| Yulio Zaki | `docs/SDD-iMitra.md` (BAB 4 model data, BAB 5 endpoint) | `internal/httpapi/` middleware auth+peran, `internal/slik/`, `mock-slik/` |
+| Rayvaldo | Kontrak API di SDD BAB 5 bersama Yulio | `internal/service/pengajuan_service.go`, `internal/repository/` |
+| Aldi | `docs/AI-WORKFLOW.md`, `docs/AI-DEVLOG.md` (kontributor: semua anggota) | `frontend/app/`, `frontend/components/` |
+| Soleh | `README.md`, `docs/DEMO-SCRIPT.md`, `docs/TRACEABILITY.md` | `*_test.go`, `.github/workflows/ci.yml`, `docker-compose.yml` |
+
+Tim berisi 6 orang, jadi mengikuti bentuk **Tim 2** pada brief §10: QA / Verification
+dirangkap dengan DevOps / Release pada satu orang. Semua peran, termasuk Tech Lead dan
+AI Workflow Officer, tetap ikut menulis kode.
 
 <!-- ISI: kalau peran berubah di hari kedua, catat perubahannya di sini beserta alasan
      dan jam perubahannya. Perubahan peran tidak dilarang; perubahan yang tidak dicatat
      yang jadi masalah. -->
 
-**Perubahan peran selama hackathon**: `<!-- ISI: atau tulis "tidak ada" -->`
+**Perubahan peran selama hackathon**: tidak ada (per 2026-08-20 10:30). Kalau berubah di
+hari kedua, catat di sini beserta jam dan alasannya.
 
 ---
 

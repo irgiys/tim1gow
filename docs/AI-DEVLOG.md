@@ -1,7 +1,7 @@
 # AI-DEVLOG — Jurnal Pemakaian AI
 
-**Tim**: `<!-- ISI: nama tim -->`
-**Pemilik berkas**: AI Workflow Officer — `<!-- ISI: nama -->`
+**Tim**: iMitra Tim 1
+**Pemilik berkas**: AI Workflow Officer — Aldi
 **Kontributor**: seluruh anggota tim
 
 ---
