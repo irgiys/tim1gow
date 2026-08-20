@@ -47,6 +47,7 @@ func NewRouter(cfg config.Config, gdb *gorm.DB) http.Handler {
 	var audH *AuditHandler
 	var skoH *SkoringHandler
 	var authH *AuthHandler
+	var pjnH *PengajuanHandler
 	var pemeriksa PemeriksaPengguna
 
 	if gdb != nil {
@@ -62,6 +63,10 @@ func NewRouter(cfg config.Config, gdb *gorm.DB) http.Handler {
 
 		// FR-06 & FR-07. Keduanya membaca tabel parameter lewat repository yang
 		// sama, jadi perubahan bobot/rentang oleh ADM langsung berlaku (AC-15).
+		//
+		// DenganPrasyarat memasang sumber keadaan BR-03. Tanpa ini endpoint
+		// skoring menolak semua permintaan sebagai CONFIG_ERROR — disengaja:
+		// guard yang kehilangan sumber datanya harus berhenti, bukan lolos.
 		skoH = NewSkoringHandler(
 			service.NewSkoringServiceWithAudit(paramRepo, auditSvc).
 				DenganPrasyarat(repository.NewPrasyaratSkoringRepository(gdb)),
@@ -73,9 +78,23 @@ func NewRouter(cfg config.Config, gdb *gorm.DB) http.Handler {
 		pemeriksa = adapter
 		authH = NewAuthHandler(adapter, []byte(cfg.JWTSecret), cfg.JWTExpiresIn,
 			repository.CocokkanPassword)
+
+		// FR-02, FR-03, FR-04. Batas plafon dan daftar dokumen wajib dibaca
+		// dari tabel parameter, bukan konstanta di kode (Larangan 3).
+		pjnH = NewPengajuanHandler(
+			service.NewPengajuanService(
+				repository.NewPengajuanRepository(gdb),
+				repository.NewBatasPlafonRepository(gdb),
+			),
+			service.NewDokumenService(
+				repository.NewDokumenRepository(gdb),
+				repository.NewDokumenWajibRepository(gdb),
+			),
+			service.NewSurveiService(repository.NewSurveiRepository(gdb)),
+		)
 	}
 
-	return NewRouterLengkap(cfg, gdb, appH, audH, skoH, authH, pemeriksa)
+	return NewRouterLengkap(cfg, gdb, appH, audH, skoH, authH, pjnH, pemeriksa)
 }
 
 // NewRouterWithHandlers membangun router Chi dengan handler yang disediakan (mudah di-test/mock).
@@ -91,7 +110,7 @@ func NewRouterWithHandlers(cfg config.Config, gdb *gorm.DB, appH *ApprovalHandle
 // Penegakan peran itu sendiri diuji langsung di middleware_auth_test.go
 // (TestAC02_PeranLainDitolak403).
 func NewRouterWithAllHandlers(cfg config.Config, gdb *gorm.DB, appH *ApprovalHandler, audH *AuditHandler, skoH *SkoringHandler) http.Handler {
-	return NewRouterLengkap(cfg, gdb, appH, audH, skoH, nil, nil)
+	return NewRouterLengkap(cfg, gdb, appH, audH, skoH, nil, nil, nil)
 }
 
 // NewRouterLengkap adalah bentuk penuh: seluruh handler plus autentikasi.
@@ -100,7 +119,7 @@ func NewRouterWithAllHandlers(cfg config.Config, gdb *gorm.DB, appH *ApprovalHan
 // test handler tetap sederhana, sementara jalur produksi (NewRouter) selalu
 // mengirimkan pemeriksa sehingga setiap route API terlindungi.
 func NewRouterLengkap(cfg config.Config, gdb *gorm.DB, appH *ApprovalHandler, audH *AuditHandler,
-	skoH *SkoringHandler, authH *AuthHandler, pemeriksa PemeriksaPengguna) http.Handler {
+	skoH *SkoringHandler, authH *AuthHandler, pjnH *PengajuanHandler, pemeriksa PemeriksaPengguna) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
@@ -183,6 +202,40 @@ func NewRouterLengkap(cfg config.Config, gdb *gorm.DB, appH *ApprovalHandler, au
 					Get("/pengajuan/{id}/audit", audH.RiwayatPengajuan)
 				aman.With(peran(domain.PeranADM, domain.PeranANL)).
 					Get("/audit", audH.SemuaAudit)
+			}
+
+			if pjnH != nil {
+				// FR-02 — Pengajuan. Membuat pengajuan adalah wewenang AO;
+				// pemiliknya diambil dari token, bukan dari badan request.
+				aman.With(peran(domain.PeranAO)).
+					Post("/pengajuan", pjnH.Buat)
+
+				// Daftar & detail dibuka untuk AO dan seluruh pemeriksa.
+				// Pembatasan "AO hanya miliknya" ditegakkan di service
+				// (pengajuan_baca.go), bukan dengan menyembunyikan baris di UI
+				// (AGENTS.md Larangan 6).
+				aman.With(peran(domain.PeranAO, domain.PeranANL,
+					domain.PeranKCP, domain.PeranKC, domain.PeranKOM)).
+					Get("/pengajuan", pjnH.Daftar)
+				aman.With(peran(domain.PeranAO, domain.PeranANL,
+					domain.PeranKCP, domain.PeranKC, domain.PeranKOM)).
+					Get("/pengajuan/{id}", pjnH.Detail)
+
+				// FR-03 — Dokumen. AO mengunggah, ANL memverifikasi.
+				// Pemisahan peran ini adalah bentuk maker != checker (BR-09)
+				// pada tahap dokumen: pengunggah tidak boleh memverifikasi
+				// berkasnya sendiri.
+				aman.With(peran(domain.PeranAO)).
+					Post("/pengajuan/{id}/dokumen", pjnH.UploadDokumen)
+				aman.With(peran(domain.PeranAO, domain.PeranANL,
+					domain.PeranKCP, domain.PeranKC, domain.PeranKOM)).
+					Get("/pengajuan/{id}/dokumen", pjnH.DaftarDokumen)
+				aman.With(peran(domain.PeranANL)).
+					Patch("/pengajuan/{id}/dokumen/{dokId}/verifikasi", pjnH.VerifikasiDokumen)
+
+				// FR-04 — Survei lapangan. Hanya AO yang merekam OTS.
+				aman.With(peran(domain.PeranAO)).
+					Post("/pengajuan/{id}/survei", pjnH.RekamSurvei)
 			}
 
 			if skoH != nil {
