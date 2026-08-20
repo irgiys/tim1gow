@@ -84,12 +84,12 @@ func (s *approvalService) AjukanKeApproval(ctx context.Context, pengajuanID int6
 	}
 
 	// Validasi plafon dengan ambang approval (BR-01)
-	ambang, ditemukan, err := s.parameterRepo.AmbangApproval(p.TotalPlafon)
+	ambang, ditemukan, err := s.parameterRepo.AmbangApproval(p.PlafonDiajukan)
 	if err != nil {
 		return fmt.Errorf("gagal membaca ambang approval: %w", err)
 	}
 	if !ditemukan || len(ambang.Level) == 0 {
-		return domain.NewConfigError("ambang approval untuk total plafon Rp %d belum diatur", p.TotalPlafon)
+		return domain.NewConfigError("ambang approval untuk total plafon Rp %d belum diatur", p.PlafonDiajukan)
 	}
 
 	statusSebelum := p.Status
@@ -143,7 +143,7 @@ func (s *approvalService) PutuskanApproval(
 	}
 
 	// BR-09: Satu pengguna tidak boleh menjadi maker dan approver pada pengajuan yang sama
-	if p.CreatedBy == actorID {
+	if p.AOID == actorID {
 		return nil, domain.NewBusinessRuleError("BR-09",
 			"pengguna pembuat pengajuan tidak dapat menyetujui pengajuannya sendiri")
 	}
@@ -181,12 +181,12 @@ func (s *approvalService) PutuskanApproval(
 	}
 
 	// Baca ambang approval dari database (Tabel 4.1)
-	ambang, ditemukan, err := s.parameterRepo.AmbangApproval(p.TotalPlafon)
+	ambang, ditemukan, err := s.parameterRepo.AmbangApproval(p.PlafonDiajukan)
 	if err != nil {
 		return nil, fmt.Errorf("gagal membaca ambang approval: %w", err)
 	}
 	if !ditemukan || len(ambang.Level) == 0 {
-		return nil, domain.NewConfigError("ambang approval untuk total plafon Rp %d belum diatur", p.TotalPlafon)
+		return nil, domain.NewConfigError("ambang approval untuk total plafon Rp %d belum diatur", p.PlafonDiajukan)
 	}
 
 	statusSebelum := p.Status
@@ -218,7 +218,7 @@ func (s *approvalService) PutuskanApproval(
 
 		if currentIdx == -1 {
 			return nil, domain.NewBusinessRuleError("BUSINESS_RULE_VIOLATION",
-				"peran %s tidak ada dalam daftar level approval untuk plafon Rp %d", actorRole, p.TotalPlafon)
+				"peran %s tidak ada dalam daftar level approval untuk plafon Rp %d", actorRole, p.PlafonDiajukan)
 		}
 
 		// Jika masih ada level berikutnya
@@ -293,7 +293,7 @@ func (s *approvalService) AmbilDetailApproval(ctx context.Context, pengajuanID i
 		return nil, fmt.Errorf("gagal mengambil riwayat keputusan: %w", err)
 	}
 
-	ambang, _, _ := s.parameterRepo.AmbangApproval(p.TotalPlafon)
+	ambang, _, _ := s.parameterRepo.AmbangApproval(p.PlafonDiajukan)
 
 	var levelSaatIni domain.Peran
 	switch p.Status {

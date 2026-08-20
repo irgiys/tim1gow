@@ -110,11 +110,11 @@ func TestApprovalHTTP_AC11_MakerChecker_BR09(t *testing.T) {
 	p := &domain.Pengajuan{
 		ID:             1,
 		NomorReferensi: "IMT-20260820-0001",
-		TotalPlafon:    30_000_000,
+		PlafonDiajukan: 30_000_000,
 		Grade:          1,
 		Status:         domain.StatusWaitingApprovalL1,
-		CreatedBy:      makerID,
-		CreatedAt:      time.Now(),
+		AOID:           makerID,
+		DibuatPada:     time.Now(),
 	}
 	_ = appRepo.SimpanPengajuan(context.Background(), p)
 
@@ -162,11 +162,11 @@ func TestApprovalHTTP_AC10_SequentialApproval_BR02(t *testing.T) {
 	p := &domain.Pengajuan{
 		ID:             2,
 		NomorReferensi: "IMT-20260820-0002",
-		TotalPlafon:    120_000_000,
+		PlafonDiajukan: 120_000_000,
 		Grade:          2,
 		Status:         domain.StatusWaitingApprovalL1,
-		CreatedBy:      10,
-		CreatedAt:      time.Now(),
+		AOID:           10,
+		DibuatPada:     time.Now(),
 	}
 	_ = appRepo.SimpanPengajuan(context.Background(), p)
 

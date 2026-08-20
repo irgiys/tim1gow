@@ -103,11 +103,11 @@ func TestApproval_AC10_RoutingBerjenjangDanUrutan(t *testing.T) {
 		p := &domain.Pengajuan{
 			ID:             1,
 			NomorReferensi: "IMT-20260820-0001",
-			TotalPlafon:    30_000_000,
+			PlafonDiajukan: 30_000_000,
 			Grade:          2,
 			Status:         domain.StatusScored,
-			CreatedBy:      makerID,
-			CreatedAt:      time.Now(),
+			AOID:           makerID,
+			DibuatPada:     time.Now(),
 		}
 		_ = appRepo.SimpanPengajuan(ctx, p)
 
@@ -152,11 +152,11 @@ func TestApproval_AC10_RoutingBerjenjangDanUrutan(t *testing.T) {
 		p := &domain.Pengajuan{
 			ID:             2,
 			NomorReferensi: "IMT-20260820-0002",
-			TotalPlafon:    120_000_000,
+			PlafonDiajukan: 120_000_000,
 			Grade:          2,
 			Status:         domain.StatusScored,
-			CreatedBy:      10,
-			CreatedAt:      time.Now(),
+			AOID:           10,
+			DibuatPada:     time.Now(),
 		}
 		_ = appRepo.SimpanPengajuan(ctx, p)
 
@@ -217,11 +217,11 @@ func TestApproval_AC10_RoutingBerjenjangDanUrutan(t *testing.T) {
 		p := &domain.Pengajuan{
 			ID:             3,
 			NomorReferensi: "IMT-20260820-0003",
-			TotalPlafon:    300_000_000,
+			PlafonDiajukan: 300_000_000,
 			Grade:          1,
 			Status:         domain.StatusScored,
-			CreatedBy:      10,
-			CreatedAt:      time.Now(),
+			AOID:           10,
+			DibuatPada:     time.Now(),
 		}
 		_ = appRepo.SimpanPengajuan(ctx, p)
 
@@ -285,11 +285,11 @@ func TestApproval_AC11_MakerChecker_BR09(t *testing.T) {
 	p := &domain.Pengajuan{
 		ID:             4,
 		NomorReferensi: "IMT-20260820-0004",
-		TotalPlafon:    30_000_000,
+		PlafonDiajukan: 30_000_000,
 		Grade:          1,
 		Status:         domain.StatusWaitingApprovalL1,
-		CreatedBy:      makerID,
-		CreatedAt:      time.Now(),
+		AOID:           makerID,
+		DibuatPada:     time.Now(),
 	}
 	_ = appRepo.SimpanPengajuan(ctx, p)
 
@@ -329,11 +329,11 @@ func TestApproval_BR05_Grade5Ditolak(t *testing.T) {
 	p := &domain.Pengajuan{
 		ID:             5,
 		NomorReferensi: "IMT-20260820-0005",
-		TotalPlafon:    30_000_000,
+		PlafonDiajukan: 30_000_000,
 		Grade:          5,
 		Status:         domain.StatusScored,
-		CreatedBy:      10,
-		CreatedAt:      time.Now(),
+		AOID:           10,
+		DibuatPada:     time.Now(),
 	}
 	_ = appRepo.SimpanPengajuan(ctx, p)
 
@@ -367,11 +367,11 @@ func TestApproval_KeputusanRejectDanReturn(t *testing.T) {
 		p := &domain.Pengajuan{
 			ID:             6,
 			NomorReferensi: "IMT-20260820-0006",
-			TotalPlafon:    30_000_000,
+			PlafonDiajukan: 30_000_000,
 			Grade:          2,
 			Status:         domain.StatusWaitingApprovalL1,
-			CreatedBy:      10,
-			CreatedAt:      time.Now(),
+			AOID:           10,
+			DibuatPada:     time.Now(),
 		}
 		_ = appRepo.SimpanPengajuan(ctx, p)
 
@@ -409,11 +409,11 @@ func TestApproval_KeputusanRejectDanReturn(t *testing.T) {
 		p := &domain.Pengajuan{
 			ID:             7,
 			NomorReferensi: "IMT-20260820-0007",
-			TotalPlafon:    30_000_000,
+			PlafonDiajukan: 30_000_000,
 			Grade:          2,
 			Status:         domain.StatusWaitingApprovalL1,
-			CreatedBy:      10,
-			CreatedAt:      time.Now(),
+			AOID:           10,
+			DibuatPada:     time.Now(),
 		}
 		_ = appRepo.SimpanPengajuan(ctx, p)
 
