@@ -27,10 +27,10 @@
 
 **Dokumen**: Software Design Document
 **Sistem**: iMitra
-**Tim**: `<!-- ISI: nama tim -->`
+**Tim**: iMitra Tim 1
 **Versi**: `<!-- ISI -->`
 **Tanggal**: `<!-- ISI -->`
-**Penyusun**: `<!-- ISI -->`
+**Penyusun**: Irgiyansyah (pemilik berkas), BAB 5 disusun bersama Rayvaldo; disetujui Luthfi (Tech Lead)
 
 ---
 

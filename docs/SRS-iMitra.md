@@ -5,7 +5,7 @@
 **Tim**: iMitra Tim 1
 **Versi**: 1.0
 **Tanggal**: 2026-08-20
-**Penyusun**: Yulio Zaki (pemilik dokumen ini), dengan rujukan ke `01-BRIEF-Hackathon-iMitra.md` dan `AGENTS.md` yang disepakati seluruh anggota tim iMitra Tim 1
+**Penyusun**: Yulio Zaki (pemilik berkas), dengan masukan Luthfi (Tech Lead) dan Soleh (QA), berdasarkan `01-BRIEF-Hackathon-iMitra.md` dan `AGENTS.md` yang disepakati seluruh anggota tim iMitra Tim 1
 
 ---
 

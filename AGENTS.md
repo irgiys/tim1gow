@@ -34,7 +34,9 @@
 |---|---|---|---|
 | 2026-08-20 09:50 | Luthfi | Versi awal — kerangka dari template brief | Sprint 0 |
 | 2026-08-20 10:20 | Luthfi | Isi bagian 2–7: stack (Go + Chi + GORM + golang-migrate, Next.js, Postgres 16), struktur direktori, konvensi, lokasi penegakan BR, perintah test/lint | Sprint 0 · ADR-0001 |
-|  |  |  |  |
+| 2026-08-20 10:35 | Irgiyansyah | Tetapkan pemilik tunggal per berkas dokumentasi dan per lapisan `internal/service/`, diturunkan dari bagian 3 & 5 berkas ini; dicatat di README bagian 1 dan AI-WORKFLOW bagian 1 | Sprint 0 · brief §10 |
+| 2026-08-20 10:45 | Irgiyansyah | Koreksi pemilik SRS (Yulio Zaki) dan SDD (Irgiyansyah); tambah pembagian `frontend/app/` per route — UI sebuah FR ditulis oleh pemilik aturan bisnis FR itu, Aldi menyiapkan fondasi & me-review, supaya satu Frontend Engineer tidak menjadi penghambat 6 peran | Sprint 0 · brief §10 |
+| 2026-08-20 10:55 | Irgiyansyah | Tetapkan dua approver PR (Luthfi & Irgiyansyah) + isi `.github/CODEOWNERS` per path. Tegaskan larangan menyetujui PR sendiri sebagai cermin git dari BR-09 (maker ≠ checker) | Sprint 0 · brief §8.2 |
 |  |  |  |  |
 
 ---

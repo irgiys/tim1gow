@@ -13,7 +13,7 @@
 
 <!-- ISI: nama tim. Bebas, tapi dipakai konsisten di semua dokumen dan di nama repo. -->
 
-**Nama tim**: `<!-- ISI: nama tim -->`
+**Nama tim**: iMitra Tim 1
 
 <!-- ISI: tabel di bawah. Satu baris per anggota. Peran diambil dari §10 brief:
      Tech Lead / Integrator, AI Workflow Officer, Backend Engineer, Frontend Engineer,
@@ -23,19 +23,101 @@
 
 | Nama | Peran | Fokus FR | Akun GitHub |
 |---|---|---|---|
-| Irgiyansyah  |  |  | https://github.com/irgiys/  |
-| Yulio Zaki |  |  | https://github.com/yuliozakik |
-|  |  |  |  |
-|  |  |  |  |
-|  |  |  |  |
-|  |  |  |  |
-|  |  |  |  |
+| Luthfi | Tech Lead / Integrator | FR-08, FR-09 | `<!-- ISI: URL akun -->` |
+| Irgiyansyah | Backend Engineer — domain & skoring | FR-06, FR-07, FR-13 | https://github.com/irgiys/ |
+| Yulio Zaki | Backend Engineer — auth & integrasi SLIK | FR-01, FR-05, mock SLIK | https://github.com/yuliozakik |
+| Rayvaldo | Backend Engineer — pengajuan & dokumen | FR-02, FR-03, FR-04 | `<!-- ISI: URL akun -->` |
+| Aldi | AI Workflow Officer + Frontend Engineer | FR-03/FR-04/FR-08 (UI), FR-11 | `<!-- ISI: URL akun -->` |
+| Soleh | QA / Verification + DevOps / Release | FR-12, test AC-01…AC-15, CI & compose | `<!-- ISI: URL akun -->` |
+
+**Pembagian tanggung jawab non-koding** (satu berkas = satu pemilik tunggal; orang lain
+mengusulkan lewat PR, supaya tidak ada konflik merge pada tabel markdown):
+
+| Pemilik | Berkas yang dimiliki | Lapisan kode yang dimiliki |
+|---|---|---|
+| Luthfi (Tech Lead) | `AGENTS.md`, `docs/adr/`, memutus saat tim berdebat > 5 menit, merge PR | `internal/service/approval_service.go`, `audit_service.go` |
+| Irgiyansyah | `docs/SDD-iMitra.md` (BAB 4 model data, BAB 5 endpoint) | `internal/service/skoring_service.go`, `margin_service.go`, tabel parameter |
+| Yulio Zaki | `docs/SRS-iMitra.md` | `internal/httpapi/` middleware auth+peran, `internal/slik/`, `mock-slik/` |
+| Rayvaldo | Kontrak API di SDD BAB 5 bersama Irgiyansyah | `internal/service/pengajuan_service.go`, `internal/repository/` |
+| Aldi | `docs/AI-WORKFLOW.md`, `docs/AI-DEVLOG.md` (kontributor: semua anggota) | `frontend/app/`, `frontend/components/`, `frontend/lib/` |
+| Soleh | `README.md`, `docs/DEMO-SCRIPT.md`, `docs/TRACEABILITY.md` | `*_test.go`, `.github/workflows/ci.yml`, `docker-compose.yml` |
+
+Tim berisi 6 orang, jadi mengikuti bentuk **Tim 2** pada brief §10: QA / Verification
+dirangkap dengan DevOps / Release pada satu orang. Semua peran, termasuk Tech Lead dan
+AI Workflow Officer, tetap ikut menulis kode.
+
+**Pembagian frontend (`frontend/app/`, Next.js 14 App Router)**
+
+Bentuk Tim 2 pada brief §10 hanya menyediakan satu Frontend Engineer, sedangkan UI iMitra
+mencakup 6 peran. Kalau seluruh UI ditumpuk ke satu orang, ia menjadi penghambat semua FR
+pada jam-jam terakhir. Karena itu pembagiannya **vertikal**: pemilik aturan bisnis sebuah FR
+juga menulis UI untuk FR itu, memakai komponen bersama yang disiapkan Aldi. Aldi tetap
+pemilik `frontend/` — ia yang menyiapkan fondasi lebih dulu dan me-review PR frontend orang
+lain supaya gaya dan pemakaian komponen tetap konsisten.
+
+| Route / bagian UI | Peran pemakai | Penulis | FR | Kapan |
+|---|---|---|---|---|
+| Fondasi: `app/layout.tsx`, `lib/apiClient.ts`, `lib/auth.ts`, guard peran sisi klien, komponen bersama (`Table`, `StatusBadge`, `FormField`, `ErrorAlert`) | semua | **Aldi** | — | **Kamis paling awal** — semua route lain menunggu ini |
+| `app/login` + penyimpanan sesi/token | semua | **Aldi** | FR-01 | Kamis (walking skeleton) |
+| `app/(ao)/pengajuan/baru` — form pengajuan | AO | **Rayvaldo** | FR-02 | Kamis (walking skeleton) |
+| `app/(ao)/pengajuan` — daftar pengajuan milik AO | AO | **Rayvaldo** | FR-02 | Kamis (walking skeleton) |
+| `app/(ao)/pengajuan/[id]/dokumen` — upload & re-upload satu dokumen | AO | **Rayvaldo** | FR-03 | Kamis–Jumat |
+| `app/(ao)/pengajuan/[id]/survei` — form survei (koordinat, foto, omzet) | AO | **Aldi** | FR-04 | Kamis–Jumat |
+| `app/(anl)/pengajuan/[id]/verifikasi` — verifikasi dokumen + kode alasan tolak | ANL | **Rayvaldo** | FR-03 | Jumat pagi |
+| `app/(anl)/pengajuan/[id]/slik` — tombol SLIK check + tampilan hasil & jalur error | ANL | **Yulio Zaki** | FR-05 | Jumat pagi |
+| `app/(anl)/pengajuan/[id]/skoring` — **rincian kontribusi tiap komponen** + form override | ANL | **Irgiyansyah** | FR-06 | Jumat pagi |
+| `app/(anl)/pengajuan/[id]/margin` — hitung margin/nisbah + tampilan blokir BR-06 | ANL | **Irgiyansyah** | FR-07 | Jumat pagi |
+| `app/(approval)/pengajuan/[id]` — kartu keputusan APPROVE / REJECT / RETURN + alasan | KCP, KC, KOM | **Luthfi** | FR-08 | Jumat pagi |
+| `app/(anl)/pengajuan/[id]/audit` — tampilan audit trail (read-only) | ANL, approver | **Luthfi** | FR-09 | Jumat pagi |
+| `app/dashboard` — pipeline per status, jumlah per tahap, filter per peran | semua | **Soleh** | FR-12 | Jumat, setelah P0 |
+| `app/(adm)/parameter` — CRUD bobot skor, ambang approval, rentang margin | ADM | **Irgiyansyah** | FR-13 | Jumat, setelah P0 |
+| Notifikasi in-app | semua | **Aldi** | FR-11 | Jumat, setelah P0 |
+
+**Hak akses & review di GitHub**
+
+| Nama | Akses repo | Peran di alur PR |
+|---|---|---|
+| Luthfi | Write | Tech Lead — approver & **satu-satunya yang me-merge** ke `main` |
+| Irgiyansyah | Write | **Approver** (review + approve PR anggota lain), pemilik `docs/SDD-iMitra.md` + skoring/margin |
+| Yulio Zaki | Write | Reviewer bidang auth/SLIK, pemilik `docs/SRS-iMitra.md` |
+| Rayvaldo | Write | Reviewer bidang pengajuan/dokumen |
+| Aldi | Write | Reviewer seluruh PR `frontend/` |
+| Soleh | Write | QA — **gerbang terakhir sebelum merge** (test & lint benar-benar lolos) |
+| Muhammad Harum Alrasyid (instruktur) | Write | Penilai; membuka issue saat cross-review Jumat 16.05 |
+
+Batas yang berlaku untuk approver, mengikuti brief §8.2 dan `AGENTS.md` bagian 4.2:
+
+- **Tidak ada yang menyetujui PR-nya sendiri**, termasuk Tech Lead dan approver. Ini cermin
+  git dari BR-09 (maker ≠ checker) — kalau kontrol itu kita tegakkan di aplikasi, kita juga
+  menegakkannya pada diri sendiri.
+- Setiap PR butuh **minimal 1 approval dari anggota lain**, dan approval hangus kalau ada
+  commit baru (`Dismiss stale approvals` aktif di branch protection).
+- Approver **tidak boleh** meloloskan PR dengan CI merah atau test yang dilemahkan
+  (`AGENTS.md` Larangan 7). Kalau test gagal, yang salah kode atau requirement-nya.
+- Dua approver (Luthfi & Irgiyansyah) supaya PR tidak menganggur saat satu orang sedang
+  fokus koding — bukan supaya review bisa dilewati.
+- Kepemilikan per path didaftarkan di [`.github/CODEOWNERS`](.github/CODEOWNERS) sehingga
+  GitHub otomatis meminta review dari orang yang paham konsekuensinya.
+
+Aturan yang berlaku untuk seluruh frontend:
+
+- **Tidak ada aturan bisnis di frontend.** Skoring, margin, routing approval, dan seluruh
+  guard BR dihitung di `backend/internal/service/` (`AGENTS.md` bagian 3 dan Larangan 17).
+  UI hanya menampilkan hasil dan pesan error dari API.
+- **Menyembunyikan tombol bukan otorisasi.** Guard peran di UI sekadar kenyamanan; penolakan
+  yang dinilai (AC-02) adalah 403 dari server (`AGENTS.md` Larangan 6).
+- **Nomor referensi tidak dibangkitkan di frontend** (`AGENTS.md` Larangan 4).
+- **NIK dan path foto tidak boleh masuk URL** — pakai id internal pengajuan (BR-11).
+- Pesan error diambil dari field `message` respons API, jangan disusun ulang di UI, supaya
+  pesan yang menyebut kode BR (AC-04) tidak hilang.
+- Semua panggilan API lewat `lib/apiClient.ts`; jangan ada `fetch()` telanjang di komponen.
 
 <!-- ISI: kalau peran berubah di hari kedua, catat perubahannya di sini beserta alasan
      dan jam perubahannya. Perubahan peran tidak dilarang; perubahan yang tidak dicatat
      yang jadi masalah. -->
 
-**Perubahan peran selama hackathon**: `<!-- ISI: atau tulis "tidak ada" -->`
+**Perubahan peran selama hackathon**: tidak ada (per 2026-08-20 10:30). Kalau berubah di
+hari kedua, catat di sini beserta jam dan alasannya.
 
 ---
 
