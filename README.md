@@ -261,6 +261,3 @@ Tim ini memakai AI sebagai alat rekayasa. Jejaknya ada di tiga tempat:
 | [`docs/adr/`](docs/adr/) | Architecture Decision Records (minimal 3) |
 | [`fixtures/nasabah-uji.csv`](fixtures/nasabah-uji.csv) | Data uji wajib untuk mock SLIK |
 | [`SETUP-SPRINT-0.md`](SETUP-SPRINT-0.md) | Checklist Sprint 0 — kerjakan ini lebih dulu |
-#   t i m 1 g o w 
- 
- 
