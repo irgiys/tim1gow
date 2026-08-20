@@ -281,11 +281,11 @@ Alasan pemilihan ada di [`docs/adr/0001-pilihan-stack.md`](docs/adr/0001-pilihan
 
 | FR | Requirement | Prioritas | Status | PR |
 |---|---|---|---|---|
-| FR-14 | Simulasi angsuran murabahah & proyeksi bagi hasil musyarakah | P2 | Belum mulai | — |
-| FR-15 | Ekspor daftar pengajuan ke CSV | P2 | Belum mulai | — |
-| FR-16 | Mode draft offline untuk AO di lapangan | P2 | Belum mulai | — |
-| FR-17 | Deteksi lokasi palsu (mock location) pada survei lapangan | P2 | Belum mulai | — |
-| FR-18 | Laporan Turn-Around Time per tahap dan per petugas | P2 | Belum mulai | — |
+| FR-14 | Simulasi angsuran murabahah & proyeksi bagi hasil musyarakah | P2 | Tidak dikerjakan | — |
+| FR-15 | Ekspor daftar pengajuan ke CSV | P2 | Tidak dikerjakan | — |
+| FR-16 | Mode draft offline untuk AO di lapangan | P2 | Tidak dikerjakan | — |
+| FR-17 | Deteksi lokasi palsu (mock location) pada survei lapangan | P2 | Tidak dikerjakan | — |
+| FR-18 | Laporan Turn-Around Time per tahap dan per petugas | P2 | Tidak dikerjakan | — |
 
 **Dasar penilaian status di atas** (diverifikasi QA terhadap kode di `main`, bukan dari rencana —
 lihat `docs/TRACEABILITY.md` untuk penelusuran per AC dan per BR):
@@ -324,26 +324,61 @@ Penelusuran rinci FR → endpoint → test → PR ada di [`docs/TRACEABILITY.md`
 >
 > Tulis bagian ini pada Gate 3 (Jumat 11.20), bukan pada Jumat 14.55.
 
-<!-- ISI: satu baris per FR atau bagian FR yang tidak selesai. Isi kolom Keputusan dengan
-     "Dibuang" (sengaja tidak dikerjakan) atau "Sebagian" (ada yang jalan, ada yang tidak).
-     Untuk "Sebagian", sebutkan dengan tepat apa yang jalan dan apa yang tidak, supaya
-     penilai tidak menemukannya sendiri saat demo.
-     Alasan harus alasan rekayasa (prioritas, risiko, waktu, dependensi), bukan "kehabisan waktu"
-     tanpa keterangan. -->
+<!-- Diisi bertahap: draf pada Gate 2 (Kamis 15.30) supaya keputusan membuang diambil
+     dengan sadar dan masih ada waktu meninjaunya, lalu DIKUNCI pada Gate 3 (Jumat 11.20).
+     Kolom "Diputuskan kapan" wajib menunjukkan kapan keputusan itu benar-benar diambil.
+
+     Aturan yang kami pakai saat mengisi:
+     - FR P0 TIDAK BOLEH berkeputusan "Dibuang" — P0 adalah batas lulus fungsional
+       (brief §3). Kalau P0 belum jadi, keputusannya "Sebagian" beserta apa yang belum,
+       bukan dibuang.
+     - "Sebagian" wajib menyebut dengan tepat apa yang jalan dan apa yang tidak, supaya
+       penilai tidak menemukannya sendiri saat demo.
+     - Alasan wajib berupa alasan rekayasa (prioritas, risiko, dependensi), bukan
+       "kehabisan waktu" tanpa keterangan. -->
+
+> **Status bagian ini: DRAF Gate 2 (Kamis 15.30).** Baris P2 di bawah sudah merupakan
+> keputusan tim; baris P0 masih berupa penilaian keadaan per Kamis dan **wajib ditinjau
+> ulang pada Gate 3 (Jumat 11.20)**, karena masih ada sesi kerja Jumat pagi. Yang tidak
+> boleh terjadi: baris P0 di bawah dibiarkan apa adanya sampai code freeze tanpa ditinjau.
 
 | FR / Bagian | Keputusan | Apa yang jalan | Apa yang tidak | Alasan | Diputuskan kapan |
 |---|---|---|---|---|---|
-|  |  |  |  |  |  |
-|  |  |  |  |  |  |
-|  |  |  |  |  |  |
+| **FR-14** Simulasi angsuran & proyeksi bagi hasil | **Dibuang** | — | Seluruhnya | P2, dan tidak dirujuk AC mana pun. Menambah permukaan perhitungan finansial baru sementara BR-08 (rincian skor belum tersimpan) dan BR-11 (NIK di log belum ditegakkan) masih terbuka justru menaikkan risiko di area yang dinilai. Kami memilih memperkuat FR-06/FR-07 yang sudah punya test | Kamis 15.30 (Gate 2) |
+| **FR-15** Ekspor daftar pengajuan ke CSV | **Dibuang** | — | Seluruhnya | P2. Ekspor data pengajuan berisiko langsung terhadap BR-11 (NIK tidak boleh keluar ke berkas/URL), dan penegakan BR-11 belum ada. Membangun jalur ekspor sebelum kontrol datanya ada adalah urutan yang salah untuk aplikasi perbankan | Kamis 15.30 (Gate 2) |
+| **FR-16** Mode draft offline untuk AO | **Dibuang** | — | Seluruhnya | P2. Butuh penyimpanan lokal + strategi sinkronisasi + resolusi konflik — pekerjaan berhari-hari, bukan berjam-jam. Tidak realistis dalam sisa waktu dan tidak dirujuk AC mana pun | Kamis 15.30 (Gate 2) |
+| **FR-17** Deteksi lokasi palsu pada survei | **Dibuang** | — | Seluruhnya | P2, dan bergantung pada FR-04 (survei) yang sendirinya belum mulai. Membangun deteksi anti-fraud di atas fitur yang belum ada tidak mungkin diuji | Kamis 15.30 (Gate 2) |
+| **FR-18** Laporan Turn-Around Time | **Dibuang** | — | Seluruhnya | P2. Datanya sebenarnya sudah tersedia di `audit_trail` (setiap transisi punya aktor + timestamp, BR-10), jadi ini murni lapisan pelaporan — nilai tambahnya kecil dibanding menutup P0 yang masih `Sebagian` | Kamis 15.30 (Gate 2) |
+| **FR-01** Otorisasi — penegakan peran di server | **Sebagian** | Fondasi frontend: halaman login, `lib/auth.ts`, `apiClient.ts`, `GuardPeran.tsx` | Endpoint login dan middleware peran di server belum ada. Guard di UI **bukan** otorisasi (`AGENTS.md` Larangan 6), jadi AC-02 (403 dari API) belum dapat dibuktikan | Fondasi UI dikerjakan lebih dulu agar route lain tidak menunggu. Penegakan server adalah dependensi FR-01 yang masih dikerjakan | Kamis 15.30 — **tinjau di Gate 3** |
+| **FR-02** Pengajuan — endpoint & repository | **Sebagian** | Aturan bisnisnya sudah ada dan teruji di `service/pengajuan_service.go`: nomor referensi `IMT-YYYYMMDD-NNNN` termasuk larangan dipakai ulang (BR-12) dan batas plafon Rp 5jt–500jt (BR-01), 8 test | Endpoint `POST /api/pengajuan` belum terdaftar, dan `NomorReferensiRepository` baru diuji lewat fake — belum ada implementasi Postgres-nya | Aturan bisnis didahulukan karena itu yang paling berisiko salah dan paling mahal diperbaiki belakangan; endpoint adalah lapisan tipis di atasnya | Kamis 15.30 — **tinjau di Gate 3** |
+| **FR-07** Margin/nisbah — endpoint | **Sebagian** | `service/margin_service.go` memblokir margin/nisbah di luar rentang grade (BR-06) dan menolak grade 5 (BR-05); 6 test termasuk AC-09 dan AC-15 | Endpoint perhitungan margin dan layar ANL belum ada | Sama seperti FR-02: perhitungan finansial diamankan test lebih dulu. AC-09 (margin 10 % grade 1 diblokir) sudah dapat dibuktikan di lapisan service | Kamis 15.30 — **tinjau di Gate 3** |
+| **FR-13** Parameter terkonfigurasi — CRUD ADM | **Sebagian** | Keempat tabel parameter ada beserta seed idempoten, dan nilainya benar-benar dibaca dari data setiap kali menghitung — AC-15 terbukti lewat test yang mengubah baris parameter di tengah test lalu memastikan hasilnya berubah | Endpoint CRUD ADM dan layar `app/(adm)/parameter` belum ada, sehingga AC-15 belum dapat didemokan **lewat UI tanpa restart** seperti bunyi AC-nya | Bagian yang bernilai secara rekayasa — jaminan bahwa tidak ada angka ambang yang di-hardcode (`AGENTS.md` Larangan 3) — sudah tercapai dan terjaga test. Layar CRUD adalah pekerjaan UI biasa | Kamis 15.30 — **tinjau di Gate 3** |
+| **FR-06** Skoring — persistensi rincian komponen (BR-08) | **Sebagian** | Perhitungan skor + grade, rincian keempat komponen beserta bobot & kontribusi dikembalikan service; 8 test termasuk AC-06, AC-07, AC-15 | Rincian **belum disimpan** ke database — tabel `komponen_skor` belum ada di migrasi. BR-08 mewajibkan rincian disimpan, bukan hanya ditampilkan. Endpoint skoring juga belum ada | Perhitungannya yang paling berisiko salah, jadi diprioritaskan lebih dulu dan diamankan dengan test. Persistensi adalah pekerjaan migrasi + repository yang lebih mekanis | Kamis 15.30 — **tinjau di Gate 3** |
+| **BR-11** NIK & foto tidak boleh ke log/pesan error/URL | **Sebagian** | Tipe `HasilSlik` di domain sengaja **tidak** memuat NIK, sehingga data pribadi tidak mengalir ke lapisan perhitungan; pesan error BR-01/BR-03/BR-06 sudah bebas data pribadi | Belum ada helper log terpusat dan belum ada test otomatis yang menjaganya. Saat ini hanya bergantung pada review PR | Pelanggaran BR-11 tidak terlihat di jalur bahagia, jadi penegakan otomatis lebih berharga daripada penambahan fitur. Dijadwalkan sebagai pekerjaan QA berikutnya | Kamis 15.30 — **tinjau di Gate 3** |
 
 **Utang teknis yang kami sadari**:
 
-<!-- ISI: hal-hal yang jalan tapi Anda tahu belum benar. Contoh: validasi hanya di frontend
-     pada satu form tertentu, indeks database belum ada, penanganan timeout SLIK masih kasar.
-     Menyebutkannya lebih dulu lebih baik daripada ditemukan penilai. -->
-
-- `<!-- ISI -->`
+- **Belum ada satu pun test yang menyentuh database.** Seluruh 68 subtest memakai fake
+  repository. Akibatnya migrasi, constraint `UNIQUE` pada `nomor_referensi` (BR-12), dan
+  idempotensi seed **belum diverifikasi otomatis** — padahal service `db` sudah hidup di
+  `docker-compose.yml` dan `scripts/db-init/` sudah menyiapkan database test. `backend/test/`
+  belum dibuat.
+- **`NomorReferensiRepository` baru diuji lewat fake.** Kontraknya ("urutan maju terus, tidak
+  pernah mengisi lubang yang ditinggalkan pengajuan ditolak") belum dibuktikan di SQL nyata.
+  Di situlah BR-12 paling mungkin bocor.
+- **`backend/Dockerfile` belum ada**, sehingga `docker compose up` dari clone bersih baru
+  menghidupkan database — belum seluruh sistem. Ini yang membuat bagian 2.1, 2.2, 2.4, dan 2.5
+  berkas ini sengaja belum diisi: menulis langkah yang belum pernah dijalankan dari clone
+  bersih lebih buruk daripada mengakuinya.
+- **`golangci-lint` belum pernah dijalankan di mesin lokal** (jaringan menolak instalasinya);
+  yang terverifikasi lokal baru `go build`, `go vet`, `go test`, dan `gofmt`. Lint hanya
+  diverifikasi lewat CI.
+- **`github.com/lib/pq` tercatat `// indirect` di `backend/go.mod`** padahal diimpor langsung
+  oleh `internal/repository/parameter_repository_db.go`. CI tidak menjalankan `go mod tidy`,
+  jadi ini tidak membuat CI merah — tetapi manifesnya tidak jujur.
+- **Sebagian username di `.github/CODEOWNERS` masih placeholder** (Luthfi, Aldi, Rayvaldo),
+  sehingga GitHub belum dapat me-resolve pemilik untuk seluruh path. Review otomatis tidak
+  diminta ke orang yang seharusnya.
 
 ---
 
