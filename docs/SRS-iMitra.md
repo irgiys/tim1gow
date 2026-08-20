@@ -26,10 +26,10 @@
 
 **Dokumen**: Software Requirements Specification
 **Sistem**: iMitra
-**Tim**: `<!-- ISI: nama tim -->`
+**Tim**: iMitra Tim 1
 **Versi**: `<!-- ISI: 1.0 -->`
 **Tanggal**: `<!-- ISI -->`
-**Penyusun**: `<!-- ISI: nama-nama -->`
+**Penyusun**: Yulio Zaki (pemilik berkas), dengan masukan Luthfi (Tech Lead) dan Soleh (QA)
 
 ---
 

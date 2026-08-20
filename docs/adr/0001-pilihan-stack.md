@@ -9,7 +9,8 @@
 
 - **Status**: `<!-- ISI: Proposed | Accepted -->`
 - **Tanggal**: `<!-- ISI: 2026-08-20 -->`
-- **Pengambil keputusan**: `<!-- ISI: nama Tech Lead + siapa yang ikut memutuskan -->`
+- **Pengambil keputusan**: Luthfi (Tech Lead, pemutus) bersama Irgiyansyah, Yulio Zaki,
+  Rayvaldo, Aldi, dan Soleh
 - **Terkait**: seluruh FR; brief §7.1, §7.2; `AGENTS.md` bagian 2
 
 ---
