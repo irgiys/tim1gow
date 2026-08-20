@@ -251,8 +251,8 @@ Alasan pemilihan ada di [`docs/adr/0001-pilihan-stack.md`](docs/adr/0001-pilihan
 | FR-05 | SLIK Check | P0 |  |  |
 | FR-06 | Skoring Kelayakan Mikro | P0 |  |  |
 | FR-07 | Perhitungan Margin / Nisbah | P0 |  |  |
-| FR-08 | Approval Berjenjang | P0 |  |  |
-| FR-09 | Audit Trail | P0 |  |  |
+| FR-08 | Approval Berjenjang | P0 | Selesai & teruji | #6 |
+| FR-09 | Audit Trail | P0 | Selesai & teruji | #6 |
 
 ### P1 — SEHARUSNYA (nilai penuh butuh ini)
 

@@ -1,0 +1,24 @@
+# =============================================================================
+#  .gitattributes — iMitra
+# =============================================================================
+#
+#  Kenapa berkas ini ada: sebagian anggota tim memakai Windows dengan
+#  core.autocrlf=true. Tanpa aturan di bawah, berkas .sh yang disimpan git
+#  sebagai LF akan di-checkout menjadi CRLF di mesin Windows. Berkas itu lalu
+#  di-mount ke dalam container Linux (lihat service `db` di docker-compose.yml),
+#  dan shell di sana menolaknya dengan galat yang menyesatkan:
+#
+#      /docker-entrypoint-initdb.d/01-create-test-database.sh: bad interpreter:
+#      /bin/sh^M: no such file or directory
+#
+#  Akibatnya database test tidak pernah dibuat, dan penyebabnya tidak terlihat
+#  dari log compose. Ini kelas galat "jalan di laptop saya" yang paling mahal
+#  waktunya, karena berkasnya terlihat benar di editor.
+#
+#  Cakupannya sengaja DIPERSEMPIT ke berkas yang benar-benar dieksekusi di
+#  dalam container Linux — bukan `* text=auto` untuk seluruh repo — supaya
+#  berkas anggota lain tidak berubah massal hanya karena berkas ini masuk.
+#  Perluas daftar ini kalau ada skrip lain yang di-mount ke container.
+# =============================================================================
+
+*.sh text eol=lf
