@@ -30,13 +30,10 @@
 
 **Riwayat perubahan berkas ini** (isi setiap kali berubah — ini bukti evolusi):
 
-<!-- ISI: satu baris per perubahan. Contoh isi:
-     | 2026-08-20 13:40 | Andi | Larang agent membuat migrasi baru tanpa persetujuan Tech Lead | DEVLOG-04 | -->
-
 | Tanggal & jam | Oleh | Perubahan | Dipicu oleh |
 |---|---|---|---|
-|  |  | Versi awal |  |
-|  |  |  |  |
+| 2026-08-20 09:50 | Luthfi | Versi awal — kerangka dari template brief | Sprint 0 |
+| 2026-08-20 10:20 | Luthfi | Isi bagian 2–7: stack (Go + Chi + GORM + golang-migrate, Next.js, Postgres 16), struktur direktori, konvensi, lokasi penegakan BR, perintah test/lint | Sprint 0 · ADR-0001 |
 |  |  |  |  |
 |  |  |  |  |
 
@@ -84,67 +81,85 @@ sebagai kesalahan prioritas.
 
 ## 2. Stack & Versi
 
-<!-- ISI: isi persis, termasuk versi mayor-minor. "Node terbaru" bukan versi.
-     Agent akan menghasilkan kode yang salah kalau versi tidak jelas — misalnya memakai API
-     yang baru ada di versi berikutnya, atau sintaks yang sudah dihapus.
-     Hapus baris yang tidak Anda pakai; jangan tinggalkan baris kosong berisi tanda tanya. -->
+Semua versi di bawah **wajib sama** dengan tabel Keputusan di `docs/adr/0001-pilihan-stack.md`.
+Kalau salah satu berbeda, salah satunya usang — perbaiki lewat PR, jangan biarkan dua sumber.
 
 | Lapisan | Teknologi | Versi | Catatan |
 |---|---|---|---|
-| Bahasa backend | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Framework backend | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Bahasa/framework frontend | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Database | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| ORM / query layer | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Tool migrasi | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Test runner | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Linter / formatter | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| Mock SLIK | `<!-- ISI -->` | `<!-- ISI -->` | Layanan terpisah, dipanggil via HTTP |
-| Runtime | Docker Compose | `<!-- ISI -->` |  |
+| Bahasa backend | Go | 1.22.x | `go.mod` menetapkan `go 1.22`; jangan naikkan tanpa persetujuan Tech Lead |
+| Framework backend | Chi (`github.com/go-chi/chi/v5`) | 5.0.x | Router tipis di atas `net/http`; middleware auth/peran ditulis sendiri (mudah dijelaskan di demo) |
+| Bahasa/framework frontend | Next.js (App Router) + React + TypeScript | Next 14.2.x · React 18.3.x · TS 5.4.x | `app/` router, bukan `pages/`. Server Components untuk fetch, Client Components untuk form |
+| Database | PostgreSQL | 16-alpine | Sama dengan image di `docker-compose.yml` |
+| ORM / query layer | GORM (`gorm.io/gorm` + `gorm.io/driver/postgres`) | 1.25.x | Hanya untuk query/persistence. **`AutoMigrate` DILARANG** — skema hanya dari migrasi SQL |
+| Tool migrasi | golang-migrate (`github.com/golang-migrate/migrate/v4`) | 4.17.x | Migrasi berupa berkas `NNNNNN_nama.up.sql` / `.down.sql`. Bukan `db.sql` restore manual (brief §7.2 butir 4) |
+| Test runner | `go test` + testify (`github.com/stretchr/testify`) | testify 1.9.x | Backend & mock SLIK. Frontend: belum wajib test di P0 |
+| Linter / formatter | golangci-lint + `gofmt` (backend); ESLint + Prettier (frontend) | golangci-lint 1.59.x · ESLint 8.x (config Next) | `gofmt -l` harus kosong; `golangci-lint run` bersih |
+| Mock SLIK | Go (`net/http` stdlib) | Go 1.22.x | Satu toolchain dengan backend → lebih sedikit yang harus di-build penilai. Baca `fixtures/nasabah-uji.csv` saat start |
+| Runtime | Docker Compose | v2 (compose spec, tanpa kunci `version`) | `docker compose up` dari clone bersih harus menghidupkan seluruh sistem |
 
-**Batasan versi yang tidak boleh diubah agent**: `<!-- ISI: mis. "jangan naikkan versi ORM,
-migrasi sudah dibuat untuk versi ini" -->`
+**Batasan versi yang tidak boleh diubah agent**: jangan menaikkan versi Go, Next.js, GORM,
+atau golang-migrate — migrasi, `go.mod`, dan `package.json` sudah dikunci ke versi ini.
+Jangan mengganti golang-migrate dengan `gorm.AutoMigrate`; skema database **hanya** berasal
+dari berkas migrasi SQL agar reproducible di mesin penilai. Penambahan dependensi baru
+mengikuti Larangan #1 (persetujuan Tech Lead lebih dulu).
 
 ---
 
 ## 3. Struktur Direktori & Di Mana Kode Baru Diletakkan
 
-<!-- ISI: sesuaikan pohon di bawah dengan struktur nyata Anda setelah Sprint 0.
-     Ini bagian yang paling sering menyelamatkan waktu: tanpa ini, agent akan menaruh
-     kode di tempat baru setiap kali dan Anda akan punya tiga tempat berbeda untuk
-     aturan bisnis yang sama. -->
+Struktur ini mengikuti layout Go yang lazim (`cmd/` + `internal/`) dengan pemisahan lapisan
+handler → service → repository. Agent **wajib** menaruh kode sesuai tabel di bawah, bukan
+membuat direktori baru tiap kali.
 
 ```
 /
-├── backend/          <!-- ISI: rincian isi -->
-├── frontend/         <!-- ISI: rincian isi -->
-├── mock-slik/        <!-- ISI: rincian isi -->
+├── backend/                     # API Go (Chi)
+│   ├── cmd/
+│   │   ├── api/                 # main.go — bootstrap server, wiring dependency
+│   │   ├── migrate/             # runner golang-migrate (up/down)
+│   │   └── seed/                # runner seed idempoten
+│   ├── internal/
+│   │   ├── domain/              # entitas + enum + error tipe (tanpa HTTP, tanpa SQL)
+│   │   ├── service/             # ATURAN BISNIS: skoring, margin, routing approval, SLIK gate
+│   │   ├── repository/          # akses DB (GORM). Satu-satunya lapisan yang menyentuh DB
+│   │   ├── httpapi/             # handler/route + middleware (auth, peran, request-id)
+│   │   ├── slik/                # HTTP client ke mock SLIK + penanganan error/timeout
+│   │   └── config/              # pembacaan env (satu tempat, di-inject ke bawah)
+│   ├── migrations/              # NNNNNN_*.up.sql / *.down.sql (golang-migrate)
+│   ├── testdata/                # fixtures test backend
+│   └── Dockerfile
+├── frontend/                    # Next.js 14 (App Router, TS)
+│   ├── app/                     # route per peran (mis. app/(ao)/pengajuan/...)
+│   ├── components/              # komponen UI reusable
+│   ├── lib/                     # api client, helper auth, tipe bersama
+│   └── Dockerfile
+├── mock-slik/                   # stub SLIK Go (net/http) + Dockerfile
 ├── docs/
-├── fixtures/
+├── fixtures/                    # nasabah-uji.csv (dibaca mock-slik saat start, read-only)
 └── docker-compose.yml
 ```
 
 **Aturan penempatan (agent wajib mengikuti ini, bukan menebak)**:
 
-<!-- ISI: lengkapi tabel. Kolom "Lokasi" berisi path nyata di repo Anda.
-     Kolom "Jangan taruh di" penting: ia mencegah agent menaruh logika bisnis di controller
-     atau di komponen UI, yang merupakan kesalahan paling umum pada kode hasil AI. -->
-
 | Jenis kode | Lokasi | Jangan taruh di |
 |---|---|---|
-| Aturan bisnis / perhitungan (skoring, margin, routing approval) | `<!-- ISI -->` | controller, komponen UI, middleware |
-| Endpoint / route handler | `<!-- ISI -->` |  |
-| Akses database / repository | `<!-- ISI -->` | service, controller |
-| Migrasi skema | `<!-- ISI -->` | mana pun selain direktori migrasi |
-| Seed data | `<!-- ISI -->` |  |
-| Test unit | `<!-- ISI -->` |  |
-| Test integrasi / API | `<!-- ISI -->` |  |
-| Komponen UI | `<!-- ISI -->` |  |
-| Pemanggil HTTP ke mock SLIK (client + penanganan error) | `<!-- ISI -->` | dipanggil langsung dari controller |
-| Konfigurasi / pembacaan env | `<!-- ISI -->` | tersebar di seluruh kode |
+| Aturan bisnis / perhitungan (skoring, margin, routing approval) | `backend/internal/service/` | controller (`httpapi`), komponen UI, middleware |
+| Endpoint / route handler | `backend/internal/httpapi/` (route + handler) | — |
+| Akses database / repository | `backend/internal/repository/` | service, controller (`httpapi`) |
+| Migrasi skema | `backend/migrations/` (`*.up.sql` / `*.down.sql`) | mana pun selain direktori migrasi; jangan pakai `AutoMigrate` |
+| Seed data | `backend/cmd/seed/` (idempoten, aman dijalankan ulang) | migrasi, service |
+| Test unit | berdampingan dengan kode: `*_test.go` di paket yang sama (mis. `internal/service/`) | direktori terpisah yang jauh dari kode |
+| Test integrasi / API | `backend/internal/httpapi/*_test.go` atau `backend/test/` (paket `_test`) | test unit yang menyentuh DB nyata |
+| Komponen UI | `frontend/components/` dan route di `frontend/app/` | logika aturan bisnis (semuanya di backend) |
+| Pemanggil HTTP ke mock SLIK (client + penanganan error) | `backend/internal/slik/` | dipanggil langsung dari controller (`httpapi`) atau repository |
+| Konfigurasi / pembacaan env | `backend/internal/config/` (satu struct, di-load sekali) | tersebar di seluruh kode (`os.Getenv` di mana-mana) |
 
-**Aturan lapisan**: `<!-- ISI: mis. "controller tidak boleh mengakses database langsung;
-selalu lewat service → repository. Aturan bisnis tidak boleh tahu tentang HTTP." -->`
+**Aturan lapisan**: alur wajib `httpapi (handler) → service → repository → DB`. Handler tidak
+boleh mengakses database langsung; selalu lewat service → repository. **Aturan bisnis
+(`service`) tidak boleh tahu tentang HTTP** (tanpa `http.Request`/`http.ResponseWriter`) dan
+tidak boleh membangun SQL sendiri. `slik` client dipanggil dari `service`, bukan dari handler.
+`repository` tidak berisi aturan bisnis — hanya baca/tulis data. Enum dan tipe error hidup di
+`domain` supaya semua lapisan memakai definisi yang sama.
 
 ---
 
@@ -152,33 +167,43 @@ selalu lewat service → repository. Aturan bisnis tidak boleh tahu tentang HTTP
 
 ### 4.1 Penamaan
 
-<!-- ISI: sesuaikan dengan bahasa pilihan Anda. Yang penting: KONSISTEN dan TERTULIS.
-     Agent tidak punya preferensi; ia akan meniru apa pun yang Anda tulis di sini,
-     dan kalau tidak Anda tulis, ia akan meniru gaya campur aduk dari data latihannya. -->
+Konsisten dan tertulis. Agent meniru apa pun yang ada di sini — jadi ikuti persis.
 
 | Objek | Konvensi | Contoh |
 |---|---|---|
-| Tabel database | `<!-- ISI -->` | `<!-- ISI -->` |
-| Kolom database | `<!-- ISI -->` | `<!-- ISI -->` |
-| Kelas / tipe | `<!-- ISI -->` | `<!-- ISI -->` |
-| Fungsi / method | `<!-- ISI -->` | `<!-- ISI -->` |
-| Berkas | `<!-- ISI -->` | `<!-- ISI -->` |
-| Endpoint | `<!-- ISI -->` | `<!-- ISI -->` |
-| Enum status | `<!-- ISI -->` | `<!-- ISI -->` |
+| Tabel database | `snake_case`, jamak, istilah domain Bahasa Indonesia | `pengajuan`, `dokumen`, `survei`, `hasil_skoring`, `audit_trail` |
+| Kolom database | `snake_case` | `nomor_referensi`, `total_plafon`, `created_at`, `created_by` |
+| Kelas / tipe (Go) | `PascalCase` exported, satu entitas satu tipe | `Pengajuan`, `HasilSkoring`, `SlikResult`, `MarginRange` |
+| Fungsi / method (Go) | `PascalCase` (exported) / `camelCase` (unexported), kata kerja | `HitungSkor`, `RouteApproval`, `validatePlafon` |
+| Berkas (Go) | `snake_case.go`; test `*_test.go` | `skoring_service.go`, `skoring_service_test.go` |
+| Berkas/komponen (frontend) | Komponen React `PascalCase.tsx`; util `camelCase.ts` | `PengajuanForm.tsx`, `apiClient.ts` |
+| Endpoint | `/api/<sumberdaya-jamak>[/{id}[/<aksi>]]`, kebab-case, sumber daya Bahasa Indonesia | `POST /api/pengajuan`, `POST /api/pengajuan/{id}/skoring`, `POST /api/dokumen/{id}/verifikasi` |
+| Enum status (kode & DB) | `SCREAMING_SNAKE_CASE`, nilai persis seperti daftar di bawah | `DRAFT`, `REJECTED_SLIK`, `WAITING_APPROVAL_L1` |
 | Branch | `feat/FR-NN-slug`, `fix/FR-NN-slug` | `feat/FR-06-skoring`, `fix/FR-03-reupload` |
 
-**Bahasa dalam kode**: `<!-- ISI: putuskan sekali dan tegakkan. Pilihan yang lazim:
-istilah domain dalam Bahasa Indonesia (pengajuan, survei, plafon, nisbah, skoring),
-sisanya dalam Bahasa Inggris. Yang dilarang adalah mencampur keduanya untuk konsep yang
-sama — "pengajuan" di satu berkas dan "application" di berkas lain akan membuat agent
-membuat dua entitas untuk satu hal. -->`
+**Bahasa dalam kode**: istilah domain memakai **Bahasa Indonesia** (`pengajuan`, `survei`,
+`plafon`, `nisbah`, `skoring`, `dokumen`, `anggota`, `approval`), sisanya (kata teknis umum,
+kata kerja generik) **Bahasa Inggris** (`create`, `handler`, `repository`, `service`,
+`request`, `response`). **Dilarang** memakai dua istilah untuk konsep yang sama — pilih
+`pengajuan`, jangan campur dengan `application`/`loan`; pilih `survei`, jangan `survey`.
+Sekali sebuah konsep dinamai, nama itu dipakai di DB, kode backend, endpoint, dan UI.
 
 **Status pengajuan (enum wajib)**: nilai berikut berasal dari brief dan tidak boleh diganti
 namanya: `DRAFT`, `REJECTED_SLIK`, `REJECTED_SCORING`, `APPROVED`. Status dokumen: `VERIFIED`,
 `REJECTED`. Status survei: `VALID`. Keputusan approval: `APPROVE`, `REJECT`, `RETURN`.
-<!-- ISI: tambahkan status transisi lain yang Anda perlukan (mis. SUBMITTED, VERIFYING,
-     SCORED, WAITING_APPROVAL_L1) beserta diagram transisinya di SDD. Agent tidak boleh
-     menambah nilai enum baru tanpa memperbarui daftar ini dan SDD. -->
+
+Status transisi tambahan yang dipakai iMitra (wajib juga tercatat di `docs/SDD-iMitra.md`
+sebelum dipakai di kode) — **agent tidak boleh menambah nilai baru di luar daftar ini tanpa
+memperbarui bagian ini DAN SDD**:
+
+- Alur pengajuan: `DRAFT` → `SUBMITTED` → `VERIFYING` → `SLIK_CHECKED` → `SCORED`
+  → `WAITING_APPROVAL_L1` → `WAITING_APPROVAL_L2` → `WAITING_APPROVAL_L3` → `APPROVED`
+- Cabang penolakan/kembali: `REJECTED_SLIK`, `REJECTED_SCORING`, `RETURNED` (dari `RETURN`
+  approval, kembali ke AO), `REJECTED` (penolakan approval final).
+- Status dokumen: `PENDING` → `VERIFIED` | `REJECTED`. Status survei: `DRAFT` → `VALID`.
+
+Diagram transisi lengkap + guard-nya wajib ada di `docs/SDD-iMitra.md`. Menambah/mengubah
+satu nilai enum = perbarui daftar ini, SDD, dan migrasi (bila enum di DB).
 
 **Format nomor referensi pengajuan**: `IMT-YYYYMMDD-NNNN` (contoh: `IMT-20260820-0007`).
 Unik dan tidak pernah dipakai ulang, termasuk untuk pengajuan yang ditolak (BR-12).
@@ -207,27 +232,32 @@ Aturan tambahan:
 
 ### 4.3 Error Handling
 
-<!-- ISI: sesuaikan dengan stack. Yang wajib ada, apa pun stack-nya: bentuk respons error
-     yang seragam, kode HTTP yang benar, dan larangan membocorkan data pribadi. -->
+Semua error API memakai satu bentuk respons JSON yang sama, dibangun oleh helper terpusat di
+`backend/internal/httpapi/` (mis. `respondError`). Handler tidak menyusun JSON error manual.
 
 Bentuk respons error yang seragam untuk seluruh API:
 
 ```json
 {
-  "error": "<!-- ISI: KODE_KONSTAN -->",
-  "message": "<!-- ISI: pesan untuk pengguna, tanpa data pribadi -->",
-  "rule": "<!-- ISI: opsional, mis. BR-03 -->"
+  "error": "KODE_KONSTAN",
+  "message": "pesan singkat untuk pengguna, tanpa data pribadi",
+  "rule": "BR-03"
 }
 ```
+
+- `error`: kode konstan `SCREAMING_SNAKE_CASE` (mis. `FORBIDDEN`, `VALIDATION_ERROR`,
+  `BUSINESS_RULE_VIOLATION`, `SLIK_UNAVAILABLE`, `NOT_FOUND`), stabil dan bisa dicek di test.
+- `message`: kalimat untuk pengguna, **tanpa NIK / nomor dokumen / path foto** (BR-11).
+- `rule`: opsional, diisi kode BR saat error berasal dari pelanggaran aturan bisnis.
 
 | Situasi | Kode HTTP | Catatan |
 |---|---|---|
 | Belum login / token tidak valid | 401 | |
 | Login tetapi peran tidak berwenang | **403** | AC-02 menguji ini secara langsung. Bukan 200, bukan 404 |
-| Validasi input gagal | 400 | Sebutkan field yang salah |
-| Pelanggaran aturan bisnis (BR-xx) | `<!-- ISI: 409 atau 422, pilih satu dan konsisten -->` | Pesan wajib menyebut kode BR-nya |
+| Validasi input gagal | 400 | Sebutkan field yang salah di `message` (tanpa data pribadi) |
+| Pelanggaran aturan bisnis (BR-xx) | **422** | Pilihan tetap untuk seluruh repo. `message` wajib menyebut kode BR; isi juga field `rule` |
 | Sumber daya tidak ada | 404 | |
-| Mock SLIK tidak tersedia / timeout | `<!-- ISI: mis. 502 atau 503 -->` | **Tidak boleh** dianggap SLIK bersih |
+| Mock SLIK tidak tersedia / timeout / 503 | **502** | Backend gagal memakai dependensi hulu. **Tidak boleh** dianggap SLIK bersih; pengajuan tidak lanjut |
 | Galat tak terduga | 500 | Tanpa stack trace ke klien |
 
 Aturan yang tidak boleh dilanggar agent:
@@ -301,18 +331,18 @@ benar-benar dibaca dari data.
 
 | BR | Aturan (ringkas) | Ditegakkan di |
 |---|---|---|
-| **BR-01** | Plafon < Rp 5.000.000 atau > Rp 500.000.000 ditolak saat submit, dengan pesan yang menjelaskan batas | `<!-- ISI: path -->` |
-| **BR-02** | Approval harus berurutan: level 2 tidak dapat memutuskan sebelum level 1 memberi `APPROVE` | `<!-- ISI -->` |
-| **BR-03** | Skoring baru boleh jalan jika semua dokumen wajib `VERIFIED` **dan** ada minimal satu survei `VALID` **dan** SLIK check sudah dijalankan | `<!-- ISI -->` |
-| **BR-04** | Hasil SLIK berlaku 30 hari; lewat itu pengajuan ditandai perlu SLIK ulang | `<!-- ISI -->` |
-| **BR-05** | Grade 5 tidak dapat diajukan ke approval; status menjadi `REJECTED_SCORING` | `<!-- ISI -->` |
-| **BR-06** | Margin/nisbah di luar rentang grade-nya **diblokir**, bukan diberi peringatan. Tidak ada jalur "lanjutkan saja" | `<!-- ISI -->` |
-| **BR-07** | Skor akhir = Σ (skor komponen × bobot) ÷ Σ bobot, dibulatkan ke bilangan bulat terdekat | `<!-- ISI -->` |
-| **BR-08** | Rincian tiap komponen skor wajib ditampilkan ke ANL **dan disimpan** bersama hasil skoring, bukan hanya angka akhir | `<!-- ISI -->` |
-| **BR-09** | Satu pengguna tidak boleh menjadi maker dan approver pada pengajuan yang sama; ditegakkan di **server** | `<!-- ISI -->` |
-| **BR-10** | Setiap perubahan status wajib punya aktor dan timestamp; tidak ada perubahan "oleh sistem" tanpa jejak sebab | `<!-- ISI -->` |
-| **BR-11** | NIK dan foto dokumen adalah data pribadi: tidak boleh muncul di log aplikasi, pesan error, atau URL | `<!-- ISI -->` |
-| **BR-12** | Nomor referensi `IMT-YYYYMMDD-NNNN` unik dan tidak pernah dipakai ulang, termasuk untuk pengajuan yang ditolak | `<!-- ISI -->` |
+| **BR-01** | Plafon < Rp 5.000.000 atau > Rp 500.000.000 ditolak saat submit, dengan pesan yang menjelaskan batas | `backend/internal/service/pengajuan_service.go` (submit) |
+| **BR-02** | Approval harus berurutan: level 2 tidak dapat memutuskan sebelum level 1 memberi `APPROVE` | `backend/internal/service/approval_service.go` |
+| **BR-03** | Skoring baru boleh jalan jika semua dokumen wajib `VERIFIED` **dan** ada minimal satu survei `VALID` **dan** SLIK check sudah dijalankan | `backend/internal/service/skoring_service.go` (guard sebelum hitung) |
+| **BR-04** | Hasil SLIK berlaku 30 hari; lewat itu pengajuan ditandai perlu SLIK ulang | `backend/internal/service/slik_service.go` |
+| **BR-05** | Grade 5 tidak dapat diajukan ke approval; status menjadi `REJECTED_SCORING` | `backend/internal/service/skoring_service.go`, `approval_service.go` |
+| **BR-06** | Margin/nisbah di luar rentang grade-nya **diblokir**, bukan diberi peringatan. Tidak ada jalur "lanjutkan saja" | `backend/internal/service/margin_service.go` |
+| **BR-07** | Skor akhir = Σ (skor komponen × bobot) ÷ Σ bobot, dibulatkan ke bilangan bulat terdekat | `backend/internal/service/skoring_service.go` |
+| **BR-08** | Rincian tiap komponen skor wajib ditampilkan ke ANL **dan disimpan** bersama hasil skoring, bukan hanya angka akhir | `backend/internal/service/skoring_service.go` + tabel `komponen_skor` (repository) |
+| **BR-09** | Satu pengguna tidak boleh menjadi maker dan approver pada pengajuan yang sama; ditegakkan di **server** | `backend/internal/service/approval_service.go` (cek `created_by` ≠ approver) |
+| **BR-10** | Setiap perubahan status wajib punya aktor dan timestamp; tidak ada perubahan "oleh sistem" tanpa jejak sebab | `backend/internal/service/audit_service.go` (dipanggil setiap transisi) |
+| **BR-11** | NIK dan foto dokumen adalah data pribadi: tidak boleh muncul di log aplikasi, pesan error, atau URL | Lintas lapisan: helper log di `internal/config`/`httpapi`, review di setiap PR |
+| **BR-12** | Nomor referensi `IMT-YYYYMMDD-NNNN` unik dan tidak pernah dipakai ulang, termasuk untuk pengajuan yang ditolak | `backend/internal/service/pengajuan_service.go` + constraint `UNIQUE` di migrasi + tabel/sequence `nomor_referensi` |
 
 ### 5.1 Tabel parameter — wajib sebagai data, bukan konstanta
 
@@ -356,14 +386,18 @@ termasuk sebagai nilai default, termasuk di dalam test.
 | Hasil survei lapangan | 20 | Penilaian ANL atas kondisi usaha, skala 1–5, dikali 20 |
 
 **Nama tabel parameter di database Anda**:
-<!-- ISI: sebutkan nama tabel nyata, mis. parameter_skoring, ambang_approval, rentang_margin.
-     Tulis di sini supaya agent memakai nama yang benar tanpa menebak. -->
 
 | Isi | Nama tabel |
 |---|---|
-| Bobot & aturan komponen skor | `<!-- ISI -->` |
-| Ambang approval per plafon | `<!-- ISI -->` |
-| Rentang margin/nisbah per grade | `<!-- ISI -->` |
+| Bobot & aturan komponen skor | `parameter_skoring` |
+| Ambang approval per plafon | `ambang_approval` |
+| Rentang margin/nisbah per grade | `rentang_margin` |
+
+Ketiga tabel ini di-*seed* dari `backend/cmd/seed/` (bukan hardcode di service), dan wajib
+punya endpoint CRUD ADM (FR-13). Service membaca nilainya lewat repository setiap kali
+menghitung — bukan meng-cache di konstanta. Test aturan bisnis (skoring/margin/approval)
+wajib **mengubah baris tabel ini lebih dulu** lalu memverifikasi hasilnya berubah (AC-15),
+bukan menyalin angka brief ke dalam test.
 
 ### 5.2 Kontrak mock SLIK (tidak boleh diubah agent)
 
@@ -418,41 +452,59 @@ Agent **tidak boleh**:
 <!-- ISI: larangan tambahan dari pengalaman tim. Format:
      16. <larangan> — ditambahkan setelah DEVLOG-xx, karena <apa yang terjadi>. -->
 
-16. `<!-- ISI -->`
-17. `<!-- ISI -->`
+16. Memakai `gorm.AutoMigrate` atau membuat/mengubah skema dari kode Go. Skema **hanya** dari
+    berkas migrasi SQL di `backend/migrations/` (golang-migrate). GORM hanya untuk query.
+17. Menaruh aturan bisnis (skoring, margin, routing approval, guard BR) di `httpapi` (handler),
+    middleware, `repository`, atau komponen frontend. Semuanya di `backend/internal/service/`.
 
 ---
 
 ## 7. Perintah Test & Lint
 
-<!-- ISI: perintah persis, bisa di-copy-paste. Harus identik dengan yang ada di
-     .github/workflows/ci.yml dan README.md bagian 2.6. Kalau agent diminta
-     "jalankan test", inilah yang ia jalankan. -->
+Perintah di bawah wajib **identik** dengan `.github/workflows/ci.yml` dan `README.md` bagian 2.6.
+Kalau agent diminta "jalankan test", inilah yang ia jalankan. Backend Go dijalankan dari
+`backend/`, frontend dari `frontend/`. Untuk lingkungan lengkap (DB + mock SLIK) pakai
+`docker compose`.
 
 ```bash
+# ---- Backend (Go) — dijalankan dari ./backend ----
+
 # Instalasi dependensi
-<!-- ISI -->
+go mod download
 
-# Migrasi (lingkungan test)
-<!-- ISI -->
+# Migrasi (lingkungan test) — golang-migrate via runner cmd/migrate
+go run ./cmd/migrate up            # membaca DATABASE_URL_TEST saat APP_ENV=test
 
-# Seed data uji
-<!-- ISI -->
+# Seed data uji (idempoten)
+go run ./cmd/seed
 
-# Test unit
-<!-- ISI -->
+# Test unit (aturan bisnis: skoring, margin, approval)
+go test ./internal/service/... -count=1
 
-# Test integrasi / API
-<!-- ISI -->
+# Test integrasi / API (butuh DB test + mock SLIK aktif)
+go test ./internal/httpapi/... ./test/... -count=1
+
+# Semua test backend
+go test ./... -count=1
 
 # Lint
-<!-- ISI -->
+golangci-lint run ./...
 
-# Format
-<!-- ISI -->
+# Format (harus tidak menghasilkan output; kalau ada, format belum bersih)
+gofmt -l .
 
-# Semua sekaligus, sama seperti yang dijalankan CI
-<!-- ISI -->
+# ---- Frontend (Next.js) — dijalankan dari ./frontend ----
+npm ci
+npm run lint
+npm run build
+
+# ---- Semua sekaligus, sama seperti yang dijalankan CI ----
+# Cara paling andal untuk mereproduksi CI di mesin bersih:
+docker compose up -d db mock-slik
+# (backend) dari ./backend:
+APP_ENV=test go run ./cmd/migrate up && go run ./cmd/seed && go test ./... -count=1 && golangci-lint run ./... && test -z "$(gofmt -l .)"
+# (frontend) dari ./frontend:
+npm ci && npm run lint && npm run build
 ```
 
 **Aturan Definition of Done untuk agent**: perubahan dianggap selesai hanya jika lint bersih,
