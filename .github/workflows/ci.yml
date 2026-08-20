@@ -237,7 +237,10 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache-dependency-path: backend/go.sum
+          # go.sum belum ada selama backend masih memakai stdlib saja. Cache
+          # by-manifest tetap valid dengan go.mod, dan `cache-dependency-path`
+          # yang menunjuk berkas tidak ada membuat langkah ini gagal.
+          cache-dependency-path: backend/go.mod
 
       - name: Unduh dependensi
         run: go mod download
@@ -265,15 +268,34 @@ jobs:
           # Dependensi sudah di-cache oleh setup-go di atas.
           skip-cache: true
 
+      - name: Apakah runner migrate & seed sudah ada
+        id: runner
+        run: |
+          set -euo pipefail
+          # backend/cmd/migrate dan backend/cmd/seed dibuat bertahap. Selama
+          # keduanya belum ada, `go run ./cmd/migrate` gagal dengan "no Go files"
+          # dan membuat CI merah karena berkas yang memang belum ditulis —
+          # bukan karena ada yang rusak.
+          [ -d cmd/migrate ] && M=true || M=false
+          [ -d cmd/seed ]    && S=true || S=false
+          echo "migrate=$M" >> "$GITHUB_OUTPUT"
+          echo "seed=$S"    >> "$GITHUB_OUTPUT"
+          if [ "$M" = "false" ] || [ "$S" = "false" ]; then
+            echo "::warning title=Runner migrasi/seed belum ada::cmd/migrate=$M cmd/seed=$S. Langkah migrasi dan seed dilewati, sehingga test integrasi yang memerlukan database BELUM diuji. Wajib ada sebelum walking skeleton."
+          fi
+
       - name: Migrasi (database test)
+        if: steps.runner.outputs.migrate == 'true'
         run: go run ./cmd/migrate up
 
       - name: Seed data uji (idempoten)
+        if: steps.runner.outputs.seed == 'true'
         run: go run ./cmd/seed
 
       - name: Seed dijalankan ulang — wajib tetap lolos (idempoten)
         # Brief §7.2 butir 5: seed wajib idempoten. Menjalankannya dua kali di CI
         # adalah cara termurah membuktikannya, bukan sekadar mengklaimnya.
+        if: steps.runner.outputs.seed == 'true'
         run: go run ./cmd/seed
 
       - name: Test (unit + integrasi)
