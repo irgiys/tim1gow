@@ -131,24 +131,28 @@ services:
   #  Uncomment bersamaan dengan backend/Dockerfile, backend/cmd/migrate, dan
   #  backend/cmd/seed. Perintahnya mengikuti AGENTS.md bagian 7.
   # ---------------------------------------------------------------------------
-  # migrate:
-  #   build:
-  #     context: ./backend
-  #   container_name: imitra-migrate
-  #   environment:
-  #     APP_ENV: ${APP_ENV}
-  #     TZ: ${TZ}
-  #     LOG_LEVEL: ${LOG_LEVEL}
-  #     DATABASE_URL: ${DATABASE_URL}
-  #     SEED_DEFAULT_PASSWORD: ${SEED_DEFAULT_PASSWORD}
-  #     PASSWORD_HASH_COST: ${PASSWORD_HASH_COST}
-  #   command: ["sh", "-c", "/app/migrate up && /app/seed"]
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
-  #   restart: "no"
-  #   networks:
-  #     - imitra
+  #  CATATAN: `/app/seed` belum diaktifkan karena backend/cmd/seed belum ada.
+  #  Untuk sementara seed nilai awal tabel parameter ditangani migrasi
+  #  000002_seed_parameter.up.sql (ON CONFLICT DO NOTHING, jadi idempoten).
+  #  Tambahkan `&& /app/seed` di command begitu cmd/seed dibuat.
+  migrate:
+    build:
+      context: ./backend
+    container_name: imitra-migrate
+    environment:
+      APP_ENV: ${APP_ENV}
+      TZ: ${TZ}
+      LOG_LEVEL: ${LOG_LEVEL}
+      DATABASE_URL: ${DATABASE_URL}
+      SEED_DEFAULT_PASSWORD: ${SEED_DEFAULT_PASSWORD}
+      PASSWORD_HASH_COST: ${PASSWORD_HASH_COST}
+    command: ["/app/migrate", "up"]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - imitra
 
   # ---------------------------------------------------------------------------
   #  backend — API Go (Chi), port 8080 di dalam container.
@@ -159,48 +163,53 @@ services:
   #    - /health wajib memeriksa koneksi database, bukan hanya membalas 200.
   #    - Tidak ada nilai secret yang ditulis di sini; semuanya dari .env.
   # ---------------------------------------------------------------------------
-  # backend:
-  #   build:
-  #     context: ./backend
-  #   container_name: imitra-backend
-  #   restart: unless-stopped
-  #   environment:
-  #     APP_ENV: ${APP_ENV}
-  #     TZ: ${TZ}
-  #     LOG_LEVEL: ${LOG_LEVEL}
-  #     PORT: 8080
-  #     DATABASE_URL: ${DATABASE_URL}
-  #     JWT_SECRET: ${JWT_SECRET}
-  #     JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
-  #     PASSWORD_HASH_COST: ${PASSWORD_HASH_COST}
-  #     SLIK_BASE_URL: ${SLIK_BASE_URL}
-  #     SLIK_INQUIRY_PATH: ${SLIK_INQUIRY_PATH}
-  #     SLIK_TIMEOUT_MS: ${SLIK_TIMEOUT_MS}
-  #     SLIK_RETRY: ${SLIK_RETRY}
-  #     SLIK_RESULT_VALID_DAYS: ${SLIK_RESULT_VALID_DAYS}
-  #     UPLOAD_DIR: /app/uploads
-  #     UPLOAD_MAX_BYTES: ${UPLOAD_MAX_BYTES}
-  #     UPLOAD_ALLOWED_MIME: ${UPLOAD_ALLOWED_MIME}
-  #     CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
-  #   ports:
-  #     - "${BACKEND_PORT}:8080"
-  #   volumes:
-  #     - imitra-uploads:/app/uploads
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
-  #     mock-slik:
-  #       condition: service_healthy
-  #     migrate:
-  #       condition: service_completed_successfully
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
-  #     interval: 10s
-  #     timeout: 3s
-  #     retries: 10
-  #     start_period: 20s
-  #   networks:
-  #     - imitra
+  #  CATATAN: dependensi ke `mock-slik` belum diaktifkan karena direktori
+  #  mock-slik/ belum ada (pemilik: Yulio Zaki). Tambahkan kembali blok
+  #  `mock-slik: condition: service_healthy` di depends_on begitu service itu
+  #  aktif, supaya backend tidak start sebelum SLIK siap.
+  backend:
+    build:
+      context: ./backend
+    container_name: imitra-backend
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV}
+      TZ: ${TZ}
+      LOG_LEVEL: ${LOG_LEVEL}
+      BACKEND_PORT: 8080
+      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL_TEST: ${DATABASE_URL_TEST}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      PASSWORD_HASH_COST: ${PASSWORD_HASH_COST}
+      SLIK_BASE_URL: ${SLIK_BASE_URL}
+      SLIK_INQUIRY_PATH: ${SLIK_INQUIRY_PATH}
+      SLIK_TIMEOUT_MS: ${SLIK_TIMEOUT_MS}
+      SLIK_RETRY: ${SLIK_RETRY}
+      SLIK_RESULT_VALID_DAYS: ${SLIK_RESULT_VALID_DAYS}
+      UPLOAD_DIR: /app/uploads
+      UPLOAD_MAX_BYTES: ${UPLOAD_MAX_BYTES}
+      UPLOAD_ALLOWED_MIME: ${UPLOAD_ALLOWED_MIME}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+    ports:
+      - "${BACKEND_PORT}:8080"
+    volumes:
+      - imitra-uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      # /readyz memeriksa koneksi database (503 bila DB tidak siap); /healthz
+      # hanya liveness. Yang dipakai di sini readiness, sesuai catatan di atas.
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/readyz || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+    networks:
+      - imitra
 
   # ---------------------------------------------------------------------------
   #  frontend — Next.js 14 (App Router), disajikan sebagai hasil build.
@@ -236,7 +245,7 @@ services:
 volumes:
   imitra-db-data:
   # Uncomment bersamaan dengan service backend yang memakainya.
-  # imitra-uploads:
+  imitra-uploads:
 
 networks:
   imitra:
