@@ -260,17 +260,17 @@ yang bisa diulang orang lain.
   penolakan. Pelajaran kedua: `go vet` dijalankan sebelum `go test`, bukan sesudah —
   ia menangkap kesalahan format yang membuat pesan kegagalan test menyesatkan.
 
-### [DEVLOG-03] `<!-- ISI: judul -->` (FR-`<!-- ISI -->`)
-- **Waktu**:
-- **Oleh**:
-- **Tool/Model**:
-- **Tugas**:
-- **Cara memberi konteks**:
-- **Keluaran AI**:
-- **Yang salah**:
-- **Cara verifikasi**:
-- **Tindakan**:
-- **Pelajaran**:
+### [DEVLOG-03] Penegakan maker != approver (BR-09), urutan berjenjang (BR-02), dan audit trail append-only (FR-08, FR-09)
+- **Waktu**: 2026-08-20 14:45 – 15:15
+- **Oleh**: Luthfi (Tech Lead)
+- **Tool/Model**: Antigravity IDE (Gemini 3.7 Flash)
+- **Tugas**: Implementasi fungsionalitas FR-08 (Approval Berjenjang) dan FR-09 (Audit Trail) beserta database migration (000003), repository GORM, service layer dengan penegakan BR-01/02/05/09/10/11/12, HTTP API handlers, dan test otomatis untuk AC-08, AC-10, AC-11, AC-12, AC-13.
+- **Cara memberi konteks**: Melampirkan `AGENTS.md` bagian 3–5, `docs/SDD-iMitra.md` BAB 3.2, 4, 5, skema ambang approval di tabel `ambang_approval`, dan acceptance criteria brief §5 (AC-08/10/11/12/13). Menegaskan aturan server-side check untuk BR-09 (`maker != approver`), sequential routing BR-02, serta immutability AC-13.
+- **Keluaran AI**: Migrasi `000003_pengajuan_approval_audit.up.sql` / `down.sql`, domain model `approval.go` dan `audit.go`, repository `approval_repository.go`, `audit_repository.go`, `parameter_repository_db.go`, service `approval_service.go` dan `audit_service.go`, handler `approval_handler.go` dan `audit_handler.go`, serta test suite `approval_service_test.go`, `audit_service_test.go`, `approval_http_test.go`, `audit_http_test.go`.
+- **Yang salah**: Saat perancangan pertama, terjadi import cycle antara package `service` dan `repository` karena `service` mengimpor `repository` sementara `repository` mengimpor `service.ParameterRepository`.
+- **Cara verifikasi**: Menjalankan `go test -v ./...` yang langsung mendeteksi `import cycle not allowed` pada saat kompilasi.
+- **Tindakan**: Menerapkan idiomatic Go *Dependency Inversion Principle* di mana interface repository (`ApprovalRepository`, `AuditRepository`, `ParameterRepository`) didefinisikan di package konsumen (`service`), dan package `repository` yang mengimplementasikannya. Seluruh unit dan integration test (7 test approval, 2 test audit, 2 test HTTP approval, 2 test HTTP audit append-only) dijalankan ulang dan 100% PASS. Migrasi 000003 berhasil diterapkan pada database Aiven PostgreSQL instance.
+- **Pelajaran**: Dalam layout Clean Architecture di Go, service mendefinisikan interface dependensinya sendiri; package luar (repository) yang mengimplementasikannya. Ini mencegah circular dependency dan membuat service mudah diuji dengan mock/fake tanpa ketergantungan DB nyata.
 
 ### [DEVLOG-04] `<!-- ISI: judul -->` (FR-`<!-- ISI -->`)
 - **Waktu**:

@@ -44,6 +44,30 @@ const (
 	PeranADM Peran = "ADM"
 )
 
+// KeputusanApproval adalah pilihan keputusan approver (KCP / KC / KOM).
+type KeputusanApproval string
+
+const (
+	KeputusanApprove KeputusanApproval = "APPROVE"
+	KeputusanReject  KeputusanApproval = "REJECT"
+	KeputusanReturn  KeputusanApproval = "RETURN"
+)
+
+// AksiAudit adalah jenis aksi yang dicatat di audit_trail.
+type AksiAudit string
+
+const (
+	AksiBuatPengajuan     AksiAudit = "BUAT_PENGAJUAN"
+	AksiSubmitPengajuan   AksiAudit = "SUBMIT_PENGAJUAN"
+	AksiVerifikasiDokumen AksiAudit = "VERIFIKASI_DOKUMEN"
+	AksiSlikCheck         AksiAudit = "SLIK_CHECK"
+	AksiSkoring           AksiAudit = "SKORING"
+	AksiOverrideSkor      AksiAudit = "OVERRIDE_SKOR"
+	AksiAjukanApproval    AksiAudit = "AJUKAN_APPROVAL"
+	AksiKeputusanApproval AksiAudit = "KEPUTUSAN_APPROVAL"
+	AksiLogin             AksiAudit = "LOGIN"
+)
+
 // Kode komponen skor kelayakan. Baris parameternya hidup di tabel
 // parameter_skoring; konstanta di bawah hanya KUNCI baris, bukan nilai bobotnya.
 const (
@@ -52,3 +76,6 @@ const (
 	KomponenLamaUsaha      = "LAMA_USAHA"
 	KomponenSurveiLapangan = "SURVEI_LAPANGAN"
 )
+
+
+
