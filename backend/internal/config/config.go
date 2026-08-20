@@ -22,6 +22,9 @@ type Config struct {
 	// SeedDefaultPassword dipakai cmd/seed untuk akun demo. Nilainya berasal
 	// dari environment, tidak pernah di-hardcode (AGENTS.md Larangan 10).
 	SeedDefaultPassword string
+	// PasswordHashCost adalah cost bcrypt. Nilai kecil mempercepat seed dan
+	// test; produksi memakai nilai lebih tinggi lewat environment.
+	PasswordHashCost int
 }
 
 // Load membaca konfigurasi dari environment. Tidak ada nilai secret yang
@@ -43,6 +46,7 @@ func Load() Config {
 		// Tanpa default: seed akun demo harus gagal terang-terangan kalau
 		// variabelnya belum diset, bukan memakai password yang bisa ditebak.
 		SeedDefaultPassword: getEnv("SEED_DEFAULT_PASSWORD", ""),
+		PasswordHashCost:    getInt("PASSWORD_HASH_COST", 10),
 	}
 }
 

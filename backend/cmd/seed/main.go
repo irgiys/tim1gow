@@ -18,12 +18,11 @@
 //     ConfigError, bukan memakai nilai default — AGENTS.md Larangan 3), dan
 //     lebih baik ketahuan di sini daripada di depan penilai.
 //
-//  2. SEED data demo yang bukan skema dan bukan parameter. Saat ini belum ada
-//     yang bisa diisi: tabel `pengguna` (FR-01, pemilik Yulio Zaki) belum
-//     dibuat migrasi mana pun. Begitu tabel itu ada, akun demo per peran
-//     (AO/ANL/KCP/KC/KOM/ADM) diisi di sini — memakai INSERT ... ON CONFLICT
-//     DO NOTHING, dan password dari SEED_DEFAULT_PASSWORD, tidak pernah
-//     di-hardcode.
+//  2. SEED data demo yang bukan skema dan bukan parameter: akun demo per peran
+//     (AO/ANL/KCP/KC/KOM/ADM) di tabel `pengguna`, dibuat setelah migrasi
+//
+//  000004. Password diambil dari SEED_DEFAULT_PASSWORD dan di-hash bcrypt —
+//     tidak pernah di-hardcode dan tidak pernah disimpan sebagai plaintext.
 //
 // IDEMPOTEN (brief §7.2 butir 5): aman dijalankan berulang. Runner ini tidak
 // pernah memakai ON CONFLICT DO UPDATE untuk tabel parameter, supaya perubahan
@@ -41,6 +40,7 @@ import (
 	"fmt"
 	"log"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
 	"github.com/irgiys/tim1gow/backend/internal/config"
@@ -120,6 +120,24 @@ func verifikasiParameter(gdb *gorm.DB) error {
 	return nil
 }
 
+// akunDemo adalah daftar akun per peran untuk demo dan test manual.
+//
+// Ini BUKAN parameter aturan bisnis (tidak ada ambang/bobot di sini), jadi
+// tidak melanggar Larangan 3. Password sengaja tidak ada di struct ini —
+// nilainya satu untuk semua akun, dari SEED_DEFAULT_PASSWORD.
+var akunDemo = []struct {
+	Nama  string
+	Email string
+	Peran string
+}{
+	{"Ayu Account Officer", "ao@imitra.test", "AO"},
+	{"Andi Analis Mikro", "anl@imitra.test", "ANL"},
+	{"Kartika Kepala CP", "kcp@imitra.test", "KCP"},
+	{"Kurnia Kepala Cabang", "kc@imitra.test", "KC"},
+	{"Komite Pembiayaan", "kom@imitra.test", "KOM"},
+	{"Admin Sistem", "adm@imitra.test", "ADM"},
+}
+
 // seedPengguna mengisi akun demo per peran. Mengembalikan -1 bila tabel
 // `pengguna` belum ada, supaya runner ini tetap berguna (dan tetap exit 0)
 // sebelum FR-01 termigrasi — compose memanggilnya dengan
@@ -137,12 +155,32 @@ func seedPengguna(gdb *gorm.DB, cfg config.Config) (int, error) {
 		return -1, nil
 	}
 
-	// Tabel `pengguna` sudah ada tetapi bentuk kolomnya milik FR-01 (Yulio
-	// Zaki). Menebak nama kolom di sini akan menghasilkan seed yang gagal
-	// senyap, jadi runner berhenti dengan instruksi yang jelas.
 	if cfg.SeedDefaultPassword == "" {
 		return 0, fmt.Errorf("SEED_DEFAULT_PASSWORD kosong; wajib diisi untuk membuat akun demo")
 	}
-	return 0, fmt.Errorf("tabel `pengguna` sudah ada tetapi seed akun demo belum ditulis; " +
-		"lengkapi seedPengguna() sesuai skema FR-01 sebelum dipakai untuk demo")
+
+	// Hash dihitung sekali untuk semua akun: bcrypt itu mahal secara sengaja,
+	// dan setiap akun memakai password yang sama.
+	hash, err := bcrypt.GenerateFromPassword([]byte(cfg.SeedDefaultPassword), cfg.PasswordHashCost)
+	if err != nil {
+		return 0, fmt.Errorf("menghitung hash password: %w", err)
+	}
+
+	var dibuat int
+	for _, a := range akunDemo {
+		// ON CONFLICT DO NOTHING, bukan DO UPDATE (Larangan 19): password yang
+		// diubah ADM saat demo tidak boleh ter-reset diam-diam saat restart.
+		res := gdb.Exec(`
+			INSERT INTO pengguna (nama, email, password_hash, peran, aktif)
+			VALUES (?, ?, ?, ?, TRUE)
+			ON CONFLICT (email) DO NOTHING`,
+			a.Nama, a.Email, string(hash), a.Peran)
+		if res.Error != nil {
+			// Email BUKAN data pribadi nasabah, tetapi tetap tidak diikutkan ke
+			// pesan galat supaya pola log seragam dengan BR-11.
+			return dibuat, fmt.Errorf("menyisipkan akun peran %s: %w", a.Peran, res.Error)
+		}
+		dibuat += int(res.RowsAffected)
+	}
+	return dibuat, nil
 }
