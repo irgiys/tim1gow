@@ -13,6 +13,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/irgiys/tim1gow/backend/internal/config"
+	"github.com/irgiys/tim1gow/backend/internal/domain"
 	"github.com/irgiys/tim1gow/backend/internal/repository"
 	"github.com/irgiys/tim1gow/backend/internal/repository/db"
 	"github.com/irgiys/tim1gow/backend/internal/service"
@@ -45,6 +46,8 @@ func NewRouter(cfg config.Config, gdb *gorm.DB) http.Handler {
 	var appH *ApprovalHandler
 	var audH *AuditHandler
 	var skoH *SkoringHandler
+	var authH *AuthHandler
+	var pemeriksa PemeriksaPengguna
 
 	if gdb != nil {
 		paramRepo := repository.NewParameterRepository(gdb)
@@ -63,9 +66,15 @@ func NewRouter(cfg config.Config, gdb *gorm.DB) http.Handler {
 			service.NewSkoringServiceWithAudit(paramRepo, auditSvc),
 			service.NewMarginService(paramRepo),
 		)
+
+		// FR-01. Adapter memakai bcrypt asli; test memakai pembanding palsu.
+		adapter := adapterPengguna{repo: repository.NewPenggunaRepository(gdb)}
+		pemeriksa = adapter
+		authH = NewAuthHandler(adapter, []byte(cfg.JWTSecret), cfg.JWTExpiresIn,
+			repository.CocokkanPassword)
 	}
 
-	return NewRouterWithAllHandlers(cfg, gdb, appH, audH, skoH)
+	return NewRouterLengkap(cfg, gdb, appH, audH, skoH, authH, pemeriksa)
 }
 
 // NewRouterWithHandlers membangun router Chi dengan handler yang disediakan (mudah di-test/mock).
@@ -73,14 +82,43 @@ func NewRouterWithHandlers(cfg config.Config, gdb *gorm.DB, appH *ApprovalHandle
 	return NewRouterWithAllHandlers(cfg, gdb, appH, audH, nil)
 }
 
-// NewRouterWithAllHandlers adalah bentuk lengkap: menerima seluruh handler,
-// termasuk skoring/margin. Handler bernilai nil hanya membuat route-nya tidak
-// terdaftar, sehingga paket test bisa memasang sebagian saja.
+// NewRouterWithAllHandlers membangun router TANPA autentikasi.
+//
+// HANYA UNTUK TEST HANDLER. Dipakai test yang menguji perilaku aturan bisnis
+// satu endpoint tanpa perlu menerbitkan token lebih dulu. Jalur produksi
+// selalu lewat NewRouter, yang memasang MiddlewareAuth + WajibPeran.
+// Penegakan peran itu sendiri diuji langsung di middleware_auth_test.go
+// (TestAC02_PeranLainDitolak403).
 func NewRouterWithAllHandlers(cfg config.Config, gdb *gorm.DB, appH *ApprovalHandler, audH *AuditHandler, skoH *SkoringHandler) http.Handler {
+	return NewRouterLengkap(cfg, gdb, appH, audH, skoH, nil, nil)
+}
+
+// NewRouterLengkap adalah bentuk penuh: seluruh handler plus autentikasi.
+//
+// Autentikasi dipasang hanya bila `pemeriksa` tidak nil. Pemisahan ini membuat
+// test handler tetap sederhana, sementara jalur produksi (NewRouter) selalu
+// mengirimkan pemeriksa sehingga setiap route API terlindungi.
+func NewRouterLengkap(cfg config.Config, gdb *gorm.DB, appH *ApprovalHandler, audH *AuditHandler,
+	skoH *SkoringHandler, authH *AuthHandler, pemeriksa PemeriksaPengguna) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
+
+	// authAktif menentukan apakah lapisan autentikasi dipasang. Bernilai false
+	// hanya pada router test handler (NewRouterWithAllHandlers); jalur produksi
+	// lewat NewRouter selalu mengirim pemeriksa.
+	authAktif := pemeriksa != nil
+
+	// peran mengembalikan middleware pembatas peran, atau pass-through ketika
+	// autentikasi tidak aktif. Tanpa ini, router test akan menolak semuanya
+	// dengan 401 karena tidak ada identitas di context.
+	peran := func(p ...domain.Peran) func(http.Handler) http.Handler {
+		if !authAktif {
+			return func(next http.Handler) http.Handler { return next }
+		}
+		return WajibPeran(p...)
+	}
 
 	// Liveness: proses hidup, tidak menyentuh dependensi.
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) {
@@ -109,28 +147,57 @@ func NewRouterWithAllHandlers(cfg config.Config, gdb *gorm.DB, appH *ApprovalHan
 
 	// Route API
 	r.Route("/api", func(api chi.Router) {
-		if appH != nil {
-			api.Post("/pengajuan/{id}/ajukan-approval", appH.AjukanApproval)
-			api.Post("/pengajuan/{id}/approval", appH.PutuskanApproval)
-			api.Get("/pengajuan/{id}/approval", appH.DetailApproval)
+		// Login bersifat publik: ia justru yang menerbitkan token.
+		if authH != nil {
+			api.Post("/auth/login", authH.Login)
 		}
 
-		if audH != nil {
-			// FR-09 & AC-12 / AC-13: Audit Trail hanya ada method GET (append-only)
-			api.Get("/pengajuan/{id}/audit", audH.RiwayatPengajuan)
-			api.Get("/audit", audH.SemuaAudit)
-		}
+		// Semua route di bawah ini WAJIB membawa token. Peran diperiksa per
+		// endpoint sesuai SDD BAB 5 — AC-02 menguji ini lewat panggilan API
+		// langsung, bukan lewat UI (AGENTS.md Larangan 6).
+		api.Group(func(aman chi.Router) {
+			if authAktif {
+				aman.Use(MiddlewareAuth([]byte(cfg.JWTSecret), pemeriksa))
+			}
 
-		if skoH != nil {
-			// FR-06 skoring kelayakan; BR-03 dicek sebelum hitung, rincian
-			// komponen ikut di respons (BR-08 / AC-07).
-			api.Post("/pengajuan/{id}/skoring", skoH.HitungSkoring)
-			// AC-08: override grade oleh ANL, alasan wajib, tercatat di audit.
-			api.Patch("/pengajuan/{id}/skoring/override", skoH.OverrideGrade)
-			// FR-07 margin/nisbah; di luar rentang grade -> 422 BR-06 (AC-09).
-			api.Post("/pengajuan/{id}/margin", skoH.TentukanMargin)
-			api.Get("/pengajuan/{id}/margin", skoH.RentangMargin)
-		}
+			if authH != nil {
+				aman.Get("/auth/me", authH.Saya)
+			}
+
+			if appH != nil {
+				// ANL mengajukan ke jalur approval; approver memutuskan.
+				aman.With(peran(domain.PeranANL)).
+					Post("/pengajuan/{id}/ajukan-approval", appH.AjukanApproval)
+				aman.With(peran(domain.PeranKCP, domain.PeranKC, domain.PeranKOM)).
+					Post("/pengajuan/{id}/approval", appH.PutuskanApproval)
+				aman.With(peran(domain.PeranAO, domain.PeranANL,
+					domain.PeranKCP, domain.PeranKC, domain.PeranKOM)).
+					Get("/pengajuan/{id}/approval", appH.DetailApproval)
+			}
+
+			if audH != nil {
+				// FR-09 & AC-12 / AC-13: Audit Trail hanya ada method GET (append-only)
+				aman.With(peran(domain.PeranAO, domain.PeranANL, domain.PeranKCP,
+					domain.PeranKC, domain.PeranKOM, domain.PeranADM)).
+					Get("/pengajuan/{id}/audit", audH.RiwayatPengajuan)
+				aman.With(peran(domain.PeranADM, domain.PeranANL)).
+					Get("/audit", audH.SemuaAudit)
+			}
+
+			if skoH != nil {
+				// Seluruh tahap skoring & margin adalah wewenang ANL (SDD BAB 5).
+				aman.With(peran(domain.PeranANL)).Group(func(anl chi.Router) {
+					// FR-06 skoring kelayakan; BR-03 dicek sebelum hitung, rincian
+					// komponen ikut di respons (BR-08 / AC-07).
+					anl.Post("/pengajuan/{id}/skoring", skoH.HitungSkoring)
+					// AC-08: override grade oleh ANL, alasan wajib, tercatat di audit.
+					anl.Patch("/pengajuan/{id}/skoring/override", skoH.OverrideGrade)
+					// FR-07 margin/nisbah; di luar rentang grade -> 422 BR-06 (AC-09).
+					anl.Post("/pengajuan/{id}/margin", skoH.TentukanMargin)
+					anl.Get("/pengajuan/{id}/margin", skoH.RentangMargin)
+				})
+			}
+		})
 	})
 
 	r.NotFound(func(w http.ResponseWriter, _ *http.Request) {
