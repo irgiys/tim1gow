@@ -18,7 +18,7 @@ type PengajuanService struct {
 	sekaran func() time.Time
 	// audit mencatat jejak BR-10. Boleh nil pada test unit yang hanya
 	// memeriksa aturan plafon/nomor referensi.
-	audit   AuditService
+	audit AuditService
 }
 
 // ValidationError adalah kegagalan validasi masukan, dipetakan handler ke HTTP

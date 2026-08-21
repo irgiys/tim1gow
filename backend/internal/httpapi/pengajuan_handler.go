@@ -64,18 +64,18 @@ type buatPengajuanRequest struct {
 // pengajuanResponse sengaja TIDAK memuat NIK (BR-11). Klien memakai id
 // internal atau nomor referensi untuk merujuk pengajuan.
 type pengajuanResponse struct {
-	ID              int64   `json:"id"`
-	NomorReferensi  string  `json:"nomorReferensi"`
-	Tipe            string  `json:"tipe"`
-	NamaNasabah     string  `json:"namaNasabah"`
-	AlamatUsaha     string  `json:"alamatUsaha"`
-	JenisUsaha      string  `json:"jenisUsaha"`
-	JenisAkad       string  `json:"jenisAkad"`
-	PlafonDiajukan  int64   `json:"plafonDiajukan"`
-	PlafonDisetujui *int64  `json:"plafonDisetujui,omitempty"`
-	TenorBulan      int     `json:"tenorBulan"`
+	ID              int64    `json:"id"`
+	NomorReferensi  string   `json:"nomorReferensi"`
+	Tipe            string   `json:"tipe"`
+	NamaNasabah     string   `json:"namaNasabah"`
+	AlamatUsaha     string   `json:"alamatUsaha"`
+	JenisUsaha      string   `json:"jenisUsaha"`
+	JenisAkad       string   `json:"jenisAkad"`
+	PlafonDiajukan  int64    `json:"plafonDiajukan"`
+	PlafonDisetujui *int64   `json:"plafonDisetujui,omitempty"`
+	TenorBulan      int      `json:"tenorBulan"`
 	Margin          *float64 `json:"marginAtauNisbah,omitempty"`
-	Status          string  `json:"status"`
+	Status          string   `json:"status"`
 }
 
 func kePengajuanResponse(p service.Pengajuan) pengajuanResponse {

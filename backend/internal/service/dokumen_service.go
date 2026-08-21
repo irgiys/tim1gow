@@ -14,7 +14,7 @@ type DokumenService struct {
 	wajib   DokumenWajibRepository
 	sekaran func() time.Time
 	// audit mencatat jejak BR-10. Boleh nil pada test unit.
-	audit   AuditService
+	audit AuditService
 }
 
 // DokumenWajibRepository membaca daftar jenis dokumen yang wajib dilengkapi.

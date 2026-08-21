@@ -13,7 +13,7 @@ type SurveiService struct {
 	repo    SurveiRepository
 	sekaran func() time.Time
 	// audit mencatat jejak BR-10. Boleh nil pada test unit.
-	audit   AuditService
+	audit AuditService
 }
 
 func NewSurveiService(repo SurveiRepository) *SurveiService {
