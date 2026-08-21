@@ -33,7 +33,7 @@ func routerCORS(t *testing.T, origins ...string) http.Handler {
 		JWTSecret:          string(secretMw),
 		CorsAllowedOrigins: origins,
 	}
-	return NewRouterLengkap(cfg, nil, nil, nil, nil, handlerAuthUji(true), nil,
+	return NewRouterLengkap(cfg, nil, nil, nil, nil, handlerAuthUji(true), nil, nil,
 		pemeriksaPalsu{aktif: true})
 }
 

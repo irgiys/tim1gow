@@ -314,29 +314,52 @@ yang bisa diulang orang lain.
   seluruh direktori sempat menyentuh 11 berkas milik anggota lain (murni CRLF, nol perubahan
   isi) dan harus dikembalikan; perintah massal wajib ditargetkan ke berkas sendiri saja.
 
-### [DEVLOG-05] `<!-- ISI: judul -->` (FR-`<!-- ISI -->`)
-- **Waktu**:
-- **Oleh**:
-- **Tool/Model**:
-- **Tugas**:
-- **Cara memberi konteks**:
-- **Keluaran AI**:
-- **Yang salah**:
-- **Cara verifikasi**:
-- **Tindakan**:
-- **Pelajaran**:
+### [DEVLOG-05] Test AC-03 lewat HTTP & pelurusan TRACEABILITY yang usang (FR-02, FR-03, FR-04)
+- **Waktu**: 2026-08-21, sesi siang (± 50 menit)
+- **Oleh**: Rayvaldo
+- **Tool/Model**: Claude Code (agent terminal), berjalan paralel dengan agent Antigravity IDE
+  yang memegang berkas frontend — pembagiannya satu berkas satu agent supaya tidak bentrok.
+- **Tugas**: menutup celah test pada FR-03 dan memperbarui `docs/TRACEABILITY.md`.
+- **Cara memberi konteks**: melampirkan `AGENTS.md`, `internal/httpapi/router.go`,
+  `pengajuan_handler.go`, `dokumen_service.go`, dan berkas test yang sudah ada. Kepemilikan
+  berkas diperiksa lewat `git log --pretty="%an" -- <path>`, bukan dari tabel peran di README —
+  dokumen peran pernah salah, riwayat git tidak.
+- **Keluaran AI**: berkas baru `internal/httpapi/dokumen_reupload_http_test.go` berisi dua test
+  berpasangan: dokumen `REJECTED` boleh diunggah ulang (201, dokumen jenis lain tidak berubah),
+  dokumen `VERIFIED` diblokir (422 + `rule: BR-03`).
+- **Yang salah**: dua hal. (1) AI memakai helper `itoa()` dan `berisi()` yang tidak pernah ada
+  di paket ini — ia mengarang nama fungsi yang "sepertinya wajar" alih-alih memakai `strconv`
+  dan `strings`; kompilasi gagal. (2) Temuan yang lebih serius bukan dari AI: `TRACEABILITY.md`
+  menyatakan FR-02/03/04 *"belum; service siap, handler menyusul"*, padahal handler **dan**
+  route-nya sudah lama terpasang di `router.go`. Dokumen tertinggal dari kode.
+- **Cara verifikasi**: test hijau tidak dipercaya apa adanya. Guard di `dokumen_service.go:60`
+  sengaja ditukar (`StatusDokumenVerified` → `StatusDokumenRejected`), lalu test dijalankan
+  ulang: **kedua** test merah dari arah berlawanan — yang satu 422 padahal mau 201, yang lain
+  201 padahal mau 422. Berkas lalu dipulihkan dan `git diff` dipastikan bersih. Endpoint yang
+  dicatat di TRACEABILITY dicocokkan satu per satu ke `router.go`, bukan ke ingatan.
+- **Tindakan**: pemakaian helper karangan diganti `strconv.FormatInt` dan `strings.Contains`;
+  tiga baris FR di TRACEABILITY diisi endpoint nyata + nama test dan statusnya menjadi `Done`.
+- **Pelajaran**: test yang lolos tidak membuktikan test itu punya gigi. Menukar guard-nya
+  sebentar jauh lebih murah daripada menemukan test kosong saat demo — dan justru mutasi itu
+  yang membuktikan Larangan 18 bekerja: tanpa kasus pembanding, guard yang tertukar akan lolos
+  mulus. Pelajaran kedua, dokumen jejak (`TRACEABILITY.md`) tidak ikut ter-update oleh CI dan
+  jadi usang tanpa gejala; ia hanya bisa dipercaya kalau setiap FR yang disentuh dicek balik ke
+  `router.go`. Ketiga, saat AI menyebut helper yang tidak dilampirkan, itu tanda karangan —
+  `grep` nama fungsinya dulu sebelum percaya.
 
-### [DEVLOG-06] `<!-- ISI: judul -->` (FR-`<!-- ISI -->`)
-- **Waktu**:
-- **Oleh**:
-- **Tool/Model**:
-- **Tugas**:
-- **Cara memberi konteks**:
-- **Keluaran AI**:
+### [DEVLOG-06] Implementasi Penuh FR-05 SLIK Check (Service, Repository, Handler, HTTP Test, Frontend Alignment)
+- **Waktu**: 2026-08-21 15:05
+- **Oleh**: Rayvaldo
+- **Tool/Model**: Antigravity IDE (Gemini 3.7 Flash)
+- **Tugas**: Melanjutkan FR-05 (SLIK Check) mencakup implementasi `SlikRepository` (GORM), `SlikHandler` (`POST /api/pengajuan/{id}/slik`), wiring router, mapping error 502 `SLIK_UNAVAILABLE`, test unit `SlikService`, dan test integrasi HTTP (`slik_http_test.go`).
+- **Cara memberi konteks**: Melampirkan `AGENTS.md` (§4.1 enum, §4.3 error format, §5.1 Tabel 4.2), `internal/service/slik_service.go`, `internal/slik/client.go`, dan `frontend/app/pengajuan/[id]/slik/page.tsx`.
+- **Keluaran AI**: Berkas baru `slik_service_test.go`, `slik_repository.go`, `slik_handler.go`, `slik_http_test.go`, serta pembaruan `router.go` dan `approval_handler.go`.
 - **Yang salah**:
-- **Cara verifikasi**:
-- **Tindakan**:
-- **Pelajaran**:
+  1. AI awalnya menghasilkan test menggunakan `github.com/stretchr/testify` yang belum terdaftar di `go.mod`, memicu kegagalan build `updates to go.mod needed`.
+  2. Pada mock test `slik_http_test.go`, AI sempat mengakses field `data` alih-alih `baris` pada `fakePengajuanRepoHTTP`.
+- **Cara verifikasi**: Test di-refactor menggunakan standard library `testing` murni. Seluruh suite test (`go test ./...`) dan build backend (`go build ./...`) berhasil 100%. Verifikasi kasus AC-05 (kol 3/4/5 -> 200 dengan status `REJECTED_SLIK` dan `Ditolak = true`), AC-06 (kol 2 -> `SLIK_CHECKED`, `GradeMinimal = 3`, `WajibCatatanAnalis = true`), kol 1 -> `SLIK_CHECKED`, error hulu 503/timeout -> 502 `SLIK_UNAVAILABLE`, penolakan peran selain ANL -> 403, dan BR-11 (tanpa NIK di URL maupun body respons). Frontend `npm run lint` & `npm run build` juga diverifikasi bersih.
+- **Tindakan**: Ganti helper testify dengan `t.Fatalf`/`t.Errorf` standar Go; selaraskan field struct mock; lengkapi `handleServiceError` dengan cabang `ErrSlikTidakTersedia` (502) dan `ErrNIKTidakDitemukanSlik` (404); catat status `Done` di `TRACEABILITY.md`.
+- **Pelajaran**: Tetap gunakan testing murni Go stdlib agar tidak menambah dependensi liar di `go.mod` (Larangan 1). Jalur error hulu (503/timeout) wajib diverifikasi secara eksplisit menghasilkan HTTP 502 agar sistem tidak pernah menelan kegagalan SLIK sebagai hasil bersih (Larangan 15).
 
 ### [DEVLOG-07] `<!-- ISI: judul -->` (FR-`<!-- ISI -->`)
 - **Waktu**:
