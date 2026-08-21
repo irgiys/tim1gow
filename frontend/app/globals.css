@@ -151,6 +151,13 @@ button.sekunder {
   border: 1px solid #f3c2be;
 }
 
+/* Konfirmasi keberhasilan, mis. nomor referensi pengajuan yang baru dibuat. */
+.alert-baik {
+  background: #e9f7ef;
+  color: var(--baik);
+  border: 1px solid #bfe4cd;
+}
+
 /* --- tabel --- */
 .tabel {
   width: 100%;
