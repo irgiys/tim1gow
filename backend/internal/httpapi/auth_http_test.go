@@ -145,7 +145,7 @@ func TestLogin_ResponsTidakMemuatHash(t *testing.T) {
 // produksi benar-benar memasang autentikasi pada seluruh route /api.
 func TestRouter_EndpointTerlindungiTanpaTokenDitolak401(t *testing.T) {
 	cfg := config.Config{AppEnv: "test", JWTSecret: string(secretMw), JWTExpiresIn: time.Hour}
-	h := NewRouterLengkap(cfg, nil, nil, nil, nil, handlerAuthUji(true), nil, pemeriksaPalsu{aktif: true})
+	h := NewRouterLengkap(cfg, nil, nil, nil, nil, handlerAuthUji(true), nil, nil, pemeriksaPalsu{aktif: true})
 
 	// Login tetap publik.
 	if rec := postLogin(h, `{"email":"anl@imitra.test","password":"Demo1234!"}`); rec.Code != http.StatusOK {

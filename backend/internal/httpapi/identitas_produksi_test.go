@@ -58,7 +58,7 @@ func routerProduksiApproval(t *testing.T) http.Handler {
 		service.NewMarginService(newFakeParamRepoSkoring()),
 	)
 
-	return NewRouterLengkap(cfg, nil, appH, nil, skoH, handlerAuthUji(true), nil,
+	return NewRouterLengkap(cfg, nil, appH, nil, skoH, handlerAuthUji(true), nil, nil,
 		pemeriksaPalsu{aktif: true})
 }
 
@@ -177,7 +177,7 @@ func TestProduksi_HeaderTidakDapatMengubahAktorYangDinilaiBR09(t *testing.T) {
 	appH := NewApprovalHandler(service.NewApprovalService(
 		appRepo, paramRepo, service.NewAuditService(&fakeAuditRepoForHTTP{})))
 
-	h := NewRouterLengkap(cfg, nil, appH, nil, nil, handlerAuthUji(true), nil,
+	h := NewRouterLengkap(cfg, nil, appH, nil, nil, handlerAuthUji(true), nil, nil,
 		pemeriksaPalsu{aktif: true})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/pengajuan/1/approval",

@@ -42,7 +42,7 @@ func routerPengajuan(t *testing.T) (http.Handler, *fakePengajuanRepoHTTP, *fakeD
 
 	r := NewRouterLengkap(
 		config.Config{AppEnv: "test", JWTSecret: string(secretMw)},
-		nil, nil, nil, nil, nil, h, pemeriksaPalsu{aktif: true},
+		nil, nil, nil, nil, nil, h, nil, pemeriksaPalsu{aktif: true},
 	)
 	return r, pjnRepo, dokRepo, batas
 }

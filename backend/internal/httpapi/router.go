@@ -17,6 +17,7 @@ import (
 	"github.com/irgiys/tim1gow/backend/internal/repository"
 	"github.com/irgiys/tim1gow/backend/internal/repository/db"
 	"github.com/irgiys/tim1gow/backend/internal/service"
+	"github.com/irgiys/tim1gow/backend/internal/slik"
 )
 
 // errorResponse adalah satu-satunya bentuk respons error untuk seluruh API
@@ -48,6 +49,7 @@ func NewRouter(cfg config.Config, gdb *gorm.DB) http.Handler {
 	var skoH *SkoringHandler
 	var authH *AuthHandler
 	var pjnH *PengajuanHandler
+	var slikH *SlikHandler
 	var pemeriksa PemeriksaPengguna
 
 	if gdb != nil {
@@ -98,9 +100,24 @@ func NewRouter(cfg config.Config, gdb *gorm.DB) http.Handler {
 			service.NewSurveiService(repository.NewSurveiRepository(gdb)).
 				DenganAudit(auditSvc),
 		)
+
+		// FR-05. SLIK Check (mock HTTP / service).
+		slikClient := slik.NewClient(slik.Opsi{
+			BaseURL:     cfg.SlikBaseURL,
+			InquiryPath: cfg.SlikInquiryPath,
+			Timeout:     cfg.SlikTimeout,
+		})
+		slikSvc := service.NewSlikService(service.OpsiSlikService{
+			SlikRepo:        repository.NewSlikRepository(gdb),
+			Pengajuan:       repository.NewPengajuanRepository(gdb),
+			Client:          slikClient,
+			Audit:           auditSvc,
+			MasaBerlakuHari: 30,
+		})
+		slikH = NewSlikHandler(slikSvc)
 	}
 
-	return NewRouterLengkap(cfg, gdb, appH, audH, skoH, authH, pjnH, pemeriksa)
+	return NewRouterLengkap(cfg, gdb, appH, audH, skoH, authH, pjnH, slikH, pemeriksa)
 }
 
 // NewRouterWithHandlers membangun router Chi dengan handler yang disediakan (mudah di-test/mock).
@@ -116,7 +133,7 @@ func NewRouterWithHandlers(cfg config.Config, gdb *gorm.DB, appH *ApprovalHandle
 // Penegakan peran itu sendiri diuji langsung di middleware_auth_test.go
 // (TestAC02_PeranLainDitolak403).
 func NewRouterWithAllHandlers(cfg config.Config, gdb *gorm.DB, appH *ApprovalHandler, audH *AuditHandler, skoH *SkoringHandler) http.Handler {
-	return NewRouterLengkap(cfg, gdb, appH, audH, skoH, nil, nil, nil)
+	return NewRouterLengkap(cfg, gdb, appH, audH, skoH, nil, nil, nil, nil)
 }
 
 // NewRouterLengkap adalah bentuk penuh: seluruh handler plus autentikasi.
@@ -125,7 +142,7 @@ func NewRouterWithAllHandlers(cfg config.Config, gdb *gorm.DB, appH *ApprovalHan
 // test handler tetap sederhana, sementara jalur produksi (NewRouter) selalu
 // mengirimkan pemeriksa sehingga setiap route API terlindungi.
 func NewRouterLengkap(cfg config.Config, gdb *gorm.DB, appH *ApprovalHandler, audH *AuditHandler,
-	skoH *SkoringHandler, authH *AuthHandler, pjnH *PengajuanHandler, pemeriksa PemeriksaPengguna) http.Handler {
+	skoH *SkoringHandler, authH *AuthHandler, pjnH *PengajuanHandler, slikH *SlikHandler, pemeriksa PemeriksaPengguna) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
@@ -273,6 +290,14 @@ func NewRouterLengkap(cfg config.Config, gdb *gorm.DB, appH *ApprovalHandler, au
 					// FR-07 margin/nisbah; di luar rentang grade -> 422 BR-06 (AC-09).
 					anl.Post("/pengajuan/{id}/margin", skoH.TentukanMargin)
 					anl.Get("/pengajuan/{id}/margin", skoH.RentangMargin)
+				})
+			}
+
+			if slikH != nil {
+				// FR-05 — SLIK Check adalah wewenang ANL (SDD BAB 5, FR-05).
+				aman.With(peran(domain.PeranANL)).Group(func(anl chi.Router) {
+					anl.Post("/pengajuan/{id}/slik", slikH.JalankanSLIK)
+					anl.Post("/pengajuan/{id}/slik-check", slikH.JalankanSLIK)
 				})
 			}
 		})

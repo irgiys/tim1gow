@@ -44,10 +44,10 @@ atau `Done (tanpa test)` dan jelaskan di `README.md` bagian 5.
 | FR | Judul | Prioritas | AC terkait | Endpoint | File test | PR | Status |
 |---|---|---|---|---|---|---|---|
 | FR-01 | Autentikasi & Otorisasi Berbasis Peran | P0 | AC-01, AC-02 |  |  |  |  |
-| FR-02 | Pengajuan Pembiayaan Mikro | P0 | AC-01 | *(belum; service siap, handler menyusul)* | `backend/internal/service/pengajuan_service_test.go` | #11 | In Progress |
-| FR-03 | Upload & Verifikasi Dokumen | P0 | AC-03 | *(belum; service siap, handler menyusul)* | `backend/internal/service/dokumen_service_test.go` | #11 | In Progress |
-| FR-04 | Survei Lapangan (OTS) | P0 | AC-04 | *(belum; service siap, handler menyusul)* | `backend/internal/service/survei_service_test.go` | #11 | In Progress |
-| FR-05 | SLIK Check | P0 | AC-05, AC-06 |  |  |  |  |
+| FR-02 | Pengajuan Pembiayaan Mikro | P0 | AC-01 | `POST /api/pengajuan`, `GET /api/pengajuan`, `GET /api/pengajuan/{id}` | `internal/service/pengajuan_service_test.go`, `internal/httpapi/pengajuan_http_test.go` (`TestRoute_FR02_...`) | #11 | Done |
+| FR-03 | Upload & Verifikasi Dokumen | P0 | AC-03 | `POST /api/pengajuan/{id}/dokumen`, `GET /api/pengajuan/{id}/dokumen`, `PATCH /api/pengajuan/{id}/dokumen/{dokId}/verifikasi` | `internal/service/dokumen_service_test.go`, `internal/httpapi/pengajuan_http_test.go` (`TestRoute_FR03_...`), `internal/httpapi/dokumen_reupload_http_test.go` (`TestRoute_FR03_AC03_ReuploadDokumenDitolakTidakMenyentuhDokumenLain`, `TestRoute_FR03_AC03_DokumenVerifiedTidakBisaDiunggahUlang`) | #11 | Done |
+| FR-04 | Survei Lapangan (OTS) | P0 | AC-04 | `POST /api/pengajuan/{id}/survei` | `internal/service/survei_service_test.go`, `internal/httpapi/pengajuan_http_test.go` (`TestRoute_FR04_SurveiHanyaAODanWajibLengkap`) | #11 | Done |
+| FR-05 | SLIK Check | P0 | AC-05, AC-06 | `POST /api/pengajuan/{id}/slik`, `POST /api/pengajuan/{id}/slik-check` | `internal/service/slik_service_test.go` (`TestAC05_...`, `TestAC06_...`, `TestBR04_...`), `internal/httpapi/slik_http_test.go` (`TestRoute_FR05_...`) | #11 | Done |
 | FR-06 | Skoring Kelayakan Mikro | P0 | AC-06, AC-07, AC-08 | `POST /api/pengajuan/{id}/skoring`, `PATCH /api/pengajuan/{id}/skoring/override` | `internal/service/skoring_service_test.go`, `internal/httpapi/skoring_http_test.go` (`TestHTTP_AC07_...`, `TestHTTP_AC06_...`, `TestHTTP_AC04_...`), `internal/httpapi/skoring_override_http_test.go` (`TestHTTP_AC08_OverrideGrade2Ke3TercatatDiAuditTrail`) | #5 | Done |
 | FR-07 | Perhitungan Margin / Nisbah | P0 | AC-09 | `POST /api/pengajuan/{id}/margin`, `GET /api/pengajuan/{id}/margin` | `internal/service/margin_service_test.go`, `internal/httpapi/skoring_http_test.go` (`TestHTTP_AC09_MarginDiBawahBatasGrade1Diblokir`) | #5 | Done |
 | FR-08 | Approval Berjenjang | P0 | AC-10, AC-11 | `POST /api/pengajuan/{id}/ajukan-approval`, `POST /api/pengajuan/{id}/approval`, `GET /api/pengajuan/{id}/approval` | `internal/service/approval_service_test.go`, `internal/httpapi/approval_http_test.go` | #6 | Done |
@@ -79,7 +79,7 @@ diverifikasi — **tetapkan kriteria verifikasi Anda sendiri** untuk keduanya da
 | BR-01 | Plafon di luar Rp 5 juta – Rp 500 juta ditolak saat submit | `backend/internal/service/pengajuan_service.go`, `approval_service.go` | `internal/service/approval_service_test.go` | Done |
 | BR-02 | Approval berurutan; level 2 menunggu `APPROVE` level 1 | `backend/internal/service/approval_service.go` | `internal/service/approval_service_test.go` (`TestApproval_AC10_RoutingBerjenjangDanUrutan`), `internal/httpapi/approval_http_test.go` | Done |
 | BR-03 | Skoring butuh dokumen `VERIFIED` + survei `VALID` + SLIK sudah dijalankan | `backend/internal/service/skoring_service.go` | `internal/service/skoring_service_test.go` (`TestPastikanBolehSkoring_BR03`) | Done |
-| BR-04 | Hasil SLIK berlaku 30 hari | `backend/internal/service/slik_service.go` |  | Belum |
+| BR-04 | Hasil SLIK berlaku 30 hari | `backend/internal/service/slik_service.go` | `internal/service/slik_service_test.go` (`TestBR04_MasaBerlaku30Hari`) | Done |
 | BR-05 | Grade 5 tidak dapat diajukan; `REJECTED_SCORING` | `backend/internal/service/approval_service.go`, `skoring_service.go` | `internal/service/approval_service_test.go` (`TestApproval_BR05_Grade5Ditolak`) | Done |
 | BR-06 | Margin/nisbah di luar rentang grade diblokir | `backend/internal/service/margin_service.go` | `internal/service/margin_service_test.go` (`TestValidasi_AC09_MarginDiBawahBatasGrade1Diblokir`) | Done |
 | BR-07 | Skor akhir = Σ(skor × bobot) ÷ Σbobot, dibulatkan sekali di akhir | `backend/internal/service/skoring_service.go` | `internal/service/skoring_service_test.go` (`TestHitung_BR07_RumusSkorAkhir`) | Done |

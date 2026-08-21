@@ -159,5 +159,17 @@ func handleServiceError(w http.ResponseWriter, err error) {
 		return
 	}
 
+	if errors.Is(err, service.ErrNIKTidakDitemukanSlik) {
+		respondError(w, http.StatusNotFound, "NOT_FOUND", "NIK tidak ditemukan di SLIK", "")
+		return
+	}
+
+	// Layanan SLIK tidak dapat dihubungi (503/timeout) -> 502 Bad Gateway (AGENTS.md 4.3).
+	// Backend gagal memakai dependensi hulu; pengajuan TIDAK boleh dianggap bersih.
+	if errors.Is(err, service.ErrSlikTidakTersedia) {
+		respondError(w, http.StatusBadGateway, "SLIK_UNAVAILABLE", "layanan SLIK tidak tersedia", "")
+		return
+	}
+
 	respondError(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", "terjadi kesalahan internal", "")
 }
