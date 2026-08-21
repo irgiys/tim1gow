@@ -279,6 +279,12 @@ func NewRouterLengkap(cfg config.Config, gdb *gorm.DB, appH *ApprovalHandler, au
 					Post("/pengajuan/{id}/survei", pjnH.RekamSurvei)
 			}
 
+			if slikH != nil {
+				// FR-05 — SLIK check (ANL)
+				aman.With(peran(domain.PeranANL)).
+					Post("/pengajuan/{id}/slik", slikH.JalankanSLIK)
+			}
+
 			if skoH != nil {
 				// Seluruh tahap skoring & margin adalah wewenang ANL (SDD BAB 5).
 				aman.With(peran(domain.PeranANL)).Group(func(anl chi.Router) {

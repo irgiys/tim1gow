@@ -73,6 +73,17 @@ func (f *fakePengajuanRepoHTTP) DaftarMilikAO(_ context.Context, aoID int64) ([]
 	return hasil, nil
 }
 
+func (f *fakePengajuanRepoHTTP) DaftarSemua(_ context.Context) ([]service.Pengajuan, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
+	hasil := make([]service.Pengajuan, 0, len(f.baris))
+	for _, p := range f.baris {
+		hasil = append(hasil, p)
+	}
+	return hasil, nil
+}
+
 func (f *fakePengajuanRepoHTTP) AmbilNomorUrutHarian(_ context.Context, tanggal time.Time) (int, error) {
 	kunci := tanggal.Format("20060102")
 	f.urutan[kunci]++

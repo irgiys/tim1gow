@@ -192,6 +192,21 @@ func (r *gormPengajuanRepo) DaftarMilikAO(ctx context.Context, aoID int64) ([]se
 	return out, nil
 }
 
+func (r *gormPengajuanRepo) DaftarSemua(ctx context.Context) ([]service.Pengajuan, error) {
+	var rows []rowPengajuan
+	err := r.db.WithContext(ctx).
+		Order("dibuat_pada DESC, id DESC").
+		Find(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	out := make([]service.Pengajuan, 0, len(rows))
+	for _, row := range rows {
+		out = append(out, kePengajuan(row))
+	}
+	return out, nil
+}
+
 // AmbilNomorUrutHarian menaikkan counter harian dengan penguncian baris.
 //
 // UPDATE ... RETURNING pada satu pernyataan bersifat atomik; INSERT lebih dulu

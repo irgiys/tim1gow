@@ -11,6 +11,16 @@ import (
 	"github.com/irgiys/tim1gow/backend/internal/domain"
 )
 
+// Daftar mengembalikan daftar pengajuan sesuai peran:
+// - AO hanya melihat pengajuan yang ia buat sendiri (Larangan 6).
+// - Peran lain (ANL, KCP, KC, KOM, ADM) melihat seluruh pengajuan aktif.
+func (s *PengajuanService) Daftar(ctx context.Context, penggunaID int64, peran domain.Peran) ([]Pengajuan, error) {
+	if peran == domain.PeranAO {
+		return s.DaftarMilikAO(ctx, penggunaID)
+	}
+	return s.repo.DaftarSemua(ctx)
+}
+
 // DaftarMilikAO mengembalikan pengajuan milik seorang AO, terbaru lebih dulu.
 func (s *PengajuanService) DaftarMilikAO(ctx context.Context, aoID int64) ([]Pengajuan, error) {
 	if aoID <= 0 {

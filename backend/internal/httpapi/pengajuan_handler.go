@@ -178,7 +178,7 @@ func (h *PengajuanHandler) Daftar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	daftar, err := h.pengajuan.DaftarMilikAO(r.Context(), ident.PenggunaID)
+	daftar, err := h.pengajuan.Daftar(r.Context(), ident.PenggunaID, ident.Peran)
 	if err != nil {
 		handleServiceError(w, err)
 		return

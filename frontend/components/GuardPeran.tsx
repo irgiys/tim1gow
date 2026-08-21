@@ -25,6 +25,8 @@ export function GuardPeran({ izinkan, children }: GuardPeranProps) {
   const router = useRouter();
   const [keadaan, setKeadaan] = useState<'memuat' | 'boleh' | 'tolak'>('memuat');
 
+  const izinkanKunci = izinkan.join(',');
+
   useEffect(() => {
     const pengguna = ambilPengguna();
     if (!pengguna) {
@@ -32,7 +34,8 @@ export function GuardPeran({ izinkan, children }: GuardPeranProps) {
       return;
     }
     setKeadaan(izinkan.includes(pengguna.peran) ? 'boleh' : 'tolak');
-  }, [izinkan, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [izinkanKunci, router]);
 
   if (keadaan === 'memuat') {
     return <p className="sub">Memuat…</p>;

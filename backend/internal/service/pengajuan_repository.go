@@ -135,6 +135,10 @@ type PengajuanRepository interface {
 	// Dipakai FR-02 "daftar pengajuan milik AO".
 	DaftarMilikAO(ctx context.Context, aoID int64) ([]Pengajuan, error)
 
+	// DaftarSemua mengembalikan seluruh pengajuan, terbaru lebih dulu.
+	// Dipakai oleh peran non-AO (ANL, KCP, KC, KOM, ADM).
+	DaftarSemua(ctx context.Context) ([]Pengajuan, error)
+
 	// AmbilNomorUrutHarian menaikkan dan mengembalikan urutan berikutnya untuk
 	// suatu tanggal, di dalam transaksi pemanggil, memakai penguncian baris
 	// (SELECT ... FOR UPDATE) sehingga dua permintaan bersamaan tidak pernah

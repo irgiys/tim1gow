@@ -64,6 +64,14 @@ func (f *fakePengajuanRepo) DaftarMilikAO(_ context.Context, aoID int64) ([]Peng
 	return hasil, nil
 }
 
+func (f *fakePengajuanRepo) DaftarSemua(_ context.Context) ([]Pengajuan, error) {
+	var hasil []Pengajuan
+	for _, p := range f.baris {
+		hasil = append(hasil, p)
+	}
+	return hasil, nil
+}
+
 // AmbilNomorUrutHarian meniru counter harian terkunci: urutan naik per tanggal
 // dan tidak pernah mengembalikan angka yang sama dua kali (BR-12).
 func (f *fakePengajuanRepo) AmbilNomorUrutHarian(_ context.Context, tanggal time.Time) (int, error) {

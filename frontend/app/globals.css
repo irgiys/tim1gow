@@ -267,3 +267,63 @@ button.bahaya {
   border-color: #f3c2be;
   background: #fdecea;
 }
+
+/* --- tab navigasi --- */
+.tab-wadah {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--garis);
+  margin-bottom: 1.25rem;
+}
+
+.tab-tombol {
+  background: transparent;
+  color: var(--fg-lemah);
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 0.6rem 1rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.tab-tombol:hover {
+  color: var(--fg);
+}
+
+.tab-tombol.aktif {
+  color: var(--utama);
+  border-bottom-color: var(--utama);
+}
+
+.kotak-dokumen {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.baris-dokumen {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: #fff;
+  border: 1px solid var(--garis);
+  border-radius: 6px;
+  gap: 1rem;
+}
+
+.baris-dokumen-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.baris-dokumen-aksi {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
