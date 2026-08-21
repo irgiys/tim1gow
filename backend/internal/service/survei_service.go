@@ -4,12 +4,16 @@ import (
 	"context"
 	"strings"
 	"time"
+
+	"github.com/irgiys/tim1gow/backend/internal/domain"
 )
 
 // SurveiService memuat aturan perekaman survei lapangan / OTS (FR-04).
 type SurveiService struct {
 	repo    SurveiRepository
 	sekaran func() time.Time
+	// audit mencatat jejak BR-10. Boleh nil pada test unit.
+	audit   AuditService
 }
 
 func NewSurveiService(repo SurveiRepository) *SurveiService {
@@ -19,6 +23,13 @@ func NewSurveiService(repo SurveiRepository) *SurveiService {
 // DenganWaktu mengganti sumber waktu; dipakai test.
 func (s *SurveiService) DenganWaktu(f func() time.Time) *SurveiService {
 	s.sekaran = f
+	return s
+}
+
+// DenganAudit memasang pencatat audit (BR-10). Kegagalan mencatat membuat
+// operasi gagal, bukan diabaikan.
+func (s *SurveiService) DenganAudit(a AuditService) *SurveiService {
+	s.audit = a
 	return s
 }
 
@@ -64,6 +75,21 @@ func (s *SurveiService) Rekam(ctx context.Context, in InputSurvei) (Survei, erro
 	}
 	if err := s.repo.Simpan(ctx, &sv); err != nil {
 		return Survei{}, err
+	}
+
+	// BR-10. Koordinat dan path foto TIDAK ikut ke catatan audit (BR-11);
+	// yang dicatat hanya bahwa survei direkam beserta statusnya.
+	if s.audit != nil {
+		id := sv.PengajuanID
+		if err := s.audit.Catat(ctx, domain.CatatAuditInput{
+			PengajuanID: &id,
+			Aksi:        domain.AksiRekamSurvei,
+			Catatan:     "survei lapangan direkam dengan status " + string(sv.Status),
+			ActorID:     in.AOID,
+			ActorRole:   domain.PeranAO,
+		}); err != nil {
+			return Survei{}, err
+		}
 	}
 	return sv, nil
 }

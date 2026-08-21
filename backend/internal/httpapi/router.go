@@ -81,16 +81,22 @@ func NewRouter(cfg config.Config, gdb *gorm.DB) http.Handler {
 
 		// FR-02, FR-03, FR-04. Batas plafon dan daftar dokumen wajib dibaca
 		// dari tabel parameter, bukan konstanta di kode (Larangan 3).
+		//
+		// DenganAudit dipasang di ketiganya: setiap perubahan keadaan wajib
+		// punya aktor dan timestamp (BR-10). Tanpa ini pengajuan, dokumen, dan
+		// survei berubah tanpa jejak, dan audit_trail tetap kosong walau
+		// endpoint /audit-nya sendiri berfungsi.
 		pjnH = NewPengajuanHandler(
 			service.NewPengajuanService(
 				repository.NewPengajuanRepository(gdb),
 				repository.NewBatasPlafonRepository(gdb),
-			),
+			).DenganAudit(auditSvc),
 			service.NewDokumenService(
 				repository.NewDokumenRepository(gdb),
 				repository.NewDokumenWajibRepository(gdb),
-			),
-			service.NewSurveiService(repository.NewSurveiRepository(gdb)),
+			).DenganAudit(auditSvc),
+			service.NewSurveiService(repository.NewSurveiRepository(gdb)).
+				DenganAudit(auditSvc),
 		)
 	}
 

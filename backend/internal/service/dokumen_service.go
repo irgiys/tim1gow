@@ -13,6 +13,8 @@ type DokumenService struct {
 	dok     DokumenRepository
 	wajib   DokumenWajibRepository
 	sekaran func() time.Time
+	// audit mencatat jejak BR-10. Boleh nil pada test unit.
+	audit   AuditService
 }
 
 // DokumenWajibRepository membaca daftar jenis dokumen yang wajib dilengkapi.
@@ -32,12 +34,19 @@ func (s *DokumenService) DenganWaktu(f func() time.Time) *DokumenService {
 	return s
 }
 
+// DenganAudit memasang pencatat audit (BR-10). Kegagalan mencatat membuat
+// operasi gagal, bukan diabaikan.
+func (s *DokumenService) DenganAudit(a AuditService) *DokumenService {
+	s.audit = a
+	return s
+}
+
 // Upload menyimpan satu dokumen berstatus UPLOADED.
 //
 // Saat AO mengunggah ulang berkas yang sebelumnya REJECTED, hanya jenis dokumen
 // itu yang tergantikan; dokumen lain dan data pengajuan tidak tersentuh (AC-03).
 // Dokumen yang sudah VERIFIED tidak boleh ditimpa.
-func (s *DokumenService) Upload(ctx context.Context, pengajuanID int64, jenis, urlBerkas string) (Dokumen, error) {
+func (s *DokumenService) Upload(ctx context.Context, pengajuanID int64, jenis, urlBerkas string, aoID int64) (Dokumen, error) {
 	jenis = strings.TrimSpace(jenis)
 	if jenis == "" {
 		return Dokumen{}, NewValidationError("jenis dokumen wajib diisi")
@@ -65,7 +74,31 @@ func (s *DokumenService) Upload(ctx context.Context, pengajuanID int64, jenis, u
 	if err := s.dok.Simpan(ctx, &d); err != nil {
 		return Dokumen{}, err
 	}
+
+	// BR-10. Catatan hanya menyebut JENIS dokumen dan id pengajuan — tidak
+	// pernah path berkasnya, karena path foto adalah data pribadi (BR-11).
+	if err := s.catatAudit(ctx, pengajuanID, domain.AksiUploadDokumen,
+		"dokumen "+jenis+" diunggah", aoID, domain.PeranAO); err != nil {
+		return Dokumen{}, err
+	}
 	return d, nil
+}
+
+// catatAudit merekam jejak perubahan dokumen (BR-10). Dilewati kalau audit
+// belum dipasang (test unit); di produksi kegagalannya diteruskan.
+func (s *DokumenService) catatAudit(ctx context.Context, pengajuanID int64,
+	aksi domain.AksiAudit, catatan string, aktorID int64, aktorPeran domain.Peran) error {
+	if s.audit == nil {
+		return nil
+	}
+	id := pengajuanID
+	return s.audit.Catat(ctx, domain.CatatAuditInput{
+		PengajuanID: &id,
+		Aksi:        aksi,
+		Catatan:     catatan,
+		ActorID:     aktorID,
+		ActorRole:   aktorPeran,
+	})
 }
 
 // Verifikasi menandai satu dokumen VERIFIED atau REJECTED oleh ANL (FR-03).
@@ -93,6 +126,17 @@ func (s *DokumenService) Verifikasi(ctx context.Context, dokumenID, anlID int64,
 	}
 
 	if err := s.dok.Perbarui(ctx, &d); err != nil {
+		return Dokumen{}, err
+	}
+
+	// BR-10. Kode alasan penolakan ikut dicatat karena ia keputusan analis,
+	// bukan data pribadi nasabah.
+	hasil := "dokumen " + d.JenisDokumen + " diverifikasi"
+	if !setujui {
+		hasil = "dokumen " + d.JenisDokumen + " ditolak; alasan: " + kodeAlasan
+	}
+	if err := s.catatAudit(ctx, d.PengajuanID, domain.AksiVerifikasiDokumen,
+		hasil, anlID, domain.PeranANL); err != nil {
 		return Dokumen{}, err
 	}
 	return d, nil

@@ -224,7 +224,8 @@ type uploadDokumenRequest struct {
 // Re-upload satu dokumen yang ditolak TIDAK menghapus dokumen lain maupun data
 // pengajuan (AC-03); aturan itu ditegakkan di DokumenService dan repository.
 func (h *PengajuanHandler) UploadDokumen(w http.ResponseWriter, r *http.Request) {
-	if _, ok := identitasWajib(w, r); !ok {
+	ident, ok := identitasWajib(w, r)
+	if !ok {
 		return
 	}
 	id, ok := parseIDPengajuan(w, r)
@@ -238,7 +239,7 @@ func (h *PengajuanHandler) UploadDokumen(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	d, err := h.dokumen.Upload(r.Context(), id, req.JenisDokumen, req.URLBerkas)
+	d, err := h.dokumen.Upload(r.Context(), id, req.JenisDokumen, req.URLBerkas, ident.PenggunaID)
 	if err != nil {
 		handleServiceError(w, err)
 		return
