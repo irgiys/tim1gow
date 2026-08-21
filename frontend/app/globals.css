@@ -137,6 +137,39 @@ button.sekunder {
   border-color: var(--garis);
 }
 
+/* Aksi merusak/menolak — dibedakan supaya tidak terklik karena salah lihat. */
+button.bahaya {
+  background: transparent;
+  color: var(--buruk);
+  border-color: #f3c2be;
+}
+
+/* Baris tombol keputusan pada layar approval. */
+.aksi-baris {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+/* Ringkasan label-nilai (mis. plafon, grade, level yang diperlukan). */
+.ringkas {
+  display: grid;
+  grid-template-columns: minmax(9rem, max-content) 1fr;
+  gap: 0.35rem 1rem;
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.ringkas dt {
+  color: var(--fg-lembut, #666);
+}
+
+.ringkas dd {
+  margin: 0;
+  font-weight: 500;
+}
+
 /* --- alert --- */
 .alert {
   padding: 0.65rem 0.8rem;

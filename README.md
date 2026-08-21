@@ -211,12 +211,20 @@ Keluaran yang diharapkan: `ao -> AO`, `anl -> ANL`, `kcp -> KCP`, `kc -> KC`, `k
 `adm -> ADM`. Baris yang kosong berarti login gagal — periksa apakah service `migrate` sudah
 selesai (`docker compose logs migrate`).
 
-**Catatan untuk penilai — apa yang sudah bisa dicoba lewat UI.** Saat ini UI baru memiliki
-`/login` dan `/pengajuan`; masuk sebagai KCP/KC/KOM/ADM akan diarahkan ke `/approval` atau
-`/parameter` yang **belum ada**. Alur approval, skoring, dan parameter ADM untuk sementara
-diuji lewat API langsung (`curl`), bukan lewat UI. Masuk sebagai ANL menampilkan `/pengajuan`,
-tetapi daftarnya masih kosong karena `GET /api/pengajuan` belum punya query lingkup untuk
-ANL/approver — status jujurnya ada di tabel FR bagian 4.
+**Catatan untuk penilai — apa yang sudah bisa dicoba lewat UI.** UI saat ini memiliki
+`/login`, `/pengajuan` (AO/ANL/approver), dan `/approval` (KCP/KC/KOM/ANL). Masuk sebagai ADM
+masih diarahkan ke `/parameter` yang **belum ada**, sehingga FR-13 hanya dapat diperiksa lewat
+API. Dua batasan yang perlu diketahui sebelum mencoba:
+
+- **Daftar pengajuan untuk ANL/approver masih kosong.** `GET /api/pengajuan` masih selalu
+  memakai `DaftarMilikAO`, jadi hanya AO yang melihat isinya. Layar `/approval` karena itu
+  membuka pengajuan **per id**, bukan lewat daftar — id-nya bisa diambil dari layar
+  `/pengajuan` saat login sebagai AO, atau dari audit trail.
+- **Skoring belum bisa dijalankan lewat UI.** Untuk mencapai status `SCORED` (prasyarat
+  `ajukan-approval`), jalankan skoring lewat API. Alurnya: SLIK check (FR-05, endpointnya belum
+  ada) → skoring → ajukan approval.
+
+Status jujur per FR ada di tabel bagian 4.
 
 ### 2.6 Test & lint
 
