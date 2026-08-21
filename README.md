@@ -175,19 +175,48 @@ cp .env.example .env
 
 ### 2.5 Akun demo
 
-<!-- ISI: daftar akun hasil seed, satu baris per peran. Password boleh ditulis di sini
-     karena ini akun seed non-produksi — tetapi JANGAN pernah menaruh secret nyata
-     (JWT secret, kredensial DB produksi, token API) di berkas ini atau di mana pun
-     dalam repo. Secret ter-commit = pengurangan -10. -->
+Keenam akun di bawah dibuat oleh `backend/cmd/seed` (idempoten, aman dijalankan ulang) dan
+otomatis tersedia setelah `docker compose up` — service `migrate` menjalankan migrasi lalu seed
+sebelum backend start, jadi tidak ada langkah manual.
 
-| Peran | Username | Password | Dipakai untuk AC |
-|---|---|---|---|
-| AO | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| ANL | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| KCP | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| KC | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| KOM | `<!-- ISI -->` | `<!-- ISI -->` |  |
-| ADM | `<!-- ISI -->` | `<!-- ISI -->` |  |
+Password di bawah bukan rahasia: akun ini hanya ada di lingkungan demo, dan nilainya berasal
+dari `SEED_DEFAULT_PASSWORD` di `.env`. Tidak ada secret nyata (JWT secret, kredensial DB,
+token API) yang ditulis di berkas ini.
+
+**Login memakai EMAIL, bukan username.** Field JSON-nya `email`
+(`backend/internal/httpapi/auth_handler.go`); mengirim `username` dijawab
+`400 VALIDATION_ERROR "email dan password wajib diisi"`.
+
+| Peran | Email | Password | Nama tampilan | Dipakai untuk AC |
+|---|---|---|---|---|
+| AO | `ao@imitra.test` | `Demo1234!` | Ayu Account Officer | AC-01, AC-02, AC-03 |
+| ANL | `anl@imitra.test` | `Demo1234!` | Andi Analis Mikro | AC-03, AC-04, AC-06, AC-07, AC-08, AC-09 |
+| KCP | `kcp@imitra.test` | `Demo1234!` | Kartika Kepala CP | AC-10, AC-11 |
+| KC | `kc@imitra.test` | `Demo1234!` | Kurnia Kepala Cabang | AC-10 |
+| KOM | `kom@imitra.test` | `Demo1234!` | Komite Pembiayaan | AC-10 |
+| ADM | `adm@imitra.test` | `Demo1234!` | Admin Sistem | AC-15 |
+
+Verifikasi cepat bahwa keenamnya benar-benar bisa login (dijalankan terhadap stack yang hidup):
+
+```bash
+for e in ao anl kcp kc kom adm; do
+  printf '%-4s -> %s\n' "$e" "$(curl -s -X POST http://localhost:8080/api/auth/login \
+    -H 'Content-Type: application/json' \
+    -d "{\"email\":\"$e@imitra.test\",\"password\":\"Demo1234!\"}" \
+    | grep -o '"peran":"[^"]*"' | cut -d'"' -f4)"
+done
+```
+
+Keluaran yang diharapkan: `ao -> AO`, `anl -> ANL`, `kcp -> KCP`, `kc -> KC`, `kom -> KOM`,
+`adm -> ADM`. Baris yang kosong berarti login gagal — periksa apakah service `migrate` sudah
+selesai (`docker compose logs migrate`).
+
+**Catatan untuk penilai — apa yang sudah bisa dicoba lewat UI.** Saat ini UI baru memiliki
+`/login` dan `/pengajuan`; masuk sebagai KCP/KC/KOM/ADM akan diarahkan ke `/approval` atau
+`/parameter` yang **belum ada**. Alur approval, skoring, dan parameter ADM untuk sementara
+diuji lewat API langsung (`curl`), bukan lewat UI. Masuk sebagai ANL menampilkan `/pengajuan`,
+tetapi daftarnya masih kosong karena `GET /api/pengajuan` belum punya query lingkup untuk
+ANL/approver — status jujurnya ada di tabel FR bagian 4.
 
 ### 2.6 Test & lint
 
