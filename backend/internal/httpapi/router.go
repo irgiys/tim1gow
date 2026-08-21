@@ -125,6 +125,12 @@ func NewRouterLengkap(cfg config.Config, gdb *gorm.DB, appH *ApprovalHandler, au
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
 
+	// CORS dipasang sebelum autentikasi: browser TIDAK mengirim header
+	// Authorization pada preflight, jadi preflight yang sampai ke
+	// MiddlewareAuth dijawab 401 dan request aslinya tidak pernah dikirim.
+	// Tanpa ini cfg.CorsAllowedOrigins dibaca dari environment lalu dibuang.
+	r.Use(MiddlewareCORS(cfg.CorsAllowedOrigins))
+
 	// authAktif menentukan apakah lapisan autentikasi dipasang. Bernilai false
 	// hanya pada router test handler (NewRouterWithAllHandlers); jalur produksi
 	// lewat NewRouter selalu mengirim pemeriksa.
