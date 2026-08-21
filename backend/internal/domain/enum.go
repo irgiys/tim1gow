@@ -76,6 +76,3 @@ const (
 	KomponenLamaUsaha      = "LAMA_USAHA"
 	KomponenSurveiLapangan = "SURVEI_LAPANGAN"
 )
-
-
-
