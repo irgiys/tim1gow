@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/irgiys/tim1gow/backend/internal/domain"
@@ -201,6 +202,42 @@ func TestPastikanBolehSkoring_BR03(t *testing.T) {
 				t.Errorf("rule = %q, ingin BR-03", brErr.Rule)
 			}
 		})
+	}
+}
+
+// AC-04 berbunyi: pengajuan tanpa survei valid ditolak saat mencoba masuk
+// skoring, "dengan pesan yang menyebut BR-03".
+//
+// Yang dinilai adalah pesan yang DILIHAT PENGGUNA, bukan field internal. Test
+// BR-03 di atas hanya memeriksa `brErr.Rule`, sehingga pesan yang tidak menyebut
+// BR-03 tetap lolos — padahal itu persis yang diminta AC-04.
+func TestPastikanBolehSkoring_AC04_PesanMenyebutBR03(t *testing.T) {
+	svc := NewSkoringService(newFakeParameterRepo())
+
+	// Kasus AC-04: dokumen & SLIK beres, yang kurang hanya survei valid.
+	err := svc.PastikanBolehSkoring(PrasyaratSkoring{
+		SemuaDokumenVerified: true,
+		AdaSurveiValid:       false,
+		SlikSudahDijalankan:  true,
+	})
+	if err == nil {
+		t.Fatal("tanpa survei valid: ingin ditolak, dapat nil")
+	}
+
+	// Pesan yang dirakit untuk pengguna wajib memuat kode BR-nya. Diperiksa
+	// lewat Error() karena itulah yang berakhir di respons API dan di layar ANL.
+	if !strings.Contains(err.Error(), "BR-03") {
+		t.Errorf("pesan %q tidak menyebut BR-03 (AC-04)", err.Error())
+	}
+
+	// Sekaligus pastikan sebabnya ikut disebut, supaya ANL tahu apa yang kurang.
+	if !strings.Contains(err.Error(), "survei") {
+		t.Errorf("pesan %q tidak menjelaskan bahwa survei yang kurang", err.Error())
+	}
+
+	// Pembanding: prasyarat lengkap tidak boleh menghasilkan pesan apa pun.
+	if err := svc.PastikanBolehSkoring(PrasyaratSkoring{true, true, true}); err != nil {
+		t.Errorf("prasyarat lengkap seharusnya lolos: %v", err)
 	}
 }
 

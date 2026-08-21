@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/irgiys/tim1gow/backend/internal/domain"
@@ -49,12 +50,23 @@ func (s *auditService) Catat(ctx context.Context, input domain.CatatAuditInput) 
 		return errors.New("aksi audit wajib diisi")
 	}
 
+	catatan := strings.TrimSpace(input.Catatan)
+
+	// AC-08: override grade adalah keputusan manual yang menimpa hasil
+	// perhitungan sistem, jadi alasannya WAJIB. Tanpa itu audit trail tidak
+	// menjawab "mengapa" (BR-10: tidak ada perubahan tanpa jejak sebab).
+	// Aksi lain tidak terkena aturan ini — pencatatan otomatis boleh tanpa catatan.
+	if input.Aksi == domain.AksiOverrideSkor && catatan == "" {
+		return domain.NewBusinessRuleError("VALIDATION_ERROR",
+			"alasan wajib diisi saat melakukan override grade")
+	}
+
 	entry := &domain.AuditTrailEntry{
 		PengajuanID:   input.PengajuanID,
 		Aksi:          input.Aksi,
 		StatusSebelum: input.StatusSebelum,
 		StatusSesudah: input.StatusSesudah,
-		Catatan:       input.Catatan,
+		Catatan:       catatan,
 		ActorID:       input.ActorID,
 		ActorRole:     input.ActorRole,
 		CreatedAt:     time.Now(),

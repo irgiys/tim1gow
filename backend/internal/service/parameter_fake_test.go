@@ -34,6 +34,8 @@ func newFakeParameterRepo() *fakeParameterRepo {
 		umum: map[string]float64{
 			KunciHariKerjaPerBulan: 25,
 			KunciMarginUsaha:       0.30,
+			KunciPlafonMinimum:     5_000_000,
+			KunciPlafonMaksimum:    500_000_000,
 		},
 		rentang: []domain.RentangMargin{
 			{Grade: 1, SkorMin: 85, SkorMaks: 100, MarginMin: 11.0, MarginMaks: 13.0, NisbahMin: 20, NisbahMaks: 25, DapatDibiayai: true},
@@ -116,4 +118,9 @@ func (f *fakeParameterRepo) ubahBatasMargin(grade int, min, maks float64) {
 			return
 		}
 	}
+}
+
+// ubahNilaiUmum meniru ADM mengubah satu baris parameter_umum lewat FR-13.
+func (f *fakeParameterRepo) ubahNilaiUmum(kunci string, nilai float64) {
+	f.umum[kunci] = nilai
 }

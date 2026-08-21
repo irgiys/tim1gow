@@ -51,6 +51,88 @@ func TestAudit_AC08_OverrideGradeTercatat(t *testing.T) {
 	}
 }
 
+// AC-08 bagian kedua: "sistem menolak jika alasan kosong". Bagian ini sebelumnya
+// tidak diuji oleh test mana pun DAN tidak ditegakkan di kode — override grade
+// dengan catatan kosong lolos begitu saja.
+//
+// Alasan wajib khusus untuk OVERRIDE_SKOR: override adalah keputusan manual yang
+// menimpa hasil perhitungan sistem, jadi tanpa alasan tersimpan, audit trail
+// tidak menjawab "mengapa" (BR-10: tidak ada perubahan tanpa jejak sebab).
+func TestAudit_AC08_OverrideTanpaAlasanDitolak(t *testing.T) {
+	ctx := context.Background()
+	pengajuanID := int64(103)
+
+	buatInput := func(catatan string) domain.CatatAuditInput {
+		return domain.CatatAuditInput{
+			PengajuanID:   &pengajuanID,
+			Aksi:          domain.AksiOverrideSkor,
+			StatusSebelum: domain.StatusScored,
+			StatusSesudah: domain.StatusScored,
+			Catatan:       catatan,
+			ActorID:       22,
+			ActorRole:     domain.PeranANL,
+		}
+	}
+
+	kasus := []struct {
+		nama    string
+		catatan string
+	}{
+		{"kosong", ""},
+		{"hanya spasi", "   "},
+		{"hanya tab dan newline", "	\n"},
+	}
+
+	for _, k := range kasus {
+		t.Run(k.nama, func(t *testing.T) {
+			svc := NewAuditService(newFakeAuditRepo())
+
+			err := svc.Catat(ctx, buatInput(k.catatan))
+			if err == nil {
+				t.Fatalf("override dengan alasan %q seharusnya ditolak (AC-08), dapat nil", k.catatan)
+			}
+
+			// Tidak boleh ada baris audit yang tertulis saat ditolak.
+			riwayat, _ := svc.AmbilRiwayatPengajuan(ctx, pengajuanID)
+			if len(riwayat) != 0 {
+				t.Errorf("override ditolak tetapi %d baris audit tetap tercatat", len(riwayat))
+			}
+		})
+	}
+
+	// Kasus pembanding (AGENTS.md Larangan 18): dengan alasan terisi harus
+	// LOLOS, supaya test di atas tidak lolos hanya karena Catat selalu menolak.
+	t.Run("dengan alasan terisi diterima", func(t *testing.T) {
+		svc := NewAuditService(newFakeAuditRepo())
+
+		err := svc.Catat(ctx, buatInput("grade diturunkan: omzet menurun tiga bulan terakhir"))
+		if err != nil {
+			t.Fatalf("override dengan alasan terisi seharusnya diterima: %v", err)
+		}
+
+		riwayat, err := svc.AmbilRiwayatPengajuan(ctx, pengajuanID)
+		if err != nil {
+			t.Fatalf("AmbilRiwayatPengajuan gagal: %v", err)
+		}
+		if len(riwayat) != 1 {
+			t.Fatalf("riwayat diharapkan 1 baris, dapat %d", len(riwayat))
+		}
+	})
+
+	// Aksi lain TIDAK boleh ikut terkena aturan ini — mis. pencatatan skoring
+	// otomatis tanpa catatan tetap sah. Kalau ikut ditolak, alur normal rusak.
+	t.Run("aksi non-override tanpa catatan tetap diterima", func(t *testing.T) {
+		svc := NewAuditService(newFakeAuditRepo())
+
+		in := buatInput("")
+		in.Aksi = domain.AksiSkoring
+
+		if err := svc.Catat(ctx, in); err != nil {
+			t.Fatalf("aksi %s tanpa catatan seharusnya tetap diterima: %v", domain.AksiSkoring, err)
+		}
+	})
+}
+
 // Test AC-12: Audit trail menampilkan riwayat lengkap satu pengajuan dari DRAFT sampai APPROVED, urut waktu, dengan aktor di setiap baris.
 func TestAudit_AC12_RiwayatLengkapUrutWaktu(t *testing.T) {
 	ctx := context.Background()
