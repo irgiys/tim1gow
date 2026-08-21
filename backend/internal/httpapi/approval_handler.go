@@ -22,22 +22,28 @@ func NewApprovalHandler(approvalService service.ApprovalService) *ApprovalHandle
 	return &ApprovalHandler{approvalService: approvalService}
 }
 
-// getActor membaca identitas aktor dari header (atau context saat ada middleware auth).
-func getActor(r *http.Request) (int64, domain.Peran) {
-	actorIDStr := r.Header.Get("X-Actor-ID")
-	actorRoleStr := r.Header.Get("X-Actor-Role")
-
-	actorID, _ := strconv.ParseInt(actorIDStr, 10, 64)
-	if actorID <= 0 {
-		actorID = 1 // default actor fallback bila belum lewat token
+// getActor membaca identitas aktor dari token yang sudah diverifikasi.
+//
+// SEBELUMNYA berkas ini membaca header X-Actor-ID / X-Actor-Role dengan fallback
+// ke (id=1, ANL). Itu dua lubang sekaligus:
+//
+//   - Identitas dapat dipalsukan klien. KCP yang sah mengirim
+//     "X-Actor-Role: KOM" membuat server menilai BR-02 memakai peran palsu.
+//   - Tanpa header, SETIAP aktor dianggap id=1. Akibatnya audit trail mencatat
+//     AJUKAN_APPROVAL sebagai actor_id=1 padahal ANL adalah id=2 (BR-10
+//     dilanggar: jejaknya menunjuk orang yang salah), dan BR-09 menolak KCP
+//     yang sah karena id=1 kebetulan adalah AO pembuat pengajuan.
+//
+// Identitas sekarang SELALU dari context yang diisi MiddlewareAuth. Ketika
+// identitas tidak ada, pemanggil dijawab 401 dan tidak ada aktor yang ditebak —
+// perubahan keadaan tanpa aktor yang pasti melanggar BR-10.
+func getActor(w http.ResponseWriter, r *http.Request) (int64, domain.Peran, bool) {
+	ident, ok := IdentitasDari(r.Context())
+	if !ok || ident.PenggunaID <= 0 {
+		respondError(w, http.StatusUnauthorized, "UNAUTHORIZED", "autentikasi diperlukan", "")
+		return 0, "", false
 	}
-
-	actorRole := domain.Peran(actorRoleStr)
-	if actorRole == "" {
-		actorRole = domain.PeranANL
-	}
-
-	return actorID, actorRole
+	return ident.PenggunaID, ident.Peran, true
 }
 
 // AjukanApproval menangani POST /api/pengajuan/{id}/ajukan-approval.
@@ -49,7 +55,10 @@ func (h *ApprovalHandler) AjukanApproval(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	actorID, actorRole := getActor(r)
+	actorID, actorRole, ok := getActor(w, r)
+	if !ok {
+		return
+	}
 	if err := h.approvalService.AjukanKeApproval(r.Context(), id, actorID, actorRole); err != nil {
 		handleServiceError(w, err)
 		return
@@ -76,7 +85,10 @@ func (h *ApprovalHandler) PutuskanApproval(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	actorID, actorRole := getActor(r)
+	actorID, actorRole, ok := getActor(w, r)
+	if !ok {
+		return
+	}
 	dec, err := h.approvalService.PutuskanApproval(r.Context(), id, req, actorID, actorRole)
 	if err != nil {
 		handleServiceError(w, err)

@@ -224,7 +224,10 @@ func (h *SkoringHandler) OverrideGrade(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	actorID, actorRole := getActor(r)
+	actorID, actorRole, ok := getActor(w, r)
+	if !ok {
+		return
+	}
 	hasil, err := h.skoring.OverrideGrade(r.Context(), service.OverrideGrade{
 		PengajuanID: id,
 		GradeSemula: req.GradeSemula,

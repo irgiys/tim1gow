@@ -142,6 +142,18 @@ func NewRouterLengkap(cfg config.Config, gdb *gorm.DB, appH *ApprovalHandler, au
 	// lewat NewRouter selalu mengirim pemeriksa.
 	authAktif := pemeriksa != nil
 
+	// Pada router TEST saja, identitas aktor boleh berasal dari header
+	// X-Actor-ID / X-Actor-Role supaya test handler dapat menguji BR-02, BR-09,
+	// dan AC-08 tanpa menerbitkan token lebih dulu.
+	//
+	// Ini TIDAK PERNAH aktif di produksi: NewRouter selalu mengirim pemeriksa,
+	// sehingga authAktif true dan blok ini dilewati. Jalur produksi membaca
+	// identitas hanya dari token yang sudah diverifikasi — header X-Actor-*
+	// dari klien diabaikan sepenuhnya.
+	if !authAktif {
+		r.Use(injeksiIdentitasUji)
+	}
+
 	// peran mengembalikan middleware pembatas peran, atau pass-through ketika
 	// autentikasi tidak aktif. Tanpa ini, router test akan menolak semuanya
 	// dengan 401 karena tidak ada identitas di context.
