@@ -8,12 +8,12 @@
 
 | Nama | Peran | Fokus FR | Akun GitHub |
 |---|---|---|---|
-| Luthfi | Tech Lead / Integrator | FR-08, FR-09 | https://github.com/luthfi |
+| Luthfi | Tech Lead / Integrator | FR-08, FR-09 | https://github.com/zachnrrr |
 | Irgiyansyah | Backend Engineer — domain & skoring + DevOps / Release | FR-06, FR-07, FR-13, CI & compose | https://github.com/irgiys/ |
 | Yulio Zaki | Backend Engineer — auth & integrasi SLIK | FR-01, FR-05, mock SLIK | https://github.com/yuliozakik |
 | Rayvaldo | Backend Engineer — pengajuan & dokumen | FR-02, FR-03, FR-04 | https://github.com/rayvaldoprawira |
 | Aldi | AI Workflow Officer + Frontend Engineer | FR-03/FR-04/FR-08 (UI), FR-11 | https://github.com/aldiariq/ |
-| Soleh | QA / Verification + DevOps / Release | FR-12, test AC-01…AC-15, CI & compose | https://github.com/soleh |
+| Soleh | QA / Verification + DevOps / Release | FR-12, test AC-01…AC-15, CI & compose | https://github.com/mshcode89  |
 
 **Pembagian tanggung jawab non-koding** (satu berkas = satu pemilik tunggal; orang lain
 mengusulkan lewat PR, supaya tidak ada konflik merge pada tabel markdown):
