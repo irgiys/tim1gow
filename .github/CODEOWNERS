@@ -50,8 +50,8 @@
 /backend/internal/domain/       @<!-- ISI: username Luthfi (Tech Lead) --> @irgiys
 /backend/internal/service/      @<!-- ISI: username Luthfi (Tech Lead) --> @irgiys
 /backend/internal/slik/         @yuliozakik
-/backend/internal/httpapi/      @yuliozakik @<!-- ISI: username Rayvaldo -->
-/backend/internal/repository/   @<!-- ISI: username Rayvaldo -->
+/backend/internal/httpapi/      @yuliozakik @rayvaldoprawira
+/backend/internal/repository/   @rayvaldoprawira
 
 # Migrasi: satu pemilik, supaya tidak ada dua migrasi bertabrakan.
 # Migrasi yang sudah di-merge tidak boleh diubah (AGENTS.md bagian 6 butir 2).

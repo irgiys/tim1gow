@@ -1,0 +1,10 @@
+# Binary hasil build lokal.
+mock-slik
+mock-slik.exe
+
+# Berkas Docker itu sendiri tidak dibutuhkan di dalam konteks build.
+Dockerfile
+.dockerignore
+
+# Fixtures di-mount oleh compose, bukan disalin ke image.
+fixtures/

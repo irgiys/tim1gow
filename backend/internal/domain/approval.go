@@ -3,15 +3,20 @@ package domain
 import "time"
 
 // Pengajuan mewakili entitas pengajuan pembiayaan mikro syariah.
+//
+// Nama kolom mengikuti SDD BAB 4.1: `ao_id` (maker, dipakai cek BR-09),
+// `plafon_diajukan`, dan `dibuat_pada`/`diperbarui_pada`. Struct ini sengaja
+// memuat kolom yang dibutuhkan alur approval saja; field lengkap pengajuan
+// (nasabah, akad, tenor) ada di lapisan service pengajuan.
 type Pengajuan struct {
 	ID             int64           `json:"id" gorm:"primaryKey;autoIncrement"`
 	NomorReferensi string          `json:"nomor_referensi" gorm:"column:nomor_referensi;unique;not null"`
-	TotalPlafon    int64           `json:"total_plafon" gorm:"column:total_plafon;not null"`
+	PlafonDiajukan int64           `json:"plafon_diajukan" gorm:"column:plafon_diajukan;not null"`
 	Grade          int             `json:"grade" gorm:"column:grade"`
 	Status         StatusPengajuan `json:"status" gorm:"column:status;not null"`
-	CreatedBy      int64           `json:"created_by" gorm:"column:created_by;not null"`
-	CreatedAt      time.Time       `json:"created_at" gorm:"column:created_at;autoCreateTime"`
-	UpdatedAt      time.Time       `json:"updated_at" gorm:"column:updated_at;autoUpdateTime"`
+	AOID           int64           `json:"ao_id" gorm:"column:ao_id;not null"`
+	DibuatPada     time.Time       `json:"dibuat_pada" gorm:"column:dibuat_pada;autoCreateTime"`
+	DiperbaruiPada time.Time       `json:"diperbarui_pada" gorm:"column:diperbarui_pada;autoUpdateTime"`
 }
 
 func (Pengajuan) TableName() string {

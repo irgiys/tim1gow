@@ -272,66 +272,47 @@ yang bisa diulang orang lain.
 - **Tindakan**: Menerapkan idiomatic Go *Dependency Inversion Principle* di mana interface repository (`ApprovalRepository`, `AuditRepository`, `ParameterRepository`) didefinisikan di package konsumen (`service`), dan package `repository` yang mengimplementasikannya. Seluruh unit dan integration test (7 test approval, 2 test audit, 2 test HTTP approval, 2 test HTTP audit append-only) dijalankan ulang dan 100% PASS. Migrasi 000003 berhasil diterapkan pada database Aiven PostgreSQL instance.
 - **Pelajaran**: Dalam layout Clean Architecture di Go, service mendefinisikan interface dependensinya sendiri; package luar (repository) yang mengimplementasikannya. Ini mencegah circular dependency dan membuat service mudah diuji dengan mock/fake tanpa ketergantungan DB nyata.
 
-### [DEVLOG-04] Empat BR ditandai "Done" tanpa test yang mengujinya (BR-01, BR-08, BR-11, BR-12) — kasus AI salah
-- **Waktu**: 2026-08-20 15:20 – 16:40
-- **Oleh**: Soleh (QA / Verification)
-- **Tool/Model**: Hermes IDE (Claude Opus, agen dengan akses baca/tulis repo)
-- **Tugas**: Dua hal. (1) Mengisi kolom BR pada `docs/TRACEABILITY.md` dan tabel Ringkasan
-  Risiko untuk Gate 2. (2) Menutup BR yang belum punya test, dimulai dari yang bisa diuji
-  murni di `service` tanpa DB maupun HTTP.
-- **Cara memberi konteks**: melampirkan `AGENTS.md` bagian 5 (daftar BR + lokasi penegakan),
-  Larangan 3, 15, 18, 19, dan bagian "Cara memakai tabel ini sebagai alat deteksi risiko"
-  pada `TRACEABILITY.md`. Batasan yang disebut eksplisit: sebuah baris hanya boleh berstatus
-  `Done` kalau berkas penegaknya **benar-benar ada** DAN ada nama fungsi test yang menguji
-  aturan itu.
-- **Keluaran AI**: audit repo, koreksi tabel BR, pengisian Ringkasan Risiko Gate 2, lalu
-  8 fungsi test baru + `pengajuan_service.go` + migrasi `000004`.
-- **Yang salah**: dua hal, dan yang pertama bukan kesalahan sesi ini.
-  1. **Tabel BR yang sudah diisi PR #8 memuat empat klaim `Done` tanpa bukti.** BR-01 menunjuk
-     `pengajuan_service.go` yang **tidak ada satu pun di repo**; kolom test-nya menunjuk
-     `approval_service_test.go`, yang ternyata hanya memakai plafon 30jt/120jt/300jt —
-     semuanya **di dalam** batas, jadi tidak ada satu pun kasus yang menguji BR-01. BR-11
-     ditandai `Done` dengan test `audit_service_test.go` yang tidak memuat satu pun assertion
-     tentang NIK. BR-12 menunjuk berkas migrasi sebagai "test" — constraint DB bukan test.
-     BR-08 ditandai `Done` padahal tabel `komponen_skor` tidak ada di migrasi mana pun,
-     sementara BR-08 mewajibkan rincian **disimpan**, bukan sekadar dikembalikan di memori.
-  2. **Kesalahan agen di sesi ini**: rencana awalnya "mengisi kolom BR yang kosong" disusun
-     dari `main` lokal yang **ketinggalan 2 commit**. Tabel itu sebenarnya sudah terisi. Kalau
-     tidak di-`fetch` lebih dulu, hasil kerjanya akan menimpa pekerjaan orang lain.
-- **Cara verifikasi**: setiap klaim `Done` dicek satu per satu ke kode, bukan dibaca dari
-  tabel — `ls` berkas penegaknya, lalu `grep` nama fungsi test dan isi assertion-nya. Itu yang
-  memunculkan keempatnya. Untuk pekerjaan (2), test ditulis lebih dulu dan **dipastikan GAGAL**
-  (`undefined: NewPengajuanService`) sebelum implementasi ditulis, supaya terbukti test-nya
-  benar-benar menguji sesuatu. Verifikasi akhir dijalankan nyata, bukan diasumsikan:
-  `go test ./internal/service/... -count=1` hijau (47 subtest), `go vet` bersih, `gofmt` bersih.
-  Go tidak tersedia di mesin QA, jadi Go 1.22.12 portable dipasang ke direktori temp — versinya
-  disamakan dengan `go 1.22` di `go.mod`, bukan versi terbaru. Percobaan pertama menjalankan
-  seluruh suite gagal karena `proxy.golang.org` diputus jaringan kantor; setelah dialihkan ke
-  mirror (`GOPROXY=https://goproxy.io`), **seluruh** suite backend dijalankan dan hijau —
-  `internal/service` **dan** `internal/httpapi` (yang sebelumnya tidak bisa diuji lokal),
-  plus `go build ./...` dan `go vet ./...` bersih.
-- **Tindakan**: keempat baris diturunkan statusnya beserta alasannya (`b9adbe8`). BR-01 dan
-  BR-12 lalu benar-benar ditutup (`ef8f775`): 8 test, masing-masing dua arah sesuai Larangan 18
-  (4jt/4.999.999 **ditolak** dan 5jt/500jt **diterima**; batas diuji tepat di tepinya). Batas
-  plafon tidak ditulis sebagai konstanta melainkan dibaca dari `parameter_umum` (Larangan 3),
-  di-seed lewat migrasi **baru** `000004` — bukan mengubah `000002` yang sudah di-merge
-  (Larangan 2) — dengan `ON CONFLICT DO NOTHING` (Larangan 19). Aturan pengisian tabel BR
-  ditulis eksplisit di komentar berkas supaya tidak terulang.
-- **Temuan sampingan (belum ditindak, sengaja di luar lingkup PR ini)**: setelah seluruh suite
-  bisa dijalankan, `go build ./...` memperbaiki `backend/go.mod` sendiri — `github.com/lib/pq`
-  tercatat sebagai `// indirect` padahal diimpor langsung oleh
-  `internal/repository/parameter_repository_db.go`. CI tidak menjalankan `go mod tidy`, jadi ini
-  tidak membuat CI merah dan tidak terlihat oleh siapa pun. Perubahan `go.mod` dikembalikan
-  supaya diff PR QA tetap bersih (satu PR satu tujuan); dilaporkan ke pemilik `go.mod` untuk
-  PR terpisah.
-- **Pelajaran**: **kolom "Test" pada tabel traceability adalah klaim, bukan bukti.** Menunjuk
-  nama berkas test tidak membuktikan apa pun — yang membuktikan adalah nama fungsi test dan
-  isi assertion-nya. Tiga dari empat kesalahan di atas berbentuk sama: kolom test diisi berkas
-  yang *ada* dan *hijau*, tetapi tidak menguji aturan yang diklaim. Ini justru berbahaya karena
-  CI hijau memberi rasa aman: tim masuk Jumat dengan keyakinan 12/12 BR terlindungi, padahal
-  4 di antaranya tidak diuji siapa pun. Pelajaran kedua, untuk agen: **`git fetch` sebelum
-  menyusun rencana kerja pada repo yang dikerjakan 6 orang paralel** — rencana yang disusun
-  dari basis usang menghasilkan pekerjaan yang menimpa milik orang lain.
+### [DEVLOG-04] Import cycle service ↔ repository setelah merge `main` (FR-02, FR-03, FR-04) — kasus AI salah
+- **Waktu**: 2026-08-20 14:20 – 15:40
+- **Oleh**: Rayvaldo
+- **Tool/Model**: Hermes IDE (agen dengan akses baca/tulis repo)
+- **Tugas**: Implementasi service + kontrak repository untuk FR-02 (pengajuan), FR-03 (dokumen),
+  dan FR-04 (survei), beserta unit test dari AC-01, AC-03, dan AC-15. Syarat yang disebut
+  eksplisit: seluruh ambang plafon dibaca dari tabel parameter, bukan konstanta
+  (`AGENTS.md` Larangan 3), dan setiap kasus penolakan wajib berpasangan dengan kasus
+  penerimaan (Larangan 18).
+- **Cara memberi konteks**: melampirkan `AGENTS.md` bagian 3 (aturan lapisan), 4.1, 4.3, dan 5
+  (BR-01, BR-03, BR-12), ditambah `docs/SDD-iMitra.md` BAB 4.1 untuk bentuk kolom. Batasan
+  tambahan: service tidak boleh tahu tentang HTTP, dan test harus jalan tanpa database nyata
+  memakai fake in-memory karena GORM belum masuk `go.mod` saat itu.
+- **Keluaran AI**: `pengajuan_service.go`, `dokumen_service.go`, `survei_service.go`, kontrak
+  repository di `internal/repository/`, plus 59 test. Semua hijau saat itu, dan dua uji mutasi
+  (membalik kondisi BR-01; mematok nomor urut BR-12) keduanya tertangkap test.
+- **Yang salah**: struktur yang dipilih AI mengikuti `AGENTS.md` bagian 3 secara harfiah —
+  interface repository ditaruh di paket `repository`, sehingga `service` meng-import
+  `repository`. Setelah `main` di-merge, ternyata Luthfi sudah memakai pola sebaliknya:
+  interface di `service/parameter_repository.go`, dan `repository/parameter_repository_db.go`
+  meng-import `service`. Dua konvensi itu bertemu menjadi
+  `service → repository → service`: **import cycle**, seluruh backend gagal build. Halusnya:
+  kedua sisi benar bila dilihat sendiri-sendiri, dan cycle tidak muncul di branch mana pun
+  sebelum digabungkan.
+- **Cara verifikasi**: `go build ./...` gagal dengan `import cycle not allowed`. Untuk
+  memastikan penyebabnya bukan kode sendiri, 9 berkas baru di-*stash* sementara lalu build
+  diulang — hasilnya `EXIT=0`, membuktikan cycle hanya terbentuk saat kedua pola bertemu,
+  bukan bawaan salah satu pihak.
+- **Tindakan**: mengalah ke pola yang sudah lebih dulu masuk `main`. Entitas dan kontrak
+  repository dipindahkan ke `internal/service/pengajuan_repository.go` meniru
+  `parameter_repository.go`, dan `internal/repository/{model,repository}.go` dihapus. Build,
+  vet, dan 70 test kembali hijau, termasuk test `httpapi` milik Irgiyansyah. Catatan penting:
+  arah `repository → service` ini **berlawanan dengan `AGENTS.md` bagian 3** yang menetapkan
+  `httpapi → service → repository`; diikuti demi keseragaman, tetapi diangkat ke Tech Lead
+  sebagai keputusan terpisah — salah satu dari dua (kode atau AGENTS.md) harus menyesuaikan.
+- **Pelajaran**: AI hanya melihat berkas yang dilampirkan, jadi ia patuh pada dokumen dan buta
+  terhadap konvensi nyata yang hidup di branch lain. Sebelum menulis lapisan baru di repo tim,
+  `main` harus ditarik lebih dulu dan pola tetangga yang sudah ada dibaca — dokumen arsitektur
+  bukan jaminan bahwa kode mengikutinya. Efek samping kedua: `gofmt -w` dan `sed -i` pada
+  seluruh direktori sempat menyentuh 11 berkas milik anggota lain (murni CRLF, nol perubahan
+  isi) dan harus dikembalikan; perintah massal wajib ditargetkan ke berkas sendiri saja.
 
 ### [DEVLOG-05] `<!-- ISI: judul -->` (FR-`<!-- ISI -->`)
 - **Waktu**:

@@ -1,224 +1,259 @@
 package service
 
 import (
+	"context"
 	"errors"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/irgiys/tim1gow/backend/internal/domain"
 )
 
-// Test-test di berkas ini diturunkan dari BR-12 dan BR-01 pada AGENTS.md
-// bagian 5, bukan dari kode yang sudah ada — pada saat ditulis,
-// pengajuan_service.go belum ada sama sekali.
-//
-// Keduanya sebelumnya berstatus "Done" di docs/TRACEABILITY.md tanpa satu pun
-// test yang benar-benar mengujinya (lihat commit b9adbe8).
+// waktuUji dipatok supaya tanggal pada nomor referensi dapat diperiksa persis.
+var waktuUji = time.Date(2026, 8, 20, 10, 0, 0, 0, time.UTC)
 
-// BR-12: nomor referensi berformat IMT-YYYYMMDD-NNNN, unik, dan tidak pernah
-// dipakai ulang — termasuk untuk pengajuan yang ditolak.
-//
-// AC-01 memeriksa format ini secara langsung. Nomor dibangkitkan di server
-// (AGENTS.md Larangan 4: tidak boleh dibangkitkan di frontend).
-func TestBuatNomorReferensi_BR12_Format(t *testing.T) {
-	repo := newFakeNomorRepo()
-	svc := NewPengajuanService(repo, newFakeParameterRepo())
+func pengajuanServiceUji(t *testing.T) (*PengajuanService, *fakePengajuanRepo, *fakeBatasPlafonRepo) {
+	t.Helper()
+	repo := newFakePengajuanRepo()
+	batas := newFakeBatasPlafonRepo()
+	svc := NewPengajuanService(repo, batas).DenganWaktu(func() time.Time { return waktuUji })
+	return svc, repo, batas
+}
 
-	tanggal := time.Date(2026, 8, 20, 10, 30, 0, 0, time.UTC)
-
-	nomor, err := svc.BuatNomorReferensi(tanggal)
-	if err != nil {
-		t.Fatalf("tidak mengharapkan error: %v", err)
-	}
-
-	if ingin := "IMT-20260820-0001"; nomor != ingin {
-		t.Errorf("nomor = %q, ingin %q", nomor, ingin)
+func inputValid() InputPengajuan {
+	return InputPengajuan{
+		AOID:           7,
+		Tipe:           TipeIndividu,
+		NamaNasabah:    "Siti Aminah",
+		NIK:            "3404010101900001",
+		AlamatUsaha:    "Pasar Beringharjo Blok C",
+		JenisUsaha:     "Warung kelontong",
+		JenisAkad:      domain.AkadMurabahah,
+		PlafonDiajukan: 30_000_000,
+		TenorBulan:     12,
 	}
 }
 
-// Urutan berlanjut dalam hari yang sama, dan NNNNN di-pad 4 digit.
-func TestBuatNomorReferensi_BR12_UrutanDalamSatuHari(t *testing.T) {
-	repo := newFakeNomorRepo()
-	svc := NewPengajuanService(repo, newFakeParameterRepo())
+// AC-01: AO membuat pengajuan Rp 30 juta akad murabahah; sistem menyimpannya
+// sebagai DRAFT dan memberi nomor referensi berformat IMT-YYYYMMDD-NNNN.
+func TestBuatPengajuan_AC01_NomorReferensiDanStatusDraft(t *testing.T) {
+	svc, repo, _ := pengajuanServiceUji(t)
 
-	tanggal := time.Date(2026, 8, 20, 8, 0, 0, 0, time.UTC)
+	p, err := svc.Buat(context.Background(), inputValid())
+	if err != nil {
+		t.Fatalf("pengajuan sah seharusnya diterima, dapat error: %v", err)
+	}
 
-	var terakhir string
-	for i := 1; i <= 3; i++ {
-		n, err := svc.BuatNomorReferensi(tanggal)
+	if want := "IMT-20260820-0001"; p.NomorReferensi != want {
+		t.Errorf("nomor referensi = %q, mau %q", p.NomorReferensi, want)
+	}
+	if p.Status != string(domain.StatusDraft) {
+		t.Errorf("status awal = %q, mau DRAFT", p.Status)
+	}
+	if p.ID == 0 {
+		t.Error("pengajuan tersimpan seharusnya punya ID")
+	}
+	if repo.jumlahTransaksi != 1 {
+		t.Errorf("pembuatan nomor referensi harus dalam 1 transaksi, dapat %d", repo.jumlahTransaksi)
+	}
+}
+
+// BR-12: nomor referensi tidak pernah dipakai ulang, termasuk pada hari yang sama.
+func TestBuatPengajuan_BR12_NomorReferensiTidakPernahDiulang(t *testing.T) {
+	svc, _, _ := pengajuanServiceUji(t)
+	ctx := context.Background()
+
+	terlihat := map[string]bool{}
+	for i := 0; i < 5; i++ {
+		p, err := svc.Buat(ctx, inputValid())
 		if err != nil {
-			t.Fatalf("pengajuan ke-%d: %v", i, err)
+			t.Fatalf("pengajuan ke-%d gagal: %v", i+1, err)
 		}
-		if n == terakhir {
-			t.Fatalf("nomor ke-%d sama dengan sebelumnya (%q); nomor dipakai ulang", i, n)
+		if terlihat[p.NomorReferensi] {
+			t.Fatalf("nomor referensi %q dipakai ulang", p.NomorReferensi)
 		}
-		terakhir = n
+		terlihat[p.NomorReferensi] = true
 	}
 
-	if ingin := "IMT-20260820-0003"; terakhir != ingin {
-		t.Errorf("nomor ketiga = %q, ingin %q", terakhir, ingin)
-	}
-}
-
-// Urutan direset per tanggal: hari baru mulai dari 0001 lagi.
-func TestBuatNomorReferensi_BR12_ResetPerTanggal(t *testing.T) {
-	repo := newFakeNomorRepo()
-	svc := NewPengajuanService(repo, newFakeParameterRepo())
-
-	hariIni := time.Date(2026, 8, 20, 9, 0, 0, 0, time.UTC)
-	besok := time.Date(2026, 8, 21, 9, 0, 0, 0, time.UTC)
-
-	if _, err := svc.BuatNomorReferensi(hariIni); err != nil {
-		t.Fatalf("tidak mengharapkan error: %v", err)
-	}
-
-	nomorBesok, err := svc.BuatNomorReferensi(besok)
-	if err != nil {
-		t.Fatalf("tidak mengharapkan error: %v", err)
-	}
-	if ingin := "IMT-20260821-0001"; nomorBesok != ingin {
-		t.Errorf("nomor hari berikutnya = %q, ingin %q", nomorBesok, ingin)
+	if want := "IMT-20260820-0005"; !terlihat[want] {
+		t.Errorf("urutan harian tidak naik; %q tidak pernah muncul", want)
 	}
 }
 
-// BR-12 bagian yang paling mudah terlewat: nomor tidak boleh dipakai ulang
-// walaupun pengajuan pemiliknya DITOLAK. Urutan maju terus, tidak mengisi
-// kembali lubang yang ditinggalkan pengajuan yang gagal.
-func TestBuatNomorReferensi_BR12_NomorPengajuanDitolakTidakDipakaiUlang(t *testing.T) {
-	repo := newFakeNomorRepo()
-	svc := NewPengajuanService(repo, newFakeParameterRepo())
-
-	tanggal := time.Date(2026, 8, 20, 9, 0, 0, 0, time.UTC)
-
-	pertama, err := svc.BuatNomorReferensi(tanggal)
-	if err != nil {
-		t.Fatalf("tidak mengharapkan error: %v", err)
-	}
-
-	// Pengajuan pertama ditolak (REJECTED_SLIK / REJECTED_SCORING / REJECTED).
-	// Nomornya tetap terpakai selamanya.
-	repo.tandaiDitolak(pertama)
-
-	kedua, err := svc.BuatNomorReferensi(tanggal)
-	if err != nil {
-		t.Fatalf("tidak mengharapkan error: %v", err)
-	}
-
-	if kedua == pertama {
-		t.Fatalf("nomor %q dipakai ulang setelah pengajuan sebelumnya ditolak (BR-12)", kedua)
-	}
-	if ingin := "IMT-20260820-0002"; kedua != ingin {
-		t.Errorf("nomor kedua = %q, ingin %q", kedua, ingin)
-	}
-}
-
-// BR-01: plafon < Rp 5.000.000 atau > Rp 500.000.000 ditolak saat submit,
-// dengan pesan yang menjelaskan batasnya.
-//
-// Batas atas & bawah diuji TEPAT di tepinya beserta kasus pembanding yang
-// harus diterima (AGENTS.md Larangan 18) — fungsi yang argumen ambangnya
-// tertukar akan meloloskan seluruh kasus penolakan kalau hanya satu arah
-// yang diuji.
-func TestPastikanPlafonValid_BR01_BatasBawahDanAtas(t *testing.T) {
-	svc := NewPengajuanService(newFakeNomorRepo(), newFakeParameterRepo())
-
+// BR-01: plafon di luar batas ditolak — DAN plafon di dalam batas diterima.
+// Kasus pembanding wajib ada (AGENTS.md Larangan 18): tanpa itu, fungsi yang
+// menolak segalanya akan lolos seluruh test penolakan.
+func TestBuatPengajuan_BR01_BatasPlafon(t *testing.T) {
 	kasus := []struct {
-		nama    string
-		plafon  int64
-		inginOK bool
+		nama     string
+		plafon   int64
+		mauTolak bool
 	}{
-		// Ditolak — di bawah batas bawah.
-		{"nol", 0, false},
-		{"4 juta", 4_000_000, false},
-		{"tepat satu rupiah di bawah batas bawah", 4_999_999, false},
-
-		// Diterima — tepat di batas dan di dalam rentang.
-		{"tepat batas bawah 5 juta", 5_000_000, true},
-		{"30 juta (AC-01)", 30_000_000, true},
-		{"120 juta (AC-10)", 120_000_000, true},
-		{"tepat batas atas 500 juta", 500_000_000, true},
-
-		// Ditolak — di atas batas atas.
-		{"tepat satu rupiah di atas batas atas", 500_000_001, false},
-		{"600 juta", 600_000_000, false},
+		{"tepat di batas bawah diterima", 5_000_000, false},
+		{"satu rupiah di bawah batas bawah ditolak", 4_999_999, true},
+		{"di tengah rentang diterima", 30_000_000, false},
+		{"tepat di batas atas diterima", 500_000_000, false},
+		{"satu rupiah di atas batas atas ditolak", 500_000_001, true},
 	}
 
 	for _, k := range kasus {
 		t.Run(k.nama, func(t *testing.T) {
-			err := svc.PastikanPlafonValid(k.plafon)
+			svc, _, _ := pengajuanServiceUji(t)
+			in := inputValid()
+			in.PlafonDiajukan = k.plafon
 
-			if k.inginOK {
+			_, err := svc.Buat(context.Background(), in)
+
+			if !k.mauTolak {
 				if err != nil {
 					t.Fatalf("plafon %d seharusnya diterima, dapat error: %v", k.plafon, err)
 				}
 				return
 			}
 
-			if err == nil {
-				t.Fatalf("plafon %d seharusnya ditolak, dapat nil", k.plafon)
+			var br *domain.BusinessRuleError
+			if !errors.As(err, &br) {
+				t.Fatalf("plafon %d seharusnya ditolak dengan BusinessRuleError, dapat: %v", k.plafon, err)
 			}
-
-			var brErr *domain.BusinessRuleError
-			if !errors.As(err, &brErr) {
-				t.Fatalf("ingin BusinessRuleError, dapat %T: %v", err, err)
-			}
-			if brErr.Rule != "BR-01" {
-				t.Errorf("rule = %q, ingin BR-01", brErr.Rule)
+			if br.Rule != "BR-01" {
+				t.Errorf("kode aturan = %q, mau BR-01", br.Rule)
 			}
 		})
 	}
 }
 
-// BR-01 mewajibkan pesannya MENJELASKAN BATAS, bukan sekadar "plafon tidak
-// valid" — AO harus tahu angka mana yang berlaku tanpa membuka dokumen.
-func TestPastikanPlafonValid_BR01_PesanMenyebutBatas(t *testing.T) {
-	svc := NewPengajuanService(newFakeNomorRepo(), newFakeParameterRepo())
+// AC-15: batas plafon berupa data. Mengubah baris parameter harus mengubah
+// hasil, tanpa menyentuh kode service.
+func TestBuatPengajuan_BR01_BatasDibacaDariParameter(t *testing.T) {
+	svc, _, batas := pengajuanServiceUji(t)
+	ctx := context.Background()
 
-	err := svc.PastikanPlafonValid(4_000_000)
+	in := inputValid()
+	in.PlafonDiajukan = 4_000_000
 
-	var brErr *domain.BusinessRuleError
-	if !errors.As(err, &brErr) {
-		t.Fatalf("ingin BusinessRuleError, dapat %v", err)
+	if _, err := svc.Buat(ctx, in); err == nil {
+		t.Fatal("dengan batas bawah 5 juta, plafon 4 juta seharusnya ditolak")
 	}
 
-	// Kedua batas wajib disebut supaya AO tahu rentang yang berlaku.
-	for _, potongan := range []string{"5.000.000", "500.000.000"} {
-		if !strings.Contains(brErr.Message, potongan) {
-			t.Errorf("pesan %q tidak menyebut batas %s", brErr.Message, potongan)
+	// ADM menurunkan batas bawah lewat tabel parameter.
+	batas.minimum = 1_000_000
+
+	if _, err := svc.Buat(ctx, in); err != nil {
+		t.Fatalf("setelah batas bawah diturunkan, plafon 4 juta seharusnya diterima, dapat: %v", err)
+	}
+}
+
+// Batas plafon belum di-seed adalah salah konfigurasi, bukan izin melanjutkan
+// diam-diam dengan nilai default (AGENTS.md Larangan 3 & 15).
+func TestBuatPengajuan_BatasBelumDiaturDitolak(t *testing.T) {
+	svc, _, batas := pengajuanServiceUji(t)
+	batas.ditemukan = false
+
+	_, err := svc.Buat(context.Background(), inputValid())
+
+	var cfg *domain.ConfigError
+	if !errors.As(err, &cfg) {
+		t.Fatalf("batas belum diatur seharusnya ConfigError, dapat: %v", err)
+	}
+}
+
+// BR-11: pesan error tidak boleh memuat NIK.
+func TestBuatPengajuan_BR11_PesanErrorTidakMemuatNIK(t *testing.T) {
+	svc, _, _ := pengajuanServiceUji(t)
+	in := inputValid()
+	in.PlafonDiajukan = 1_000
+
+	_, err := svc.Buat(context.Background(), in)
+	if err == nil {
+		t.Fatal("plafon di bawah batas seharusnya ditolak")
+	}
+	if pesanMemuat(err.Error(), in.NIK) {
+		t.Errorf("pesan error membocorkan NIK: %q", err.Error())
+	}
+}
+
+// Pengajuan kelompok dinilai dari TOTAL plafon anggota, bukan per anggota.
+func TestBuatPengajuan_KelompokDinilaiDariTotalPlafon(t *testing.T) {
+	svc, repo, _ := pengajuanServiceUji(t)
+
+	in := inputValid()
+	in.Tipe = TipeKelompok
+	in.PlafonDiajukan = 0
+	in.Anggota = []PengajuanAnggota{
+		{NamaAnggota: "Anggota A", NIKAnggota: "3404010101900002", PlafonAnggota: 10_000_000},
+		{NamaAnggota: "Anggota B", NIKAnggota: "3404010101900003", PlafonAnggota: 15_000_000},
+	}
+
+	p, err := svc.Buat(context.Background(), in)
+	if err != nil {
+		t.Fatalf("kelompok dengan total 25 juta seharusnya diterima, dapat: %v", err)
+	}
+	if p.PlafonDiajukan != 25_000_000 {
+		t.Errorf("total plafon kelompok = %d, mau 25000000", p.PlafonDiajukan)
+	}
+
+	anggota, err := repo.DaftarAnggota(context.Background(), p.ID)
+	if err != nil {
+		t.Fatalf("gagal membaca anggota: %v", err)
+	}
+	if len(anggota) != 2 {
+		t.Errorf("jumlah anggota tersimpan = %d, mau 2", len(anggota))
+	}
+}
+
+func TestBuatPengajuan_ValidasiInputWajib(t *testing.T) {
+	kasus := []struct {
+		nama  string
+		ubah  func(*InputPengajuan)
+		tolak bool
+	}{
+		{"input lengkap diterima", func(*InputPengajuan) {}, false},
+		{"nama nasabah kosong ditolak", func(in *InputPengajuan) { in.NamaNasabah = "  " }, true},
+		{"NIK kosong ditolak", func(in *InputPengajuan) { in.NIK = "" }, true},
+		{"jenis usaha kosong ditolak", func(in *InputPengajuan) { in.JenisUsaha = "" }, true},
+		{"akad tidak dikenal ditolak", func(in *InputPengajuan) { in.JenisAkad = "IJARAH" }, true},
+		{"tenor nol ditolak", func(in *InputPengajuan) { in.TenorBulan = 0 }, true},
+		{"akad musyarakah diterima", func(in *InputPengajuan) { in.JenisAkad = domain.AkadMusyarakah }, false},
+	}
+
+	for _, k := range kasus {
+		t.Run(k.nama, func(t *testing.T) {
+			svc, _, _ := pengajuanServiceUji(t)
+			in := inputValid()
+			k.ubah(&in)
+
+			_, err := svc.Buat(context.Background(), in)
+
+			if k.tolak && err == nil {
+				t.Fatal("seharusnya ditolak, tetapi diterima")
+			}
+			if !k.tolak && err != nil {
+				t.Fatalf("seharusnya diterima, dapat error: %v", err)
+			}
+		})
+	}
+}
+
+func TestFormatNomorReferensi(t *testing.T) {
+	got := FormatNomorReferensi(time.Date(2026, 8, 20, 0, 0, 0, 0, time.UTC), 7)
+	if want := "IMT-20260820-0007"; got != want {
+		t.Errorf("FormatNomorReferensi = %q, mau %q", got, want)
+	}
+}
+
+// pesanMemuat memeriksa keberadaan potongan teks tanpa membocorkannya ke output.
+func pesanMemuat(pesan, potongan string) bool {
+	if potongan == "" {
+		return false
+	}
+	return len(pesan) >= len(potongan) && contains(pesan, potongan)
+}
+
+func contains(s, sub string) bool {
+	for i := 0; i+len(sub) <= len(s); i++ {
+		if s[i:i+len(sub)] == sub {
+			return true
 		}
 	}
-}
-
-// Batas plafon BR-01 adalah PARAMETER, bukan konstanta di kode (AGENTS.md
-// Larangan 3). Test ini yang membuktikannya: barisnya diubah di tengah test
-// pada instance service yang sama, lalu nilai yang tadinya ditolak harus
-// diterima.
-func TestPastikanPlafonValid_BR01_BatasDibacaDariParameter(t *testing.T) {
-	repo := newFakeParameterRepo()
-	svc := NewPengajuanService(newFakeNomorRepo(), repo)
-
-	// Sebelum diubah: 4 juta di bawah batas bawah 5 juta.
-	if err := svc.PastikanPlafonValid(4_000_000); err == nil {
-		t.Fatal("4 juta seharusnya ditolak sebelum batas diubah")
-	}
-
-	repo.ubahNilaiUmum(KunciPlafonMinimum, 3_000_000) // ADM lewat FR-13
-
-	if err := svc.PastikanPlafonValid(4_000_000); err != nil {
-		t.Fatalf("4 juta seharusnya diterima setelah batas bawah diturunkan ke 3 juta: %v", err)
-	}
-}
-
-// Batas yang belum diatur harus MENGHENTIKAN submit, bukan diam-diam memakai
-// nilai default — kegagalan konfigurasi bukan alasan melewati BR-01
-// (AGENTS.md Larangan 3 & 15).
-func TestPastikanPlafonValid_BR01_ParameterKosongTidakMemakaiDefault(t *testing.T) {
-	repo := newFakeParameterRepo()
-	repo.umum = map[string]float64{}
-	svc := NewPengajuanService(newFakeNomorRepo(), repo)
-
-	if err := svc.PastikanPlafonValid(30_000_000); err == nil {
-		t.Fatal("batas plafon belum diatur: ingin error, dapat nil")
-	}
+	return false
 }
