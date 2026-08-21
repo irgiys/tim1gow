@@ -1,34 +1,19 @@
 # iMitra — Sistem Originasi Pembiayaan Mikro Syariah
 
-> **Berkas ini adalah TEMPLATE.** Setiap blok `<!-- ISI: ... -->` adalah placeholder yang wajib
-> Anda ganti. Jangan biarkan satu pun `<!-- ISI: ... -->` tersisa di tag `v1.0.0` — penilai
-> membaca README ini lebih dulu, sebelum menjalankan aplikasi Anda.
->
-> Aturan praktis: kalau penilai tidak bisa menjalankan aplikasi Anda hanya dengan membaca
-> berkas ini, aplikasi Anda dianggap tidak jalan.
-
 ---
 
 ## 1. Tim
 
-<!-- ISI: nama tim. Bebas, tapi dipakai konsisten di semua dokumen dan di nama repo. -->
-
 **Nama tim**: iMitra Tim 1
-
-<!-- ISI: tabel di bawah. Satu baris per anggota. Peran diambil dari §10 brief:
-     Tech Lead / Integrator, AI Workflow Officer, Backend Engineer, Frontend Engineer,
-     QA / Verification, DevOps / Release. Semua peran ikut menulis kode.
-     Kolom "Fokus FR" diisi ID FR yang menjadi tanggung jawab utamanya (mis. FR-05, FR-06).
-     Isi tabel ini dalam 30 menit pertama dan beri tahu instruktur. -->
 
 | Nama | Peran | Fokus FR | Akun GitHub |
 |---|---|---|---|
-| Luthfi | Tech Lead / Integrator | FR-08, FR-09 | `<!-- ISI: URL akun -->` |
+| Luthfi | Tech Lead / Integrator | FR-08, FR-09 | https://github.com/zachnrrr |
 | Irgiyansyah | Backend Engineer — domain & skoring + DevOps / Release | FR-06, FR-07, FR-13, CI & compose | https://github.com/irgiys/ |
 | Yulio Zaki | Backend Engineer — auth & integrasi SLIK | FR-01, FR-05, mock SLIK | https://github.com/yuliozakik |
 | Rayvaldo | Backend Engineer — pengajuan & dokumen | FR-02, FR-03, FR-04 | https://github.com/rayvaldoprawira |
 | Aldi | AI Workflow Officer + Frontend Engineer | FR-03/FR-04/FR-08 (UI), FR-11 | https://github.com/aldiariq/ |
-| Soleh | QA / Verification + DevOps / Release | FR-12, test AC-01…AC-15, CI & compose | `<!-- ISI: URL akun -->` |
+| Soleh | QA / Verification + DevOps / Release | FR-12, test AC-01…AC-15, CI & compose | https://github.com/mshcode89  |
 
 **Pembagian tanggung jawab non-koding** (satu berkas = satu pemilik tunggal; orang lain
 mengusulkan lewat PR, supaya tidak ada konflik merge pada tabel markdown):
@@ -112,66 +97,121 @@ Aturan yang berlaku untuk seluruh frontend:
   yang dinilai (AC-02) adalah 403 dari server (`AGENTS.md` Larangan 6).
 - **Nomor referensi tidak dibangkitkan di frontend** (`AGENTS.md` Larangan 4).
 - **NIK dan path foto tidak boleh masuk URL** — pakai id internal pengajuan (BR-11).
-- Pesan error diambil dari field `message` respons API, jangan disusun ulang di UI, supaya
+Pesan error diambil dari field `message` respons API, jangan disusun ulang di UI, supaya
   pesan yang menyebut kode BR (AC-04) tidak hilang.
 - Semua panggilan API lewat `lib/apiClient.ts`; jangan ada `fetch()` telanjang di komponen.
 
-<!-- ISI: kalau peran berubah di hari kedua, catat perubahannya di sini beserta alasan
-     dan jam perubahannya. Perubahan peran tidak dilarang; perubahan yang tidak dicatat
-     yang jadi masalah. -->
-
-**Perubahan peran selama hackathon**: tidak ada (per 2026-08-20 10:30). Kalau berubah di
-hari kedua, catat di sini beserta jam dan alasannya.
+**Perubahan peran selama hackathon**: tidak ada (per 2026-08-20 10:30).
 
 ---
 
 ## 2. Cara Menjalankan
 
-<!-- ISI: Target wajib (§7.2 butir 1): penilai melakukan git clone di mesin bersih,
-     menjalankan SATU perintah, dan aplikasi hidup. Uji ini sendiri dari direktori
-     kosong minimal sekali sebelum Gate 2 dan sekali lagi sebelum code freeze.
-     Jangan tulis langkah yang belum pernah Anda jalankan dari clone bersih. -->
+Langkah di bawah dijalankan dari clone bersih pada Windows 11 + Docker Desktop
+(2026-08-21). Satu catatan jujur di depan supaya tidak menjadi kejutan: service
+`frontend` **masih dikomentari** di `docker-compose.yml`, jadi `docker compose up`
+menghidupkan backend, database, dan mock SLIK — bukan UI. Cara menjalankan UI ada di
+bagian 2.2 langkah 4. Alasannya ada di bagian 5 (utang teknis).
 
 ### 2.1 Prasyarat
 
-<!-- ISI: daftar prasyarat beserta versi minimum. Contoh format:
-     - Docker Engine >= 24 dan Docker Compose v2
-     - (kalau tanpa Docker) runtime bahasa X versi Y -->
-
-- `<!-- ISI: prasyarat 1 -->`
-- `<!-- ISI: prasyarat 2 -->`
+- **Docker Engine >= 24** dan **Docker Compose v2** (`docker compose version` —
+  perhatikan spasi, bukan `docker-compose`). Ini satu-satunya prasyarat untuk backend,
+  database, migrasi, seed, dan mock SLIK.
+- **Node.js 20 LTS** + npm 10 — hanya diperlukan untuk menjalankan frontend, karena
+  service-nya belum aktif di compose. Versi 20 dipakai supaya sama dengan
+  `NODE_VERSION` di `.github/workflows/ci.yml`.
+- Port yang harus bebas di host: **8080** (API), **3000** (UI), **5432** (Postgres),
+  **9090** (mock SLIK). Semuanya dapat diubah lewat `.env`.
+- Go **tidak** perlu dipasang. Backend dibangun di dalam container, dan bila ingin
+  menjalankan test tanpa memasang Go, pakai perintah container di bagian 2.6.
 
 ### 2.2 Langkah
 
 ```bash
-git clone <!-- ISI: URL repo -->
-cd <!-- ISI: nama direktori -->
+# 1. Clone
+git clone https://github.com/irgiys/tim1gow.git
+cd tim1gow
+
+# 2. Siapkan environment (nilai default sudah cukup untuk demo)
 cp .env.example .env
-<!-- ISI: satu perintah untuk menjalankan, mis. docker compose up --build -->
+
+# 3. Hidupkan backend + database + mock SLIK.
+#    Service `migrate` menjalankan migrasi lalu seed sendiri sebelum backend start,
+#    jadi tidak ada langkah manual sesudah ini.
+docker compose up -d --build
+
+# 4. Jalankan frontend (service-nya belum aktif di compose — lihat bagian 5)
+cd frontend
+npm ci
+npm run build
+cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/
+cd .next/standalone && PORT=3000 HOSTNAME=127.0.0.1 node server.js
+```
+
+Dua jebakan pada langkah 4 yang kami temukan sendiri, ditulis di sini supaya tidak
+terulang di mesin penilai:
+
+- `npm start` / `next start` **tidak bekerja** dengan `output: 'standalone'` di
+  `next.config.js` — Next mencetak peringatan lalu menyajikan route yang salah.
+  Jalankan `node server.js` dari `.next/standalone`, sama seperti `frontend/Dockerfile`.
+- `HOSTNAME=127.0.0.1` wajib. Tanpanya server bind ke hostname mesin
+  (mis. `http://LAPTOP-XXXX:3000`) dan `http://localhost:3000` menolak koneksi walau
+  log menulis "Ready".
+
+Verifikasi bahwa semuanya benar-benar hidup:
+
+```bash
+docker compose ps                                  # backend/db/mock-slik: healthy
+curl -s http://localhost:8080/readyz               # {"db":"ok","status":"ready"}
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost:3000/login   # 200
 ```
 
 ### 2.3 Alamat layanan setelah jalan
 
-<!-- ISI: sesuaikan port dengan .env.example Anda. -->
+Port mengikuti `.env.example` (`FRONTEND_PORT`, `BACKEND_PORT`, `MOCK_SLIK_PORT`, `DB_PORT`).
 
 | Layanan | URL | Catatan |
 |---|---|---|
-| Frontend | `<!-- ISI -->` |  |
-| Backend API | `<!-- ISI -->` |  |
-| Mock SLIK | `<!-- ISI -->` |  |
-| Database | `<!-- ISI -->` |  |
+| Frontend | http://localhost:3000 | Dijalankan manual (bagian 2.2 langkah 4). Route yang ada: `/login`, `/pengajuan`, `/approval` |
+| Backend API | http://localhost:8080 | `/healthz` liveness, `/readyz` readiness (memeriksa DB). Seluruh endpoint di bawah `/api` |
+| Mock SLIK | http://localhost:9090 | `POST /slik/inquiry` sesuai kontrak brief §6.1. Membaca `fixtures/nasabah-uji.csv` saat start |
+| Database | `postgres://imitra_app:***@localhost:5432/imitra` | Password ada di `.env`. Akses cepat: `docker exec -it imitra-db psql -U imitra_app -d imitra` |
+
+**CORS**: API hanya menerima origin yang terdaftar di `CORS_ALLOWED_ORIGINS`, dicocokkan
+**persis**. Default memuat `http://localhost:3000` dan `http://127.0.0.1:3000` karena bagi
+browser keduanya origin berbeda. Membuka UI dari alamat lain (mis. IP LAN) membuat login
+gagal dengan preflight 403 tanpa error apa pun di log backend — tambahkan origin-nya di
+`.env` lebih dulu.
 
 ### 2.4 Migrasi & seed
 
-<!-- ISI: perintah migrasi dan seed. Wajib idempoten — bisa dijalankan berulang tanpa error
-     (§7.2 butir 4 dan 5). Sebutkan juga cara MERESET demo ke kondisi awal, karena penilai
-     mungkin meminta demo diulang. -->
+Pada `docker compose up`, service `migrate` menjalankan
+`command: ["sh","-c","/app/migrate up && /app/seed"]` dan berhenti dengan kode 0. Backend
+baru start sesudahnya. Jadi **untuk pemakaian normal tidak ada perintah yang perlu
+dijalankan** — perintah di bawah hanya untuk menjalankan ulang secara manual.
 
 ```bash
-<!-- ISI: perintah migrasi -->
-<!-- ISI: perintah seed -->
-<!-- ISI: perintah reset -->
+# Migrasi ulang (golang-migrate, idempoten — aman diulang)
+docker compose run --rm migrate sh -c "/app/migrate up"
+
+# Seed ulang (idempoten; tabel parameter memakai ON CONFLICT DO NOTHING,
+# jadi bobot yang diubah ADM saat demo TIDAK ter-reset — itu yang membuat AC-15 bisa dibuktikan)
+docker compose run --rm migrate sh -c "/app/seed"
+
+# Reset demo ke kondisi awal: buang volume database, lalu bangun ulang.
+# Migrasi + seed berjalan otomatis, jadi ini satu-satunya perintah reset yang dibutuhkan.
+docker compose down -v && docker compose up -d --build
+
+# Verifikasi hasil reset
+docker compose logs migrate --no-log-prefix | tail -5
+docker exec imitra-db psql -U imitra_app -d imitra -c "SELECT count(*) FROM pengguna;"   # 6
 ```
+
+`docker compose down -v` **menghapus data**. Tanpa `-v`, data pengajuan dari demo
+sebelumnya tetap ada dan nomor referensi melanjutkan urutan (BR-12: nomor tidak pernah
+dipakai ulang).
+
 
 ### 2.5 Akun demo
 
@@ -228,36 +268,118 @@ Status jujur per FR ada di tabel bagian 4.
 
 ### 2.6 Test & lint
 
-<!-- ISI: perintah persis. Harus sama dengan yang dipakai di .github/workflows/ci.yml
-     dan yang tertulis di AGENTS.md. Kalau ketiganya berbeda, salah satunya sudah usang. -->
+Perintah di bawah sama dengan `.github/workflows/ci.yml` dan `AGENTS.md` bagian 7.
+Backend dijalankan dari `backend/`, frontend dari `frontend/`.
 
 ```bash
-<!-- ISI: perintah test -->
-<!-- ISI: perintah lint -->
+# ---- Backend (Go 1.22) — dari ./backend ----
+go mod download
+gofmt -l .                      # harus TIDAK menghasilkan output
+go vet ./...
+golangci-lint run ./...
+go test ./... -count=1
+
+# ---- Frontend (Node 20) — dari ./frontend ----
+npm ci
+npm run lint
+npm run build
+```
+
+**Tanpa memasang Go di host.** Go tidak wajib ada (bagian 2.1); versinya dikunci ke 1.22
+oleh `go.mod`, jadi jalankan test di dalam container dengan versi yang sama:
+
+```bash
+docker run --rm -v "$PWD/backend:/src" -w /src golang:1.22-alpine \
+  sh -c 'go build ./... && go test ./... -count=1'
+```
+
+**Catatan tentang `gofmt` di Windows.** Working copy repo ini memakai CRLF, sehingga
+`gofmt -l .` di mesin Windows mendaftar hampir semua berkas — termasuk berkas yang tidak
+pernah disentuh. Itu **bukan** bukti format bersih maupun kotor. Untuk memeriksanya
+sungguhan, normalkan akhir baris lebih dulu di direktori sementara (repo tidak disentuh),
+baru jalankan `gofmt`:
+
+```bash
+docker run --rm -v "$PWD/backend:/src" -w /src golang:1.22-alpine sh -c \
+  'rm -rf /tmp/n && mkdir -p /tmp/n && cp -r internal cmd go.mod go.sum /tmp/n/ && cd /tmp/n && find . -name "*.go" -exec dos2unix -q {} + 2>/dev/null || find . -name "*.go" -exec sed -i "s/[[:cntrl:]]$//" {} + ; echo "berkas belum terformat: $(gofmt -l . | wc -l)"'
+```
+
+Hasil yang diharapkan: `berkas belum terformat: 0`.
+
+Kami menuliskannya karena pernah keliru melaporkan `gofmt -l` sebagai "murni CRLF" tanpa
+memeriksa — ternyata ada empat berkas yang benar-benar salah format, tenggelam di antara
+40 berkas yang terdaftar hanya karena CRLF (lihat DEVLOG-05). Di CI hal ini tidak muncul:
+runner Linux meng-checkout dengan LF, jadi `gofmt -l .` di sana bersih apa adanya.
+
+Sebagian test integrasi backend membutuhkan database dan mock SLIK aktif. Cara paling
+andal mereproduksi CI di mesin bersih:
+
+```bash
+docker compose up -d db mock-slik
+cd backend && APP_ENV=test go run ./cmd/migrate up && go run ./cmd/seed && go test ./... -count=1
 ```
 
 ---
 
 ## 3. Arsitektur Singkat
 
-<!-- ISI: 5-10 baris prosa, bukan lebih. Jelaskan: komponen apa saja, siapa memanggil siapa,
-     di mana aturan bisnis ditegakkan, dan bagaimana otorisasi bekerja di server.
-     Detail lengkapnya ada di docs/SDD-iMitra.md — jangan duplikasi, cukup rujuk. -->
+Empat komponen berjalan di Docker Compose. **Browser** memanggil **Backend API** (Go 1.22 +
+Chi) langsung — bukan lewat frontend sebagai proxy — sehingga API menegakkan CORS dengan
+pencocokan origin persis. Di dalam backend alurnya searah: `httpapi` (handler + middleware
+auth/peran) → `service` (seluruh aturan bisnis) → `repository` (GORM, satu-satunya lapisan
+yang menyentuh SQL) → **PostgreSQL 16**. Panggilan SLIK keluar dari `service` ke **mock
+SLIK** lewat HTTP, bukan sebagai fungsi lokal.
 
-`<!-- ISI: deskripsi arsitektur -->`
+**Seluruh aturan bisnis ada di `backend/internal/service/`** — skoring (BR-07), rentang
+margin (BR-06), routing approval berjenjang (BR-02), guard prasyarat skoring (BR-03), dan
+maker ≠ checker (BR-09). Frontend tidak menghitung apa pun; ia menampilkan `message` dari
+API apa adanya supaya pesan yang menyebut kode BR tidak hilang (AC-04). Angka ambang,
+bobot, dan rentang **tidak** ada di kode: ketiganya baris di tabel `parameter_skoring`,
+`ambang_approval`, dan `rentang_margin`, dibaca ulang setiap perhitungan sehingga ADM dapat
+mengubahnya tanpa deploy ulang (AC-15).
 
-<!-- ISI: diagram arsitektur. Mermaid inline diterima dan disarankan karena ikut ter-render
-     di GitHub. Diagram harus benar-benar ADA — tulisan "diagram terlampir" dinilai sebagai
-     tidak ada. Hapus contoh di bawah dan gambar arsitektur Anda sendiri. -->
+**Otorisasi ditegakkan di server, dua lapis.** `MiddlewareAuth` memverifikasi JWT HS256 dan
+menaruh identitas di context; `WajibPeran` membatasi setiap route ke peran yang berhak dan
+menjawab **403** untuk akses lintas-peran (AC-02). Identitas aktor — yang dipakai untuk
+BR-09 dan untuk kolom aktor di audit trail — **selalu** diambil dari token yang sudah
+diverifikasi, tidak pernah dari header, query, atau badan request. Guard peran di UI hanya
+kenyamanan tampilan. Skema database hanya berasal dari migrasi SQL (`golang-migrate`);
+`AutoMigrate` dilarang.
+
+Detail model data dan daftar endpoint ada di [`docs/SDD-iMitra.md`](docs/SDD-iMitra.md) —
+tidak diduplikasi di sini.
 
 ```mermaid
-graph LR
-  FE[Frontend] --> BE[Backend API]
-  BE --> DB[(Database)]
-  BE --> SLIK[Mock SLIK]
+graph TB
+  subgraph host["Host (browser pengguna)"]
+    B["Browser<br/>Next.js 14 App Router<br/>:3000"]
+  end
+
+  subgraph compose["Docker Compose — network: imitra"]
+    subgraph be["Backend API — Go 1.22 + Chi · :8080"]
+      MW["httpapi: MiddlewareCORS → MiddlewareAuth → WajibPeran<br/>(JWT HS256, identitas dari token)"]
+      SVC["service: ATURAN BISNIS<br/>skoring · margin · approval · audit<br/>BR-01…BR-12"]
+      REPO["repository (GORM)<br/>satu-satunya lapisan penyentuh SQL"]
+      MW --> SVC --> REPO
+    end
+    DB[("PostgreSQL 16<br/>:5432<br/>skema dari migrasi SQL")]
+    SLIK["mock-slik :9090<br/>POST /slik/inquiry<br/>fixtures/nasabah-uji.csv"]
+    MIG["migrate (sekali jalan)<br/>golang-migrate up + seed"]
+  end
+
+  B -- "fetch + Bearer token<br/>CORS: origin dicocokkan persis" --> MW
+  REPO --> DB
+  SVC -- "HTTP, bukan fungsi lokal<br/>timeout/503/404 ditangani" --> SLIK
+  MIG -- "jalan & selesai sebelum backend start" --> DB
+
+  PARAM["parameter_skoring · ambang_approval · rentang_margin<br/>dibaca ulang setiap perhitungan (AC-15)"]
+  DB -.-> PARAM
+  PARAM -.-> SVC
 ```
 
-**Stack yang dipilih**: `<!-- ISI: bahasa, framework, database, ORM -->`
+**Stack yang dipilih**: Go 1.22 + Chi v5 + GORM 1.25 (query saja) + golang-migrate 4.17,
+Next.js 14.2 App Router + React 18 + TypeScript 5.4, PostgreSQL 16-alpine, mock SLIK dengan
+`net/http` stdlib.
 Alasan pemilihan ada di [`docs/adr/0001-pilihan-stack.md`](docs/adr/0001-pilihan-stack.md).
 
 **Aturan untuk AI agent**: [`AGENTS.md`](AGENTS.md)
@@ -266,49 +388,64 @@ Alasan pemilihan ada di [`docs/adr/0001-pilihan-stack.md`](docs/adr/0001-pilihan
 
 ## 4. Status Functional Requirements
 
-<!-- ISI: kolom Status dan PR. Kolom FR / Requirement / Prioritas sudah benar sesuai brief §3
-     — jangan diubah, penilai mencocokkannya.
-     Nilai Status yang diizinkan, pilih satu:
-       - Selesai & teruji  : lolos AC terkait, ada test otomatis, sudah di-merge ke main
-       - Selesai           : jalan dan di-merge, tetapi belum ada test otomatis
-       - Sebagian          : hanya sebagian AC terpenuhi. WAJIB dijelaskan di bagian 5
-       - Tidak dikerjakan  : sengaja dibuang. WAJIB dijelaskan di bagian 5
-     Jangan pakai "In progress" di tag v1.0.0 — pada saat itu tidak ada lagi yang sedang jalan.
-     Kolom PR: nomor PR yang menyelesaikannya, mis. #14, #21.
-     Perbarui tabel ini setiap kali PR di-merge, bukan sekali di akhir. -->
-
 ### P0 — WAJIB (batas lulus fungsional)
+
+Status di bawah dinilai dari **panggilan API terhadap stack yang berjalan**, bukan dari
+lulusnya test unit. Kolom PR menyebut PR yang menyelesaikannya; `#11` masih menunggu review
+pada saat baris ini ditulis.
 
 | FR | Requirement | Prioritas | Status | PR |
 |---|---|---|---|---|
-| FR-01 | Autentikasi & Otorisasi Berbasis Peran | P0 |  |  |
-| FR-02 | Pengajuan Pembiayaan Mikro | P0 |  |  |
-| FR-03 | Upload & Verifikasi Dokumen | P0 |  |  |
-| FR-04 | Survei Lapangan (OTS) | P0 |  |  |
-| FR-05 | SLIK Check | P0 |  |  |
-| FR-06 | Skoring Kelayakan Mikro | P0 |  |  |
-| FR-07 | Perhitungan Margin / Nisbah | P0 |  |  |
-| FR-08 | Approval Berjenjang | P0 | Selesai & teruji | #6 |
-| FR-09 | Audit Trail | P0 | Selesai & teruji | #6 |
+| FR-01 | Autentikasi & Otorisasi Berbasis Peran | P0 | Selesai & teruji | #11 |
+| FR-02 | Pengajuan Pembiayaan Mikro | P0 | Selesai & teruji | #11 |
+| FR-03 | Upload & Verifikasi Dokumen | P0 | Sebagian | #11 |
+| FR-04 | Survei Lapangan (OTS) | P0 | Selesai & teruji | #11 |
+| FR-05 | SLIK Check | P0 | Sebagian | — |
+| FR-06 | Skoring Kelayakan Mikro | P0 | Selesai & teruji | #5 |
+| FR-07 | Perhitungan Margin / Nisbah | P0 | Selesai & teruji | #5 |
+| FR-08 | Approval Berjenjang | P0 | Selesai & teruji | #6, #11 |
+| FR-09 | Audit Trail | P0 | Selesai & teruji | #6, #11 |
+
+Dua baris P0 yang **bukan** "Selesai & teruji", dirinci di bagian 5:
+
+- **FR-05 SLIK Check** — mock SLIK berjalan dan punya test sendiri, tetapi backend belum
+  memanggilnya: `POST /api/pengajuan/{id}/slik-check` mengembalikan **404** dan
+  `internal/slik/` belum ada. Akibat berantai: BR-04 (hasil SLIK kedaluwarsa 30 hari) belum
+  ditegakkan, dan status `SCORED` hanya dapat dicapai dengan mengubah status lewat SQL —
+  sehingga **AC-05 dan AC-06 belum dapat dibuktikan lewat aplikasi**. Ini kekurangan P0
+  paling berdampak yang kami sadari.
+- **FR-03 Upload & Verifikasi Dokumen** — verifikasi, penolakan dengan kode alasan, dan
+  re-upload satu dokumen (AC-03) bekerja penuh lewat API. Yang belum sesuai: endpoint upload
+  menerima JSON `urlBerkas`, sedangkan SDD BAB 5 menetapkan `multipart/form-data`. Jadi
+  berkas tidak benar-benar diunggah, hanya rujukannya yang dicatat.
+
+**Catatan penting soal cakupan UI.** Delapan FR di atas berstatus jalan **lewat API**;
+antarmukanya baru ada tiga halaman (`/login`, `/pengajuan`, `/approval`). FR-03, FR-04,
+FR-06, FR-07, dan FR-09 karena itu hanya dapat didemokan lewat `curl`, bukan lewat browser.
+Rinciannya ada di bagian 5.
 
 ### P1 — SEHARUSNYA (nilai penuh butuh ini)
 
 | FR | Requirement | Prioritas | Status | PR |
 |---|---|---|---|---|
-| FR-10 | Pembiayaan Kelompok (Majelis) | P1 |  |  |
-| FR-11 | Notifikasi Perubahan Status | P1 |  |  |
-| FR-12 | Dashboard Pipeline | P1 |  |  |
-| FR-13 | Parameter Terkonfigurasi | P1 |  |  |
+| FR-10 | Pembiayaan Kelompok (Majelis) | P1 | Sebagian | #11 |
+| FR-11 | Notifikasi Perubahan Status | P1 | Tidak dikerjakan | — |
+| FR-12 | Dashboard Pipeline | P1 | Tidak dikerjakan | — |
+| FR-13 | Parameter Terkonfigurasi | P1 | Sebagian | #5 |
 
 ### P2 — BOLEH (hanya kalau P0 dan P1 tuntas dan teruji)
 
+Seluruh FR P2 **tidak dikerjakan**: P0 belum tuntas (FR-05), jadi mengerjakan P2 berarti
+menambah permukaan yang belum teruji sementara batas lulus fungsional belum tercapai.
+Alasannya dicatat di bagian 5.
+
 | FR | Requirement | Prioritas | Status | PR |
 |---|---|---|---|---|
-| FR-14 | Simulasi angsuran murabahah & proyeksi bagi hasil musyarakah | P2 |  |  |
-| FR-15 | Ekspor daftar pengajuan ke CSV | P2 |  |  |
-| FR-16 | Mode draft offline untuk AO di lapangan | P2 |  |  |
-| FR-17 | Deteksi lokasi palsu (mock location) pada survei lapangan | P2 |  |  |
-| FR-18 | Laporan Turn-Around Time per tahap dan per petugas | P2 |  |  |
+| FR-14 | Simulasi angsuran murabahah & proyeksi bagi hasil musyarakah | P2 | Tidak dikerjakan | — |
+| FR-15 | Ekspor daftar pengajuan ke CSV | P2 | Tidak dikerjakan | — |
+| FR-16 | Mode draft offline untuk AO di lapangan | P2 | Tidak dikerjakan | — |
+| FR-17 | Deteksi lokasi palsu (mock location) pada survei lapangan | P2 | Tidak dikerjakan | — |
+| FR-18 | Laporan Turn-Around Time per tahap dan per petugas | P2 | Tidak dikerjakan | — |
 
 Penelusuran rinci FR → endpoint → test → PR ada di [`docs/TRACEABILITY.md`](docs/TRACEABILITY.md).
 
@@ -318,36 +455,46 @@ Penelusuran rinci FR → endpoint → test → PR ada di [`docs/TRACEABILITY.md`
 
 > **Bagian ini wajib ada dan wajib terisi.** Ia bukan pengakuan kegagalan — ia bukti bahwa
 > tim memutuskan secara sadar.
->
-> Kenapa penting: menurut brief §11 (Gate 3) dan §12, **fitur setengah jadi yang dibiarkan
-> mengambang tanpa catatan bernilai negatif (−5 per fitur, maksimum −10), sementara fitur
-> yang dibuang dengan alasan tertulis bernilai positif.** Membuang FR-14 dengan alasan
-> "P0 belum semua teruji, kami pilih memperkuat FR-06" adalah keputusan rekayasa dan
-> dinilai sebagai keahlian. Meninggalkan tombol yang tidak berfungsi tanpa penjelasan
-> adalah utang yang tidak diakui.
->
-> Tulis bagian ini pada Gate 3 (Jumat 11.20), bukan pada Jumat 14.55.
-
-<!-- ISI: satu baris per FR atau bagian FR yang tidak selesai. Isi kolom Keputusan dengan
-     "Dibuang" (sengaja tidak dikerjakan) atau "Sebagian" (ada yang jalan, ada yang tidak).
-     Untuk "Sebagian", sebutkan dengan tepat apa yang jalan dan apa yang tidak, supaya
-     penilai tidak menemukannya sendiri saat demo.
-     Alasan harus alasan rekayasa (prioritas, risiko, waktu, dependensi), bukan "kehabisan waktu"
-     tanpa keterangan. -->
 
 | FR / Bagian | Keputusan | Apa yang jalan | Apa yang tidak | Alasan | Diputuskan kapan |
 |---|---|---|---|---|---|
-|  |  |  |  |  |  |
-|  |  |  |  |  |  |
-|  |  |  |  |  |  |
+| **FR-05** SLIK Check | Sebagian | Mock SLIK berjalan di compose, punya test sendiri (`mock-slik/main_test.go`), dan mengembalikan 200/404/503 sesuai kontrak brief §6.1 | `internal/slik/` client dan route `POST /api/pengajuan/{id}/slik-check` (**404**). BR-04 (kedaluwarsa 30 hari) belum ditegakkan. AC-05 & AC-06 belum dapat dibuktikan lewat aplikasi | Dua bug otorisasi yang lebih berbahaya muncul lebih dulu: prasyarat BR-03 dapat dipalsukan klien, dan identitas approver diambil dari header sehingga audit trail mencatat orang yang salah. Keduanya cacat kontrol di aplikasi perbankan, jadi kami dahulukan itu daripada menambah jalur baru | Jumat, setelah audit BR-10 selesai |
+| **FR-03** upload berkas | Sebagian | Verifikasi dokumen, penolakan dengan kode alasan, re-upload satu dokumen tanpa kehilangan data lain (AC-03) — semuanya lewat API | Upload menerima JSON `urlBerkas`, bukan `multipart/form-data` seperti SDD BAB 5. Berkas tidak benar-benar tersimpan | Menyelesaikan AC-03 (perilaku yang dinilai) lebih dulu; mengubah ke multipart menyentuh kontrak SDD dan butuh keputusan Tech Lead, bukan diputuskan sendiri saat implementasi | Jumat, saat wiring handler |
+| **FR-10** Pembiayaan Kelompok | Sebagian | Enum `TipeKelompok` dan tabel `pengajuan_anggota` sudah ada; pengajuan bertipe `KELOMPOK` dapat dibuat dan disimpan | Belum ada endpoint pengelolaan anggota, dan ambang approval belum dihitung dari **total plafon kelompok** seperti bagian 5.1 AGENTS.md. AC-14 belum diuji | Fondasi datanya sudah ada sejak migrasi 000004, tetapi menyelesaikannya berarti mengubah logika routing approval yang sudah teruji untuk P0. Risiko merusak AC-10/AC-11 lebih besar daripada nilai P1 yang didapat | Jumat, saat menilai sisa waktu |
+| **FR-13** Parameter Terkonfigurasi | Sebagian | Ketiga tabel parameter ada, di-seed idempoten, dan **dibaca ulang dari DB setiap perhitungan** — mengubah baris `parameter_skoring` langsung mengubah hasil skoring tanpa restart (AC-15 terbukti lewat test dan lewat SQL) | Endpoint CRUD ADM (**404** semua) dan halaman `/parameter`. ADM login lalu mendarat di 404 | Inti AC-15 adalah "parameter berupa data, bukan konstanta" — itu sudah terbukti. CRUD-nya lapisan tipis di atasnya, dan P0 (FR-05) belum tuntas | Jumat, setelah P0 dinilai belum tuntas |
+| **FR-11** Notifikasi | Dibuang | — | Seluruhnya (`/api/notifikasi` → 404) | Notifikasi tidak dirujuk AC mana pun. Menambahkannya berarti permukaan baru tanpa kriteria penerimaan, sementara FR-05 (P0, punya dua AC) masih terbuka | Jumat, Gate 3 |
+| **FR-12** Dashboard Pipeline | Dibuang | — | Seluruhnya (`/api/dashboard` → 404) | Sama seperti FR-11: tanpa AC. Selain itu dashboard bergantung pada query lingkup per peran yang justru masih menjadi utang (lihat di bawah), jadi mengerjakannya sekarang akan menghasilkan dashboard yang menampilkan daftar kosong untuk ANL dan approver | Jumat, Gate 3 |
+| **FR-14 – FR-18** (seluruh P2) | Dibuang | — | Seluruhnya | Brief menetapkan P2 hanya dikerjakan bila P0 **dan** P1 tuntas dan teruji. P0 belum tuntas, jadi mengerjakan P2 adalah kesalahan prioritas — bukan kekurangan waktu | Kamis, saat menyusun urutan kerja |
+| **UI untuk FR-03/04/06/07/09** | Sebagian | Ketiga halaman yang ada (`/login`, `/pengajuan`, `/approval`) berfungsi penuh terhadap API sungguhan | Halaman `/pengajuan/[id]/dokumen`, `/survei`, `/verifikasi`, `/slik`, `/skoring`, `/margin`, `/audit`, `/parameter`, `/dashboard` | Kami memilih menutup lubang **otorisasi dan audit** di backend lebih dulu (lima bug, semuanya hanya muncul saat aplikasi dijalankan) daripada menambah halaman di atas backend yang identitas aktornya masih bisa dipalsukan. Konsekuensinya jujur: lima FR itu hanya dapat didemokan lewat `curl` | Jumat, setelah menemukan bug identitas |
 
 **Utang teknis yang kami sadari**:
 
-<!-- ISI: hal-hal yang jalan tapi Anda tahu belum benar. Contoh: validasi hanya di frontend
-     pada satu form tertentu, indeks database belum ada, penanganan timeout SLIK masih kasar.
-     Menyebutkannya lebih dulu lebih baik daripada ditemukan penilai. -->
-
-- `<!-- ISI -->`
+- **`GET /api/pengajuan` selalu memakai `DaftarMilikAO`.** ANL dan approver menerima daftar
+  **kosong** (terverifikasi: ANL 0 baris, AO 5 baris), padahal SDD BAB 5 menetapkan ANL
+  melihat semua dan approver melihat yang menunggu levelnya. Route sudah dibuka untuk
+  mereka, query-nya belum ada. Akibat langsung: layar `/approval` harus membuka pengajuan
+  **per id** alih-alih menampilkan daftar. Kami memilih membiarkannya terlihat apa adanya
+  daripada menyembunyikannya dengan daftar palsu.
+- **Service `frontend` masih dikomentari di `docker-compose.yml`** (baris ~213–240),
+  sehingga `docker compose up` tidak menghidupkan UI dan penilai harus menjalankannya
+  manual (bagian 2.2 langkah 4). `frontend/Dockerfile` sendiri sudah ada dan berfungsi.
+  Belum diaktifkan karena mengubah compose adalah PR terpisah menurut AGENTS.md Larangan 14.
+- **`golangci-lint` belum pernah dijalankan di lokal** — tidak terpasang di mesin
+  pengembang, jadi kebersihannya hanya dibuktikan CI. `gofmt`, `go vet`, dan `go test`
+  sudah bersih.
+- **Test frontend belum ada.** Hanya `npm run lint` dan `npm run build` yang menjaga; tidak
+  ada test komponen maupun end-to-end. Sesuai AGENTS.md bagian 2 test frontend belum wajib
+  di P0, tetapi ini tetap utang.
+- **Upload belum memvalidasi ukuran dan MIME sungguhan.** `UPLOAD_ALLOWED_MIME` ada di
+  `.env` tetapi belum ditegakkan karena berkasnya belum benar-benar diunggah (lihat FR-03).
+- **Penanganan timeout SLIK belum teruji dari sisi backend.** Mock SLIK dapat dipaksa 503
+  dan `SLIK_TIMEOUT_MS` sudah ada di `.env`, tetapi karena client belum ada, jalur error itu
+  belum pernah dilalui backend. Yang sudah pasti: kegagalan SLIK **tidak** boleh dianggap
+  SLIK bersih (AGENTS.md Larangan 15) — aturannya sudah ditulis, penegakannya menyusul
+  bersama FR-05.
+- **Data demo bertumpuk di database.** Beberapa pengajuan uji dibuat lewat API selama
+  pengujian manual, dan status sebagiannya diubah lewat SQL untuk mencapai `SCORED` (karena
+  FR-05 belum ada). Untuk demo bersih, jalankan perintah reset di bagian 2.4.
 
 ---
 
@@ -361,15 +508,11 @@ Tim ini memakai AI sebagai alat rekayasa. Jejaknya ada di tiga tempat:
 | [`docs/AI-WORKFLOW.md`](docs/AI-WORKFLOW.md) | Tool dan model apa untuk tugas apa, cara memberi konteks, pembagian AI vs manual |
 | [`docs/AI-DEVLOG.md`](docs/AI-DEVLOG.md) | Jurnal pemakaian AI: minimal 10 entri, minimal 3 di antaranya kasus AI salah dan kami menangkapnya |
 
-<!-- ISI: 3-5 baris ringkasan. Bukan menyalin isi ketiga dokumen di atas, tetapi menjawab:
-     apa satu pola pemakaian AI yang terbukti paling berguna bagi tim ini selama 2 hari,
-     dan apa satu hal yang Anda putuskan untuk TIDAK diserahkan ke AI. Penilai kemungkinan
-     besar akan menanyakan ini di sesi tanya jawab, jadi jawaban tertulisnya sebaiknya
-     sudah Anda sepakati bersama. -->
+**Pola pemakaian AI paling berguna**: Menggunakan AI untuk otomatisasi eksplorasi kode, pembuatan boilerplates handler/service/test Go, serta konversi kontrak SDD menjadi test suite otomatis secara konsisten.
 
-`<!-- ISI: ringkasan -->`
+**Hal yang TIDAK diserahkan ke AI**: Penentuan aturan otorisasi perbankan, validasi identitas aktor di context JWT, dan keputusan pemisahan layer arsitektur. Semua verifikasi keamanan dan mutation test dilakukan manual oleh engineer.
 
-**Keputusan arsitektur yang menolak saran AI**: `<!-- ISI: rujuk nomor ADR, mis. docs/adr/0003-....md -->`
+**Keputusan arsitektur yang menolak saran AI**: ADR-0001 (Menolak saran AI untuk menggunakan `GORM AutoMigrate` dan library tambahan di luar stdlib, demi memastikan reproduksibilitas skema SQL via `golang-migrate` di lingkungan penilai).
 
 ---
 
