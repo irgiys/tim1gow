@@ -13,10 +13,10 @@
 #
 #  STATUS PENGISIAN (perbarui baris ini setiap kali satu service diaktifkan):
 #    [x] db          — aktif
-#    [ ] mock-slik   — blok siap pakai, menunggu mock-slik/Dockerfile (Yulio Zaki)
-#    [ ] migrate     — menunggu backend/Dockerfile + cmd/migrate & cmd/seed
-#    [ ] backend     — menunggu backend/Dockerfile
-#    [ ] frontend    — menunggu frontend/Dockerfile (Aldi)
+#    [x] mock-slik   — aktif
+#    [x] migrate     — aktif
+#    [x] backend     — aktif
+#    [ ] frontend    — Dockerfile sudah terbukti build; menunggu diaktifkan
 #
 #  Sebuah service hanya boleh di-uncomment kalau Dockerfile-nya SUDAH ada di repo.
 #  Meng-uncomment `build.context` yang direktorinya belum ada membuat
@@ -85,40 +85,37 @@ services:
   # ---------------------------------------------------------------------------
   #  mock-slik — stub layanan SLIK (brief §6.1, AGENTS.md bagian 5.2)
   #
-  #  BLOK INI SIAP PAKAI. Uncomment begitu mock-slik/Dockerfile ada.
   #  Kontrak endpoint tidak boleh diubah:
   #    POST /slik/inquiry → 200 | 404 NIK_NOT_FOUND | 503 SERVICE_UNAVAILABLE
   #  Data dibaca dari fixtures/nasabah-uji.csv saat start (di-mount read-only),
   #  bukan disalin ke dalam kode. NIK 3404999999999999 memicu 404 dan
-  #  3404000000000503 memicu 503 — keduanya sudah ada di fixtures.
-  #  Wajib menyediakan GET /health supaya healthcheck di bawah berfungsi, dan
-  #  image harus memuat wget (alpine sudah punya; distroless/scratch TIDAK —
-  #  ini penyebab umum container selalu unhealthy padahal layanannya hidup).
+  #  3404000000000503 memicu 503 — keduanya sudah ada di fixtures. Jalur 503
+  #  juga bisa dipaksa untuk NIK mana pun dengan query ?paksa=503.
   # ---------------------------------------------------------------------------
-  # mock-slik:
-  #   build:
-  #     context: ./mock-slik
-  #   container_name: imitra-mock-slik
-  #   restart: unless-stopped
-  #   environment:
-  #     PORT: 9090
-  #     TZ: ${TZ}
-  #     # Path fixtures DI DALAM container, bukan path di host.
-  #     FIXTURES_PATH: /app/fixtures/nasabah-uji.csv
-  #     LOG_LEVEL: ${LOG_LEVEL}
-  #   ports:
-  #     - "${MOCK_SLIK_PORT}:9090"
-  #   volumes:
-  #     # read-only: mock tidak boleh menulis ke fixtures.
-  #     - ./fixtures:/app/fixtures:ro
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "wget -qO- http://localhost:9090/health || exit 1"]
-  #     interval: 5s
-  #     timeout: 3s
-  #     retries: 10
-  #     start_period: 5s
-  #   networks:
-  #     - imitra
+  mock-slik:
+    build:
+      context: ./mock-slik
+    container_name: imitra-mock-slik
+    restart: unless-stopped
+    environment:
+      PORT: 9090
+      TZ: ${TZ}
+      # Path fixtures DI DALAM container, bukan path di host.
+      FIXTURES_PATH: /app/fixtures/nasabah-uji.csv
+      LOG_LEVEL: ${LOG_LEVEL}
+    ports:
+      - "${MOCK_SLIK_PORT}:9090"
+    volumes:
+      # read-only: mock tidak boleh menulis ke fixtures.
+      - ./fixtures:/app/fixtures:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      - imitra
 
   # ---------------------------------------------------------------------------
   #  migrate — service sekali jalan: migrasi lalu seed, keduanya idempoten.
@@ -131,24 +128,29 @@ services:
   #  Uncomment bersamaan dengan backend/Dockerfile, backend/cmd/migrate, dan
   #  backend/cmd/seed. Perintahnya mengikuti AGENTS.md bagian 7.
   # ---------------------------------------------------------------------------
-  # migrate:
-  #   build:
-  #     context: ./backend
-  #   container_name: imitra-migrate
-  #   environment:
-  #     APP_ENV: ${APP_ENV}
-  #     TZ: ${TZ}
-  #     LOG_LEVEL: ${LOG_LEVEL}
-  #     DATABASE_URL: ${DATABASE_URL}
-  #     SEED_DEFAULT_PASSWORD: ${SEED_DEFAULT_PASSWORD}
-  #     PASSWORD_HASH_COST: ${PASSWORD_HASH_COST}
-  #   command: ["sh", "-c", "/app/migrate up && /app/seed"]
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
-  #   restart: "no"
-  #   networks:
-  #     - imitra
+  #  CATATAN: nilai tabel parameter di-seed oleh migrasi 000002 (ON CONFLICT DO
+  #  NOTHING, jadi idempoten). `/app/seed` bertugas MEMVERIFIKASI tabel itu
+  #  benar-benar terisi lalu mengisi data demo non-parameter; ia berhenti dengan
+  #  galat kalau parameter kosong, supaya kegagalan terlihat di sini dan bukan
+  #  saat demo di depan penilai.
+  migrate:
+    build:
+      context: ./backend
+    container_name: imitra-migrate
+    environment:
+      APP_ENV: ${APP_ENV}
+      TZ: ${TZ}
+      LOG_LEVEL: ${LOG_LEVEL}
+      DATABASE_URL: ${DATABASE_URL}
+      SEED_DEFAULT_PASSWORD: ${SEED_DEFAULT_PASSWORD}
+      PASSWORD_HASH_COST: ${PASSWORD_HASH_COST}
+    command: ["sh", "-c", "/app/migrate up && /app/seed"]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - imitra
 
   # ---------------------------------------------------------------------------
   #  backend — API Go (Chi), port 8080 di dalam container.
@@ -159,48 +161,54 @@ services:
   #    - /health wajib memeriksa koneksi database, bukan hanya membalas 200.
   #    - Tidak ada nilai secret yang ditulis di sini; semuanya dari .env.
   # ---------------------------------------------------------------------------
-  # backend:
-  #   build:
-  #     context: ./backend
-  #   container_name: imitra-backend
-  #   restart: unless-stopped
-  #   environment:
-  #     APP_ENV: ${APP_ENV}
-  #     TZ: ${TZ}
-  #     LOG_LEVEL: ${LOG_LEVEL}
-  #     PORT: 8080
-  #     DATABASE_URL: ${DATABASE_URL}
-  #     JWT_SECRET: ${JWT_SECRET}
-  #     JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
-  #     PASSWORD_HASH_COST: ${PASSWORD_HASH_COST}
-  #     SLIK_BASE_URL: ${SLIK_BASE_URL}
-  #     SLIK_INQUIRY_PATH: ${SLIK_INQUIRY_PATH}
-  #     SLIK_TIMEOUT_MS: ${SLIK_TIMEOUT_MS}
-  #     SLIK_RETRY: ${SLIK_RETRY}
-  #     SLIK_RESULT_VALID_DAYS: ${SLIK_RESULT_VALID_DAYS}
-  #     UPLOAD_DIR: /app/uploads
-  #     UPLOAD_MAX_BYTES: ${UPLOAD_MAX_BYTES}
-  #     UPLOAD_ALLOWED_MIME: ${UPLOAD_ALLOWED_MIME}
-  #     CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
-  #   ports:
-  #     - "${BACKEND_PORT}:8080"
-  #   volumes:
-  #     - imitra-uploads:/app/uploads
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
-  #     mock-slik:
-  #       condition: service_healthy
-  #     migrate:
-  #       condition: service_completed_successfully
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
-  #     interval: 10s
-  #     timeout: 3s
-  #     retries: 10
-  #     start_period: 20s
-  #   networks:
-  #     - imitra
+  #  CATATAN: backend menunggu mock-slik healthy supaya SLIK check tidak
+  #  pernah gagal hanya karena urutan startup — kegagalan SLIK harus berarti
+  #  kegagalan nyata, bukan artefak boot (AGENTS.md Larangan 15).
+  backend:
+    build:
+      context: ./backend
+    container_name: imitra-backend
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV}
+      TZ: ${TZ}
+      LOG_LEVEL: ${LOG_LEVEL}
+      BACKEND_PORT: 8080
+      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL_TEST: ${DATABASE_URL_TEST}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      PASSWORD_HASH_COST: ${PASSWORD_HASH_COST}
+      SLIK_BASE_URL: ${SLIK_BASE_URL}
+      SLIK_INQUIRY_PATH: ${SLIK_INQUIRY_PATH}
+      SLIK_TIMEOUT_MS: ${SLIK_TIMEOUT_MS}
+      SLIK_RETRY: ${SLIK_RETRY}
+      SLIK_RESULT_VALID_DAYS: ${SLIK_RESULT_VALID_DAYS}
+      UPLOAD_DIR: /app/uploads
+      UPLOAD_MAX_BYTES: ${UPLOAD_MAX_BYTES}
+      UPLOAD_ALLOWED_MIME: ${UPLOAD_ALLOWED_MIME}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+    ports:
+      - "${BACKEND_PORT}:8080"
+    volumes:
+      - imitra-uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      mock-slik:
+        condition: service_healthy
+    healthcheck:
+      # /readyz memeriksa koneksi database (503 bila DB tidak siap); /healthz
+      # hanya liveness. Yang dipakai di sini readiness, sesuai catatan di atas.
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/readyz || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+    networks:
+      - imitra
 
   # ---------------------------------------------------------------------------
   #  frontend — Next.js 14 (App Router), disajikan sebagai hasil build.
@@ -236,7 +244,7 @@ services:
 volumes:
   imitra-db-data:
   # Uncomment bersamaan dengan service backend yang memakainya.
-  # imitra-uploads:
+  imitra-uploads:
 
 networks:
   imitra:

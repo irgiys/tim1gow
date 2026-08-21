@@ -48,14 +48,14 @@ atau `Done (tanpa test)` dan jelaskan di `README.md` bagian 5.
 | FR-03 | Upload & Verifikasi Dokumen | P0 | AC-03 | *(belum; service siap, handler menyusul)* | `backend/internal/service/dokumen_service_test.go` | #11 | In Progress |
 | FR-04 | Survei Lapangan (OTS) | P0 | AC-04 | *(belum; service siap, handler menyusul)* | `backend/internal/service/survei_service_test.go` | #11 | In Progress |
 | FR-05 | SLIK Check | P0 | AC-05, AC-06 |  |  |  |  |
-| FR-06 | Skoring Kelayakan Mikro | P0 | AC-06, AC-07, AC-08 | *(belum; service siap, handler milik FR-06 UI)* | `backend/internal/service/skoring_service_test.go` | #5 | In Progress |
-| FR-07 | Perhitungan Margin / Nisbah | P0 | AC-09 | *(belum; service siap)* | `backend/internal/service/margin_service_test.go` | #5 | In Progress |
+| FR-06 | Skoring Kelayakan Mikro | P0 | AC-06, AC-07, AC-08 | `POST /api/pengajuan/{id}/skoring`, `PATCH /api/pengajuan/{id}/skoring/override` | `internal/service/skoring_service_test.go`, `internal/httpapi/skoring_http_test.go` (`TestHTTP_AC07_...`, `TestHTTP_AC06_...`, `TestHTTP_AC04_...`), `internal/httpapi/skoring_override_http_test.go` (`TestHTTP_AC08_OverrideGrade2Ke3TercatatDiAuditTrail`) | #5 | Done |
+| FR-07 | Perhitungan Margin / Nisbah | P0 | AC-09 | `POST /api/pengajuan/{id}/margin`, `GET /api/pengajuan/{id}/margin` | `internal/service/margin_service_test.go`, `internal/httpapi/skoring_http_test.go` (`TestHTTP_AC09_MarginDiBawahBatasGrade1Diblokir`) | #5 | Done |
 | FR-08 | Approval Berjenjang | P0 | AC-10, AC-11 | `POST /api/pengajuan/{id}/ajukan-approval`, `POST /api/pengajuan/{id}/approval`, `GET /api/pengajuan/{id}/approval` | `internal/service/approval_service_test.go`, `internal/httpapi/approval_http_test.go` | #6 | Done |
 | FR-09 | Audit Trail | P0 | AC-08, AC-12, AC-13 | `GET /api/pengajuan/{id}/audit`, `GET /api/audit` *(append-only, tanpa PUT/PATCH/DELETE)* | `internal/service/audit_service_test.go`, `internal/httpapi/audit_http_test.go` | #6 | Done |
 | FR-10 | Pembiayaan Kelompok (Majelis) | P1 | AC-14 |  |  |  |  |
 | FR-11 | Notifikasi Perubahan Status | P1 | — |  |  |  |  |
 | FR-12 | Dashboard Pipeline | P1 | — |  |  |  |  |
-| FR-13 | Parameter Terkonfigurasi | P1 | AC-15 | *(CRUD ADM belum; tabel & migrasi siap)* | `skoring_service_test.go` (`TestHitung_AC15_UbahBobotLangsungBerlaku`), `margin_service_test.go` (`TestValidasi_AC15_UbahRentangLangsungBerlaku`) | #5 | In Progress |
+| FR-13 | Parameter Terkonfigurasi | P1 | AC-15 | *(CRUD ADM belum; nilainya dibaca live oleh endpoint skoring & margin)* | `skoring_service_test.go`, `margin_service_test.go`, `internal/httpapi/skoring_http_test.go` (`TestHTTP_AC15_UbahBobotLangsungBerlakuTanpaRestart`, `TestHTTP_AC15_UbahRentangMarginLangsungBerlaku`) | #5 | In Progress |
 | FR-14 | Simulasi angsuran murabahah & proyeksi bagi hasil musyarakah | P2 | — |  |  |  |  |
 | FR-15 | Ekspor daftar pengajuan ke CSV | P2 | — |  |  |  |  |
 | FR-16 | Mode draft offline untuk AO di lapangan | P2 | — |  |  |  |  |

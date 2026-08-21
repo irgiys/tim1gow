@@ -25,6 +25,20 @@
 *.p12
 *.pfx
 *.keystore
+
+#  Sertifikat CA penyedia Postgres terkelola (Aiven/Neon/RDS) yang kadang perlu
+#  diunduh untuk sslmode=verify-ca. Bukan secret, tetapi tidak ada alasan ikut
+#  ter-commit dan mudah tertukar dengan berkas kunci.
+ca.pem
+*-ca.pem
+
+#  Berkas kerja lokal yang kadang dibuat saat menguji compose. Semuanya sudah
+#  tercakup pola `.env.*` di atas; didaftarkan eksplisit supaya niatnya jelas
+#  dan tidak ada yang tergoda membuat pengecualian untuk salah satunya.
+.env.local
+.env.localtest
+.env.aiven
+.env.backup
 secrets.json
 credentials.json
 serviceaccount*.json
