@@ -26,7 +26,7 @@ func unggahTiganya(t *testing.T, svc *DokumenService, pengajuanID int64) map[str
 		JenisDokumenKK,
 		JenisDokumenSuratKeteranganUsaha,
 	} {
-		d, err := svc.Upload(context.Background(), pengajuanID, jenis, "berkas/"+jenis+".jpg")
+		d, err := svc.Upload(context.Background(), pengajuanID, jenis, "berkas/"+jenis+".jpg", 7)
 		if err != nil {
 			t.Fatalf("upload %s gagal: %v", jenis, err)
 		}
@@ -72,7 +72,7 @@ func TestDokumen_AC03_ReuploadHanyaBerkasYangDitolak(t *testing.T) {
 	}
 
 	// AO mengunggah ulang KTP saja.
-	ktpBaru, err := svc.Upload(ctx, pengajuanID, JenisDokumenKTP, "berkas/KTP-v2.jpg")
+	ktpBaru, err := svc.Upload(ctx, pengajuanID, JenisDokumenKTP, "berkas/KTP-v2.jpg", 7)
 	if err != nil {
 		t.Fatalf("re-upload KTP seharusnya diizinkan, dapat: %v", err)
 	}
@@ -130,7 +130,7 @@ func TestDokumen_YangSudahVerifiedTidakBisaDiunggahUlang(t *testing.T) {
 		t.Fatalf("verifikasi gagal: %v", err)
 	}
 
-	_, err := svc.Upload(ctx, 1, JenisDokumenKTP, "berkas/KTP-v2.jpg")
+	_, err := svc.Upload(ctx, 1, JenisDokumenKTP, "berkas/KTP-v2.jpg", 7)
 	var br *domain.BusinessRuleError
 	if !errors.As(err, &br) {
 		t.Fatalf("re-upload dokumen VERIFIED seharusnya ditolak, dapat: %v", err)

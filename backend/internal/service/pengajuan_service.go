@@ -16,6 +16,9 @@ type PengajuanService struct {
 	repo    PengajuanRepository
 	batas   BatasPlafonRepository
 	sekaran func() time.Time
+	// audit mencatat jejak BR-10. Boleh nil pada test unit yang hanya
+	// memeriksa aturan plafon/nomor referensi.
+	audit AuditService
 }
 
 // ValidationError adalah kegagalan validasi masukan, dipetakan handler ke HTTP
@@ -47,6 +50,17 @@ type BatasPlafonRepository interface {
 // NewPengajuanService membuat service dengan sumber waktu bawaan.
 func NewPengajuanService(repo PengajuanRepository, batas BatasPlafonRepository) *PengajuanService {
 	return &PengajuanService{repo: repo, batas: batas, sekaran: time.Now}
+}
+
+// DenganAudit memasang pencatat audit (BR-10). Dipasang di wiring produksi;
+// test unit yang hanya memeriksa aturan plafon/nomor referensi boleh
+// mengabaikannya, sama seperti pola NewSkoringServiceWithAudit.
+//
+// Ketika audit terpasang, kegagalan mencatat membuat operasi GAGAL — bukan
+// diabaikan. Pengajuan yang tersimpan tanpa jejak aktor melanggar BR-10.
+func (s *PengajuanService) DenganAudit(a AuditService) *PengajuanService {
+	s.audit = a
+	return s
 }
 
 // DenganWaktu mengganti sumber waktu; dipakai test agar tanggal pada nomor
@@ -120,7 +134,43 @@ func (s *PengajuanService) Buat(ctx context.Context, in InputPengajuan) (Pengaju
 	if err != nil {
 		return Pengajuan{}, err
 	}
+
+	// BR-10: pembuatan pengajuan adalah perubahan keadaan, jadi wajib punya
+	// aktor dan timestamp. Dicatat SETELAH transaksi berhasil supaya audit
+	// tidak pernah menyebut pengajuan yang gagal disimpan.
+	if err := s.catatAudit(ctx, p.ID, domain.AksiBuatPengajuan, "",
+		string(domain.StatusDraft), "pengajuan dibuat "+p.NomorReferensi,
+		in.AOID, domain.PeranAO); err != nil {
+		return Pengajuan{}, err
+	}
 	return p, nil
+}
+
+// catatAudit merekam satu jejak perubahan keadaan (BR-10).
+//
+// Ketika audit belum dipasang (test unit), pencatatan dilewati. Di jalur
+// produksi audit SELALU dipasang lewat DenganAudit, dan kegagalan mencatat
+// diteruskan sebagai error — bukan ditelan — supaya tidak ada perubahan
+// keadaan yang kehilangan jejak aktornya.
+//
+// Catatan tidak boleh memuat NIK, nomor dokumen, atau path foto (BR-11);
+// pemanggil memakai nomor referensi atau id internal.
+func (s *PengajuanService) catatAudit(ctx context.Context, pengajuanID int64,
+	aksi domain.AksiAudit, sebelum, sesudah, catatan string,
+	aktorID int64, aktorPeran domain.Peran) error {
+	if s.audit == nil {
+		return nil
+	}
+	id := pengajuanID
+	return s.audit.Catat(ctx, domain.CatatAuditInput{
+		PengajuanID:   &id,
+		Aksi:          aksi,
+		StatusSebelum: domain.StatusPengajuan(sebelum),
+		StatusSesudah: domain.StatusPengajuan(sesudah),
+		Catatan:       catatan,
+		ActorID:       aktorID,
+		ActorRole:     aktorPeran,
+	})
 }
 
 // PastikanPlafonDalamBatas menegakkan BR-01: plafon di bawah batas minimum atau

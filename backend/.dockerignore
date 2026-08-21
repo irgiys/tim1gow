@@ -1,0 +1,21 @@
+# Jangan kirim berkas ini ke build context Docker.
+# Alasan utama: .env berisi kredensial nyata dan TIDAK BOLEH masuk image
+# (AGENTS.md Larangan 10). Sisanya sekadar mempercepat build.
+
+.env
+.env.*
+!.env.example
+
+*_test.go
+testdata/
+
+Dockerfile
+.dockerignore
+.git
+.gitignore
+
+# Artefak build lokal
+/api
+/migrate
+/out
+uploads/

@@ -59,7 +59,9 @@ type AksiAudit string
 const (
 	AksiBuatPengajuan     AksiAudit = "BUAT_PENGAJUAN"
 	AksiSubmitPengajuan   AksiAudit = "SUBMIT_PENGAJUAN"
+	AksiUploadDokumen     AksiAudit = "UPLOAD_DOKUMEN"
 	AksiVerifikasiDokumen AksiAudit = "VERIFIKASI_DOKUMEN"
+	AksiRekamSurvei       AksiAudit = "REKAM_SURVEI"
 	AksiSlikCheck         AksiAudit = "SLIK_CHECK"
 	AksiSkoring           AksiAudit = "SKORING"
 	AksiOverrideSkor      AksiAudit = "OVERRIDE_SKOR"
@@ -76,6 +78,3 @@ const (
 	KomponenLamaUsaha      = "LAMA_USAHA"
 	KomponenSurveiLapangan = "SURVEI_LAPANGAN"
 )
-
-
-
