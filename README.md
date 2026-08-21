@@ -13,7 +13,7 @@
 | Yulio Zaki | Backend Engineer — auth & integrasi SLIK | FR-01, FR-05, mock SLIK | https://github.com/yuliozakik |
 | Rayvaldo | Backend Engineer — pengajuan & dokumen | FR-02, FR-03, FR-04 | https://github.com/rayvaldoprawira |
 | Aldi | AI Workflow Officer + Frontend Engineer | FR-03/FR-04/FR-08 (UI), FR-11 | https://github.com/aldiariq/ |
-| Soleh | QA / Verification + DevOps / Release | FR-12, test AC-01…AC-15, CI & compose | https://github.com/mshcode89  |
+| Soleh | QA / Verification | FR-12, test AC-01…AC-15 | https://github.com/mshcode89 |
 
 **Pembagian tanggung jawab non-koding** (satu berkas = satu pemilik tunggal; orang lain
 mengusulkan lewat PR, supaya tidak ada konflik merge pada tabel markdown):
@@ -101,7 +101,12 @@ Pesan error diambil dari field `message` respons API, jangan disusun ulang di UI
   pesan yang menyebut kode BR (AC-04) tidak hilang.
 - Semua panggilan API lewat `lib/apiClient.ts`; jangan ada `fetch()` telanjang di komponen.
 
-**Perubahan peran selama hackathon**: tidak ada (per 2026-08-20 10:30).
+**Perubahan peran selama hackathon**:
+
+| Jam | Perubahan | Alasan |
+|---|---|---|
+| 2026-08-20 11:10 | Peran **DevOps / Release** pindah dari Soleh (QA) ke **Irgiyansyah**, beserta kepemilikan `ci.yml`, `docker-compose.yml`, `.env.example`, dan `backend/migrations/` | QA dibiarkan murni sebagai penjaga gerbang. Kalau QA juga yang menulis CI, ia menjadi pemeriksa atas pekerjaannya sendiri — pola yang persis kita larang di BR-09 (maker ≠ checker). Dicatat di `AGENTS.md` riwayat baris 11:10 |
+| 2026-08-20 17:10 | Tabel di atas dan `docs/AI-WORKFLOW.md` disesuaikan agar mencerminkan perubahan 11:10 | Ketiga dokumen sebelumnya tidak sinkron: `AGENTS.md` sudah memindahkan DevOps ke Irgiyansyah sejak 11:10, tetapi README dan AI-WORKFLOW masih mencantumkan "CI & compose" sebagai tugas Soleh. Ditemukan saat audit QA atas tugas yang belum dikerjakan |
 
 ---
 

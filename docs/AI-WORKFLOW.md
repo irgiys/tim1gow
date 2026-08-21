@@ -36,9 +36,9 @@ mengedit berkas yang sama.
 | CRUD & endpoint rutin | Rayvaldo | *(belum disetor)* | *(belum disetor)* | *(belum disetor)* |  |
 | Komponen UI per peran (shell, auth, AO) | Aldi | Hermes IDE | Claude Opus | Agen bisa menjalankan `tsc`, `next build`, `eslint`, dan `curl` sendiri lalu membaca keluarannya, sehingga fondasi frontend diverifikasi hijau **sebelum** commit, bukan diserahkan ke CI |  |
 | Integrasi HTTP ke mock SLIK + jalur error | Yulio Zaki | *(belum disetor)* | *(belum disetor)* | *(belum disetor)* |  |
-| Menulis test dari AC | Soleh | *(belum disetor)* | *(belum disetor)* | *(belum disetor)* |  |
-| Review kode / cari bug sebelum PR | Soleh (gerbang) + Luthfi (merge) | *(belum disetor)* | *(belum disetor)* | *(belum disetor)* |  |
-| docker-compose & CI | Soleh | *(belum disetor)* | *(belum disetor)* | *(belum disetor)* |  |
+| Menulis test dari AC | Soleh | Hermes IDE | Claude Opus | Agen menjalankan `go test` sendiri, jadi siklus RED→GREEN benar-benar ditegakkan: test dipastikan GAGAL lebih dulu sebelum implementasi ditulis. Untuk test yang lolos seketika, kemampuannya menangkap regresi dibuktikan lewat uji mutasi (lihat DEVLOG-04, kasus AC-04) | Ya — DEVLOG-04 |
+| Review kode / cari bug sebelum PR | Soleh (gerbang) + Luthfi (merge) | Hermes IDE | Claude Opus | Berguna untuk memeriksa **isi assertion** test, bukan hanya keberadaan berkasnya — inilah yang menemukan 4 BR berstatus `Done` tanpa test yang mengujinya, plus 1 bug nyata (AC-08: override grade tanpa alasan lolos). CI hijau tidak menangkap keduanya | Ya — DEVLOG-04 |
+| docker-compose & CI | Irgiyansyah (DevOps / Release) | *(belum disetor)* | *(belum disetor)* | *(belum disetor)* |  |
 | Seed & data uji | Irgiyansyah (parameter) + Yulio (SLIK) | *(belum disetor)* | *(belum disetor)* | *(belum disetor)* |  |
 | Dokumentasi (SRS Yulio · SDD Irgi · ADR Luthfi) | Yulio Zaki / Irgiyansyah / Luthfi | Hermes IDE | Claude Opus | Patuh pada format tabel yang diminta dan bisa menghitung sendiri placeholder `<!-- ISI -->` per berkas, jadi tidak ada bagian yang terlewat karena lupa |  |
 | Debugging galat runtime | pemilik lapisan yang bersangkutan | *(belum disetor)* | *(belum disetor)* | *(belum disetor)* |  |
@@ -169,11 +169,11 @@ berhak menunjuk baris acak di PR dan meminta penjelasan sebelum approve.
 | Anggota | Tool utama | Model yang dipakai | Untuk bagian apa |
 |---|---|---|---|
 | Luthfi | *(belum disetor)* | *(belum disetor)* | `AGENTS.md`, ADR, `approval_service.go`, `audit_service.go`, merge PR |
-| Irgiyansyah | Hermes IDE | Claude Opus | Pembagian peran & pemilik berkas (DEVLOG-01), SDD BAB 4–5, skoring & margin, tabel parameter |
+| Irgiyansyah | Hermes IDE | Claude Opus | Pembagian peran & pemilik berkas (DEVLOG-01), SDD BAB 4–5, skoring & margin, tabel parameter, `ci.yml`, `docker-compose.yml`, `.env.example`, `backend/migrations/` |
 | Yulio Zaki | *(belum disetor)* | *(belum disetor)* | SRS, middleware auth+peran, `internal/slik/`, `mock-slik/` |
 | Rayvaldo | *(belum disetor)* | *(belum disetor)* | Pengajuan, dokumen, survei, `internal/repository/`, migrasi |
 | Aldi | Hermes IDE | Claude Opus | Fondasi `frontend/` (`lib/apiClient.ts`, `lib/auth.ts`, komponen bersama, `app/login`), `AI-WORKFLOW.md`, `AI-DEVLOG.md` |
-| Soleh | *(belum disetor)* | *(belum disetor)* | Test dari AC, `ci.yml`, `docker-compose.yml`, `README.md`, DEMO-SCRIPT |
+| Soleh | Hermes IDE | Claude Opus | Test dari AC (BR-01, BR-12, AC-04, AC-08, AC-13), `TRACEABILITY.md`, `README.md`, DEMO-SCRIPT. Agen menjalankan sendiri `go test`/`go vet`/`gofmt` lalu membaca keluarannya, sehingga klaim "test lolos" berasal dari eksekusi nyata — bukan dari pembacaan kode (DEVLOG-04) |
 
 ### 5.2 Pengamatan per tool
 

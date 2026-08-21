@@ -36,4 +36,9 @@ type ParameterRepository interface {
 const (
 	KunciHariKerjaPerBulan = "hari_kerja_per_bulan"
 	KunciMarginUsaha       = "margin_usaha"
+
+	// Batas plafon BR-01. Nilainya hidup di tabel parameter_umum supaya dapat
+	// diubah ADM tanpa deploy ulang (FR-13, AGENTS.md Larangan 3).
+	KunciPlafonMinimum  = "plafon_minimum"
+	KunciPlafonMaksimum = "plafon_maksimum"
 )

@@ -50,16 +50,42 @@ func TestAuditHTTP_AC13_AppendOnlyTidakAdaMutasi(t *testing.T) {
 
 	forbiddenMethods := []string{http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete}
 
-	for _, method := range forbiddenMethods {
-		t.Run("Metode_"+method+"_Ditolak", func(t *testing.T) {
-			req := httptest.NewRequest(method, "/api/pengajuan/1/audit", nil)
+	// AC-13 meminta bukti dari DAFTAR ROUTE, jadi SEMUA route audit yang
+	// terdaftar di router harus diperiksa — bukan hanya satu. Sebelumnya
+	// /api/audit tidak diuji sama sekali padahal ia route audit juga.
+	auditRoutes := []string{
+		"/api/pengajuan/1/audit",
+		"/api/audit",
+	}
+
+	for _, route := range auditRoutes {
+		for _, method := range forbiddenMethods {
+			t.Run("Metode_"+method+"_Ditolak_pada_"+route, func(t *testing.T) {
+				req := httptest.NewRequest(method, route, nil)
+				w := httptest.NewRecorder()
+
+				handler.ServeHTTP(w, req)
+
+				if w.Code != http.StatusNotFound && w.Code != http.StatusMethodNotAllowed {
+					t.Fatalf("metode %s pada %s harus ditolak (404/405), dapat status %d",
+						method, route, w.Code)
+				}
+			})
+		}
+	}
+
+	// Pembanding: GET pada kedua route harus TETAP bisa diakses. Tanpa ini,
+	// router yang memblokir seluruh metode akan meloloskan test di atas.
+	for _, route := range auditRoutes {
+		t.Run("GET_tetap_diizinkan_pada_"+route, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, route, nil)
 			w := httptest.NewRecorder()
 
 			handler.ServeHTTP(w, req)
 
-			if w.Code != http.StatusNotFound && w.Code != http.StatusMethodNotAllowed {
-				t.Fatalf("metode %s pada /api/pengajuan/{id}/audit harus ditolak (404/405), dapat status %d",
-					method, w.Code)
+			if w.Code == http.StatusNotFound || w.Code == http.StatusMethodNotAllowed {
+				t.Fatalf("GET %s seharusnya tersedia (audit trail dapat dibaca), dapat status %d",
+					route, w.Code)
 			}
 		})
 	}
