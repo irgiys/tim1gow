@@ -9,5 +9,8 @@ nik,nama,jenis_usaha,kolektibilitas,jumlah_fasilitas_aktif,total_baki_debet,omze
 3404121189000008,Nur Hidayah,Konveksi,5,4,67000000,700000,42,"SLIK kol-5 - penolakan otomatis"
 3404300394000009,Agus Setiawan,Servis Elektronik,2,1,9000000,400000,24,"SLIK kol-2 + kapasitas sedang - grade 3"
 3404060586000010,Lestari Wulandari,Toko Sembako,1,1,12000000,650000,18,"Grade 2/3 - uji batas lama usaha"
+1111111111111111,Luthfi,Vape,1,1,10000000,1000000,36,"Luthfi - Lancar (Kolektibilitas 1)"
+321691419999999,Eka Purnama,Burger,1,1,5000000,750000,24,"Eka Purnama - Lancar (Kolektibilitas 1)"
+3216914199999990,Eka Purnama,Burger,1,1,5000000,750000,24,"Eka Purnama 16 digit - Lancar (Kolektibilitas 1)"
 3404999999999999,TIDAK ADA DI SLIK,-,-,-,-,-,-,"NIK tidak ditemukan - uji respons 404"
 3404000000000503,PEMICU ERROR,-,-,-,-,-,-,"Pemicu respons 503 - uji penanganan layanan tidak tersedia"

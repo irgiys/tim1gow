@@ -23,6 +23,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { apiClient } from '@/lib/apiClient';
 import { ambilToken } from '@/lib/auth';
 import { GuardPeran } from '@/components/GuardPeran';
@@ -81,7 +82,12 @@ export default function HalamanSlikCheck({ params }: { params: { id: string } })
     <GuardPeran izinkan={['ANL']}>
       <TopBar />
       <main>
-        <h1>SLIK Check</h1>
+        <div style={{ marginBottom: '1rem' }}>
+          <Link href="/pengajuan" style={{ color: 'var(--utama, #00875A)', textDecoration: 'none', fontWeight: 500 }}>
+            ← Kembali ke Daftar Pengajuan
+          </Link>
+        </div>
+        <h1>SLIK Check (FR-05)</h1>
         <p className="sub">
           Pengajuan #{pengajuanId} — jalankan pengecekan SLIK untuk nasabah pada pengajuan ini.
           Hasil akan menentukan kelanjutan proses di sisi server.

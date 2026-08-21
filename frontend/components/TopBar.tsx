@@ -22,7 +22,23 @@ export function TopBar() {
 
   return (
     <header className="topbar">
-      <span className="merek">iMitra</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+        <a href="/pengajuan" className="merek" style={{ textDecoration: 'none' }}>
+          iMitra
+        </a>
+        {pengguna ? (
+          <nav style={{ display: 'flex', gap: '1rem', fontSize: '0.9rem' }}>
+            <a href="/pengajuan" style={{ color: 'var(--fg)', textDecoration: 'none', fontWeight: 600 }}>
+              📋 Pengajuan
+            </a>
+            {['KCP', 'KC', 'KOM'].includes(pengguna.peran) ? (
+              <a href="/approval" style={{ color: 'var(--fg-lemah)', textDecoration: 'none' }}>
+                ✍️ Approval
+              </a>
+            ) : null}
+          </nav>
+        ) : null}
+      </div>
       {pengguna ? (
         <span className="peran">
           {pengguna.namaLengkap} — {LABEL_PERAN[pengguna.peran]} ({pengguna.peran}){' '}

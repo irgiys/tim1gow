@@ -17,6 +17,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { apiClient } from '@/lib/apiClient';
 import { ambilToken, ambilPengguna } from '@/lib/auth';
 import { GuardPeran } from '@/components/GuardPeran';
@@ -72,6 +73,77 @@ function IsiHalaman() {
   const [sedangMuat, setSedangMuat] = useState(true);
   const peran = ambilPengguna()?.peran;
 
+  const kolom: KolomTabel<BarisPengajuan>[] = [
+    { judul: 'Nomor Referensi', render: (b) => <code>{b.nomorReferensi}</code> },
+    { judul: 'Nasabah', render: (b) => b.namaNasabah },
+    { judul: 'Akad', render: (b) => b.jenisAkad },
+    { judul: 'Plafon', angka: true, render: (b) => rupiah.format(b.plafonDiajukan) },
+    { judul: 'Tenor', angka: true, render: (b) => `${b.tenorBulan} bln` },
+    { judul: 'Status', render: (b) => <StatusBadge status={b.status} /> },
+    {
+      judul: 'Aksi / Menu',
+      render: (b) => (
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {peran === 'ANL' ? (
+            <>
+              <Link
+                href={`/pengajuan/${b.id}/slik`}
+                style={{
+                  padding: '0.35rem 0.65rem',
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                  background: 'var(--utama, #00875A)',
+                  color: '#ffffff',
+                  borderRadius: '4px',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                }}
+              >
+                🔍 SLIK Check
+              </Link>
+              <Link
+                href={`/pengajuan/${b.id}/verifikasi`}
+                style={{
+                  padding: '0.35rem 0.65rem',
+                  fontSize: '0.82rem',
+                  fontWeight: 500,
+                  background: '#f1f5f9',
+                  color: '#1e293b',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '4px',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                }}
+              >
+                📄 Verifikasi Dokumen
+              </Link>
+            </>
+          ) : peran === 'AO' ? (
+            <Link
+              href={`/pengajuan/${b.id}/dokumen`}
+              style={{
+                padding: '0.35rem 0.65rem',
+                fontSize: '0.82rem',
+                background: '#f1f5f9',
+                color: '#1e293b',
+                border: '1px solid #cbd5e1',
+                borderRadius: '4px',
+                textDecoration: 'none',
+                display: 'inline-block',
+              }}
+            >
+              📁 Dokumen
+            </Link>
+          ) : null}
+        </div>
+      ),
+    },
+  ];
+
   const muat = useCallback(async () => {
     setSedangMuat(true);
     setGalatMuat(null);
@@ -110,7 +182,7 @@ function IsiHalaman() {
           <p className="sub">Memuat…</p>
         ) : (
           <Table
-            kolom={KOLOM}
+            kolom={kolom}
             data={daftar}
             kunci={(b) => String(b.id)}
             pesanKosong="Belum ada pengajuan."
